@@ -1,0 +1,8 @@
+@echo off
+..\exec\asm68k /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- ErrorHandler.asm, ErrorHandler.bin, , ErrorHandler.lst
+..\exec\convsym ErrorHandler.lst "bundles\ErrorHandler.Global.ASM68K.asm" -input asm68k_lst -output asm -outopt "ErrorHandler.%%s equ ErrorHandler+$%%X" -filter "__global_.+"
+..\exec\convsym ErrorHandler.lst "bundles\ErrorHandler.Global.AS.asm" -input asm68k_lst -output asm -outopt "ErrorHandler_%%s: label ErrorHandler+$%%X" -filter "__global_.+"
+
+..\exec\asm68k /k /e __DEBUG__ /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- ErrorHandler.asm, ErrorHandler.Debug.bin, , ErrorHandler.Debug.lst
+..\exec\convsym ErrorHandler.Debug.lst "bundles\ErrorHandler.Debug.Global.ASM68K.asm" -input asm68k_lst -output asm -outopt "ErrorHandler.%%s equ ErrorHandler+$%%X" -filter "__global_.+"
+pause

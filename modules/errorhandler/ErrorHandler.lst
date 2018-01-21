@@ -1,0 +1,1967 @@
+00000000                            
+00000000                            
+00000000                            ; ===============================================================
+00000000                            ; ---------------------------------------------------------------
+00000000                            ; Error handling module
+00000000                            ; 2017, Vladikcomper
+00000000                            ; ---------------------------------------------------------------
+00000000                            
+00000000                            	include	'..\core\Macros.asm'
+00000000                            
+00000000                            ; ===============================================================
+00000000                            ; ---------------------------------------------------------------
+00000000                            ; Error handling and debugging modules
+00000000                            ; 2016-2017, Vladikcomper
+00000000                            ; ---------------------------------------------------------------
+00000000                            ; Macros definitions file
+00000000                            ; ---------------------------------------------------------------
+00000000                            
+00000000 =00C00000                  VDP_Data		equ 	$C00000
+00000000 =00C00004                  VDP_Ctrl		equ 	$C00004
+00000000                            
+00000000                            ; Generate VRAM write command
+00000000                            vram	macro
+00000000                            		if (narg=1)
+00000000                            				move.l	#($40000000+((\1&$3FFF)<<16)+((\1&$C000)>>14)),($C00004).l
+00000000                            		else
+00000000                            				move.l	#($40000000+((\1&$3FFF)<<16)+((\1&$C000)>>14)),\2
+00000000                            		endc
+00000000                            		endm
+00000000                            
+00000000                            ; Generate dc.l constant with VRAM write command
+00000000                            dcvram	macro
+00000000                            		dc.l	($40000000+((\1&$3FFF)<<16)+((\1&$C000)>>14))
+00000000                            		endm
+00000000                            
+00000000                            
+00000000                            ; Generate CRAM write command
+00000000                            cram	macro	offset,operand
+00000000                            		if (narg=1)
+00000000                            				move.l	#($C0000000+(\1<<16)),VDP_Ctrl
+00000000                            		else
+00000000                            				move.l	#($C0000000+(\1<<16)),\operand
+00000000                            		endc
+00000000                            		endm
+00000000                            		
+00000000                            ; Special macro do define externally visible symbols
+00000000                            __global macro	*
+00000000                            __global__\*:
+00000000                            \*:
+00000000                            		endm
+00000000                            
+00000000                            ; ---------------------------------------------------------------
+00000000                            ; Constants
+00000000                            ; ---------------------------------------------------------------
+00000000                            
+00000000 =00000400                  VRAM_Font		equ 	(('!'-1)*$20)
+00000000 =00008000                  VRAM_PlaneA 	equ		$8000
+00000000 =00008000                  VRAM_PlaneB 	equ		VRAM_PlaneA
+00000000                            
+00000000 =00000000                  _white			equ 	0
+00000000 =00002000                  _yellow 		equ 	1<<13
+00000000 =00004000                  _blue			equ 	2<<13
+00000000 =00006000                  _blue2			equ 	3<<13
+00000000                            
+00000000                            
+00000000                            ; ===============================================================
+00000000                            ; ---------------------------------------------------------------
+00000000                            ; Main error handler
+00000000                            ; ---------------------------------------------------------------
+00000000                            ; GLOBAL REGISTERS:
+00000000                            ;		d6	.b	Error handler flags bitfield
+00000000                            ;		a3		Pointer to additional parameters
+00000000                            ;		a4		Stack pointer (after exception frame)
+00000000                            ;
+00000000                            ; NOTE:	It should be called via JSR/BSR exclusively with error
+00000000                            ;		information following the JSR/BSR opcode.
+00000000                            ;
+00000000                            ; ERROR DATA FORMAT:
+00000000                            ;		dc.b	"<Error formatted message>", 0
+00000000                            ;		dc.b	<Error Handler flags>
+00000000                            ;		even
+00000000                            ;		jmp		<ConsoleProgram> (optional)
+00000000                            ;
+00000000                            ;	Flags bitfield uses the following format:
+00000000                            ;		bit #0:	If set, loads extended stack frame (used for
+00000000                            ;				Address and Bus errors only)
+00000000                            ;		bit #1: If set, displays SR and USP registers
+00000000                            ;		bit #2:	<UNUSED>
+00000000                            ;		bit #3:	<UNUSED>
+00000000                            ;		bit #4:	<UNUSED>
+00000000                            ;		bit #5:	If set, displays full screen, but then calls
+00000000                            ;				console program (via "jmp <ConsoleProgram>")
+00000000                            ;		bit #6:	If set, displays error header only, then calls
+00000000                            ;				console program (via "jmp <ConsoleProgram>")
+00000000                            ;		bit #7:	If set, skips a byte after this byte, so
+00000000                            ;				jmp <ConsoleProgram> is word-aligned.
+00000000                            ; ---------------------------------------------------------------
+00000000                            
+00000000                            ErrorHandler:
+00000000 46FC 2700                  	move	#$2700, sr						; disable interrupts for good
+00000004 4FEF 0000                  	lea		-Console_RAM.size(sp), sp		; STACK => allocate memory for console
+00000008 48E7 FFFE                  	movem.l d0-a6, -(sp) 					; STACK => dump registers ($3C bytes)
+0000000C                            
+0000000C 4EBA 0000                  	jsr		ErrorHandler_SetupVDP(pc)
+00000010 49EF 0000                  	lea 	$3C+Console_RAM.size(sp), a4	; a4 = arguments, stack frame
+00000014                            
+00000014 4E68                       	move.l	usp, a0
+00000016 2F08                       	move.l	a0, -(sp)						; save USP if needed to display later (as it's overwritten by the console subsystem)
+00000018                            
+00000018                            	; Initialize console subsystem
+00000018 47EF 0040                  	lea		$3C+4(sp), a3					; a3 = Console RAM
+0000001C 4EBA 0000                  	jsr		Error_InitConsole(pc)
+00000020                            
+00000020                            	; ----------------
+00000020                            	; Screen header
+00000020                            	; ----------------
+00000020                            
+00000020 41FA 0000                  	lea		Str_SetErrorScreen(pc), a0
+00000024 4EBA 0000                  	jsr		Console_Write(pc)
+00000028                            
+00000028                            	; Print error description
+00000028 225C                       	movea.l	(a4)+, a1						; get error text
+0000002A 45D4                       	lea		(a4), a2						; a2 = load arguments buffer (if present)
+0000002C 4EBA 0000                  	jsr 	Console_WriteLine_Formatted(pc)
+00000030 4EBA 0000                  	jsr		Console_StartNewLine(pc)
+00000034                            
+00000034 49D2                       	lea		(a2), a4						; a4 = stack frame (after arguments buffer was processed by Console_Write)
+00000036                            ;	move.w	a2, -(sp)						; remember top of the stack pointer (points to SR et al)
+00000036                            
+00000036 1C19                       	move.b	(a1)+, d6
+00000038 6A00                       	bpl.s	@align_ok
+0000003A 5249                       	addq.w	#1, a1
+0000003C                            @align_ok:
+0000003C 47D1                       	lea		(a1), a3
+0000003E                            
+0000003E                            	; Print error address (for Address error and Bus Error only)
+0000003E 0806 0000                  	btst	#0, d6							; does error has extended stack frame (Address Error and Bus Error only)?
+00000042 6700                       	beq.s	@skip							; if not, branch
+00000044                            
+00000044 43FA 0000                  	lea 	Str_Address(pc), a1				; a1 = formatted string
+00000048 45EC 0002                  	lea		2(a4), a2						; a2 = arguments buffer
+0000004C 4EBA 0000                  	jsr		Console_WriteLine_Formatted(pc)
+00000050 504C                       	addq.w	#8, a4							; skip extension part of the stack frame
+00000052                            @skip:
+00000052                            
+00000052                            	; Print error location
+00000052 43FA 0000                  	lea 	Str_Location(pc), a1			; a1 = formatted string
+00000056 45EC 0002                  	lea		2(a4), a2						; a2 = arguments buffer
+0000005A 4EBA 0000                  	jsr		Console_WriteLine_Formatted(pc)
+0000005E                            
+0000005E                            	; Print module name error occured in
+0000005E 43FA 0000                  	lea 	Str_Module(pc), a1				; a1 = formatted string
+00000062 45EC 0002                  	lea		2(a4), a2						; a2 = arguments buffer
+00000066 4EBA 0000                  	jsr		Console_WriteLine_Formatted(pc)
+0000006A                            
+0000006A                            	; Print caller
+0000006A 45EC 0006                  	lea		6(a4), a2						; a2 = call stack (after exception stack frame)
+0000006E 4EBA 0000                  	jsr		Error_GuessCaller(pc)			; d1 = caller
+00000072 43FA 0000                  	lea 	Str_Caller(pc), a1				; a1 = formatted string
+00000076 2F01                       	move.l	d1, -(sp)
+00000078 45D7                       	lea		(sp), a2						; a2 = arguments buffer
+0000007A 4EBA 0000                  	jsr		Console_WriteLine_Formatted(pc)
+0000007E 4EBA 0000                  	jsr		Console_StartNewLine(pc)
+00000082 584F                       	addq.w	#4,sp							; free argument
+00000084                            
+00000084 0806 0006                  	btst	#6, d6							; is execute console program bit set?
+00000088 6600 0000                  	bne.w	Error_EnterConsoleProgram		; if yes, branch to error trap
+0000008C                            
+0000008C                            	; ----------------
+0000008C                            	; Registers
+0000008C                            	; ----------------
+0000008C                            
+0000008C 45EF 0004                  	lea		4(sp), a2						; use register buffer as arguments
+00000090                            
+00000090                            	; Print data registers
+00000090 4EBA 0000                  	jsr		Console_GetPosAsXY(pc)			; d0/d1 = XY-pos
+00000094 3F01                       	move.w	d1, -(sp)						; remember line
+00000096 7003                       	moveq	#3, d0							; left margin for data registers
+00000098 4EBA 0000                  	jsr		Console_SetPosAsXY(pc)
+0000009C 303C 6430                  	move.w	#'d0', d0						; d0 = 'd0', what a twist !!!
+000000A0 7A07                       	moveq	#8-1, d5						; number of registers - 1
+000000A2 4EBA 0000                  	jsr		Error_DrawRegisters(pc)
+000000A6                            
+000000A6                            	; Print address registers
+000000A6 321F                       	move.w	(sp)+, d1						; restore line
+000000A8 7011                       	moveq	#$11, d0						; left margin for address registers
+000000AA 4EBA 0000                  	jsr		Console_SetPosAsXY(pc)
+000000AE 303C 6130                  	move.w	#'a0', d0
+000000B2 7A06                       	moveq	#7-1, d5						; number of registers - 1
+000000B4 4EBA 0000                  	jsr		Error_DrawRegisters(pc)
+000000B8                            
+000000B8                            	; Special case : stack register
+000000B8 303C 7370                  	move.w	#'sp', d0
+000000BC 7A00                       	moveq	#0, d5
+000000BE 2F0C                       	move.l	a4, -(sp)
+000000C0 45D7                       	lea		(sp), a2
+000000C2 4EBA 0000                  	jsr		Error_DrawRegisters(pc)
+000000C6 584F                       	addq.w	#4, sp
+000000C8                            
+000000C8                            	; Display USP and SR (if requested)
+000000C8 0806 0001                  	btst	#1, d6
+000000CC 6700                       	beq.s	@skip2
+000000CE                            
+000000CE                                ; Draw 'USP'
+000000CE 43FA 0000                  	lea		Str_USP(pc), a1
+000000D2 45D7                       	lea		(sp), a2						; a2 = USP saved in stack (how convy!)
+000000D4 4EBA 0000                  	jsr		Console_Write_Formatted(pc)
+000000D8                            
+000000D8                            	; Draw 'SR'
+000000D8 43FA 0000                  	lea		Str_SR(pc), a1
+000000DC 45D4                       	lea		(a4), a2
+000000DE 4EBA 0000                  	jsr		Console_WriteLine_Formatted(pc)
+000000E2                            
+000000E2                            @skip2:
+000000E2 584F                       	addq.w	#4, sp							; free USP copy from the stack (we don't need it anyways, as long as Console
+000000E4                            
+000000E4 4EBA 0000                  	jsr		Console_GetPosAsXY(pc)			; d0/d1 = XY-pos
+000000E8 5241                       	addq.w	#1, d1							; skip a line
+000000EA 7001                       	moveq	#1, d0							; left margin for data registers
+000000EC 4EBA 0000                  	jsr		Console_SetPosAsXY(pc)
+000000F0                            
+000000F0                            
+000000F0                            	; --------------------
+000000F0                            	; Interrupt handlers
+000000F0                            	; --------------------
+000000F0                            
+000000F0                            	; Print vertical and horizontal interrupt handlers, if available
+000000F0 2038 0078                  	move.l	$78.w, d0						; d0 = VInt vector address
+000000F4 41FA 0000                  	lea		Str_VInt(pc), a0
+000000F8 4EBA 0000                  	jsr		Error_DrawInterruptHandler(pc)
+000000FC                            
+000000FC 2038 0070                  	move.l	$70.w, d0						; d0 = HInt vector address
+00000100 41FA 0000                  	lea		Str_HInt(pc), a0
+00000104 4EBA 0000                  	jsr		Error_DrawInterruptHandler(pc)
+00000108                            
+00000108 4EBA 0000                  	jsr		Console_StartNewLine(pc)		; newline
+0000010C                            
+0000010C                            	; -----------------
+0000010C                            	; Stack contents
+0000010C                            	; -----------------
+0000010C                            
+0000010C 344C                       	movea.w	a4, a2
+0000010E 3278 0002                  	movea.w 2.w, a1							; a1 = stack top
+00000112 5349                       	subq.w	#1, a1							; hotfix to convert stack pointer $0000 to $FFFF, decrement by 1 shouldn't make any difference otherwise
+00000114                            
+00000114 4EBA 0000                  	jsr		Console_GetPosAsXY(pc)			; d0/d1 = XY-pos
+00000118 7A19                       	moveq	#28-3, d5
+0000011A 9A41                       	sub.w	d1, d5
+0000011C 6B00                       	bmi.s	@stack_done
+0000011E                            
+0000011E 6100                       	bsr.s	Error_DrawStackRow_First
+00000120                            
+00000120                            	@stack_loop:
+00000120 4EBA 0000                  		jsr		Error_DrawStackRow(pc)
+00000124 51CD FFFA                  		dbf		d5, @stack_loop
+00000128                            
+00000128                            @stack_done:
+00000128                            
+00000128 0806 0005                  	btst	#5, d6							; is execute console program (at the end) bit set?
+0000012C 6600                       	bne.s	Error_RunConsoleProgram
+0000012E                            
+0000012E                            ; ---------------------------------------------------------------
+0000012E                            Error_IdleLoop:
+0000012E 60FE                       	bra.s	*
+00000130                            
+00000130                            ; ---------------------------------------------------------------
+00000130                            ; Routine to enter console mode after writting error header
+00000130                            ; ---------------------------------------------------------------
+00000130                            
+00000130                            Error_EnterConsoleProgram:
+00000130 7200                       	moveq	#0, d1
+00000132 4EBA 0000                  	jsr		Console_SetBasePattern(pc)
+00000136                            
+00000136                            Error_RunConsoleProgram:
+00000136 2ECB                       	move.l	a3, (sp)+						; replace USP in stack with return address
+00000138 4CDF 7FFF                  	movem.l	(sp)+, d0-a6					; restore registers
+0000013C 487A FFF0                  	pea		Error_IdleLoop(pc)				; set return address
+00000140 2F2F FFC4                  	move.l	-$3C(sp), -(sp)					; retrieve "a3" saved earlier
+00000144 4E75                       	rts										; jump to a3
+00000146                            
+00000146                            ; ---------------------------------------------------------------
+00000146                            Error_InitConsole:	__global
+00000146                          M __global__error_initconsole:
+00000146                          M error_initconsole:
+00000146 43FA 0000                  	lea		ErrorHandler_ConsoleConfig(pc), a1
+0000014A 45FA 0000                  	lea		Art1bpp_Font(pc), a2
+0000014E 4EFA 0000                  	jmp		Console_Init(pc)				; d5 = On-screen position
+00000152                            
+00000152                            
+00000152                            ; ===============================================================
+00000152                            ; ---------------------------------------------------------------
+00000152                            ; Subroutine to draw contents of stack row
+00000152                            ; ---------------------------------------------------------------
+00000152                            ; INPUT:
+00000152                            ;		a0		String buffero
+00000152                            ;		a1		Top of stack pointer
+00000152                            ;		a2		Arguments (stack contents)
+00000152                            ; ---------------------------------------------------------------
+00000152                            
+00000152                            Error_DrawStackRow_First:
+00000152 4FEF FFD0                  	lea		-$30(sp), sp
+00000156 41D7                       	lea		(sp), a0				; a0 = string buffer
+00000158 7EFF                       	moveq	#-1, d7					; size of the buffer for formatter functions (we assume buffer will never overflow)
+0000015A                            
+0000015A 20FC 2853 5029             	move.l	#'(SP)', (a0)+
+00000160 30FC 3A20                  	move.w	#': ', (a0)+
+00000164 6000                       	bra.s	Error_DrawStackRow_Continue
+00000166                            
+00000166                            ; ---------------------------------------------------------------
+00000166                            Error_DrawStackRow:
+00000166 4FEF FFD0                  	lea		-$30(sp), sp
+0000016A 41D7                       	lea		(sp), a0				; a0 = string buffer
+0000016C 7EFF                       	moveq	#-1, d7					; size of the buffer for formatter functions (we assume buffer will never overflow)
+0000016E                            
+0000016E 30FC 202B                  	move.w	#' +', (a0)+
+00000172 320A                       	move.w	a2, d1
+00000174 924C                       	sub.w	a4, d1					; d1 = stack displacement
+00000176 4EBA 0000                  	jsr 	FormatHex_Byte(pc)
+0000017A 30FC 3A20                  	move.w	#': ', (a0)+
+0000017E                            
+0000017E                            ; ---------------------------------------------------------------
+0000017E                            Error_DrawStackRow_Continue:
+0000017E 7005                       	moveq	#5, d0					; number of words to display
+00000180                            
+00000180                            	@loop:
+00000180 7200                       		moveq	#$FFFFFF00|_pal2, d1	; use light blue
+00000182 B4C9                       		cmp.w	a1, a2					; is current word out of stack?
+00000184 6D00                       		blt.s	@0						; if not, branch
+00000186 7200                       		moveq	#$FFFFFF00|_pal3, d1	; use dark blue
+00000188 10C1                       	@0:	move.b	d1, (a0)+				; setup color
+0000018A 321A                       		move.w	(a2)+, d1
+0000018C 4EBA 0000                  		jsr		FormatHex_Word(pc)
+00000190 10FC 0020                  		move.b	#' ', (a0)+
+00000194 51C8 FFEA                  		dbf 	d0, @loop
+00000198                            
+00000198 4218                       	clr.b	(a0)+					; finalize string
+0000019A                            
+0000019A                            	; Draw string on screen
+0000019A 41D7                       	lea		(sp), a0
+0000019C 7200                       	moveq	#0, d1
+0000019E 4EBA 0000                  	jsr		Console_WriteLine_WithPattern(pc)
+000001A2 4FEF 0030                  	lea		$30(sp), sp
+000001A6 4E75                       	rts
+000001A8                            
+000001A8                            
+000001A8                            ; ===============================================================
+000001A8                            ; ---------------------------------------------------------------
+000001A8                            ; Subroutine to draw series of registers
+000001A8                            ; ---------------------------------------------------------------
+000001A8                            ; INPUT:
+000001A8                            ;		d0	.w	Name of the first register ('d0' or 'a0')
+000001A8                            ;		d5	.w	Number of registers
+000001A8                            ;		a2		Registers buffer
+000001A8                            ; ---------------------------------------------------------------
+000001A8                            
+000001A8                            Error_DrawRegisters:     
+000001A8 4FEF FFF0                  	lea		-$10(sp), sp				; allocate string buffaro
+000001AC 7EFF                       	moveq	#-1, d7						; size of the buffer for formatter functions (we assume buffer will never overflow)
+000001AE                            
+000001AE                            	@regloop:
+000001AE 41D7                       		lea		(sp), a0						; use allocated stack space as string buffer
+000001B0 30C0                       		move.w	d0, (a0)+						; put register name
+000001B2 30FC 3A20                  		move.w	#': ', (a0)+					; put ": "
+000001B6 10FC 0000                  		move.b	#_pal2, (a0)+					; put palette flag
+000001BA 221A                       		move.l	(a2)+, d1
+000001BC 4EBA 0000                  		jsr		FormatHex_LongWord(pc)			; put register contents
+000001C0 4218                       		clr.b	(a0)+							; finalize string
+000001C2                            
+000001C2 41D7                       		lea		(sp), a0						; use allocated stack space as string buffer
+000001C4 7200                       		moveq	#0, d1							; default pattern
+000001C6 4EBA 0000                  		jsr		Console_WriteLine_WithPattern(pc)
+000001CA 5240                       		addq.w	#1, d0							; next register name
+000001CC 51CD FFE0                  		dbf		d5, @regloop
+000001D0                            
+000001D0 4FEF 0010                  	lea		$10(sp), sp
+000001D4 4E75                       	rts
+000001D6                            
+000001D6                            
+000001D6                            ; ===============================================================
+000001D6                            ; ---------------------------------------------------------------
+000001D6                            ; Subroutine to draw series of registers
+000001D6                            ; ---------------------------------------------------------------
+000001D6                            ; INPUT:
+000001D6                            ;		d0	.l	Interrupt handler address
+000001D6                            ;		a0		Handler name string
+000001D6                            ; ---------------------------------------------------------------
+000001D6                            
+000001D6                            Error_DrawInterruptHandler:
+000001D6 2200                       	move.l	d0, d1
+000001D8 4841                       	swap	d1
+000001DA 4601                       	not.b	d1							; does handler address point to RAM (block $FF)?
+000001DC 6600                       	bne.s	@ret						; if not, branch
+000001DE                            
+000001DE 514F                       	subq.w	#8, sp
+000001E0 2E88                       	move.l	a0, (sp)					; Argument #0 : String pointer
+000001E2 2440                       	movea.l	d0, a2						; a2 = handler routine
+000001E4 43FA 0000                  	lea		Str_IntHandler_Unknown(pc), a1
+000001E8 0C5A 4EF9                  	cmp.w	#$4EF9, (a2)+				; does routine include jmp (xxx).l opcode?
+000001EC 6600                       	bne.s	@0							; if not, process "Str_IntHandler_Unknown"
+000001EE 43FA 0000                  	lea		Str_IntHandler(pc), a1		; otherwise, process "Str_IntHandler"
+000001F2 2F52 0004                  	move.l	(a2), 4(sp)					; Argument #1 : Jump offset
+000001F6 45D7                       @0	lea		(sp), a2
+000001F8 4EBA 0000                  	jsr		Console_Write_Formatted(pc)
+000001FC 504F                       	addq.w	#8, sp
+000001FE                            
+000001FE                            @ret:
+000001FE 4E75                       	rts
+00000200                            
+00000200                            ; ---------------------------------------------------------------
+00000200                            Str_IntHandler:
+00000200 0000 0000 0000 00          	dc.b	_str, _pal0, _sym|long|split|forced, _pal2, _disp|weak, _newl, 0
+00000207                            	
+00000207                            Str_IntHandler_Unknown:
+00000207 0000 3C75 6E64 6566 696E+  	dc.b	_str, _pal0, '<undefined>', _newl, 0
+00000216                            	even
+00000216                            
+00000216                            
+00000216                            ; ===============================================================
+00000216                            ; ---------------------------------------------------------------
+00000216                            ; Subroutine to guess caller by inspecting stack
+00000216                            ; ---------------------------------------------------------------
+00000216                            ; INPUT:
+00000216                            ;		a2				Bottom of stack (after stack frame)
+00000216                            ;
+00000216                            ; OUTPUT:
+00000216                            ;		d1		.l		Caller offset
+00000216                            ;
+00000216                            ; USES:
+00000216                            ;		a1-a2
+00000216                            ; ---------------------------------------------------------------
+00000216                            
+00000216                            Error_GuessCaller:
+00000216 3278 0002                  	movea.w	2.w, a1					; a1 = stack top boundary
+0000021A 5949                       	subq.w	#4, a1					; subtract a longword to set offset you should pass through
+0000021C B2CA                       	cmpa.w	a2, a1
+0000021E 6500                       	blo.s	@nocaller
+00000220                            
+00000220                            @try_offset:
+00000220 0C52 0040                  	cmp.w	#$40, (a2)				; does this seem like an offset?
+00000224 6500                       	blo.s	@caller_found			; if yes, branch
+00000226 544A                       	addq.w	#2, a2					; try some next offsets
+00000228 B2CA                       	cmpa.w	a2, a1
+0000022A 64F4                       	bhs.s	@try_offset
+0000022C                            
+0000022C                            @nocaller:
+0000022C 7200                       	moveq	#0, d1
+0000022E 4E75                       	rts
+00000230                            
+00000230                            ; ---------------------------------------------------------------
+00000230                            @caller_found:
+00000230 2212                       	move.l	(a2), d1
+00000232 4E75                       	rts
+00000234                            
+00000234                            
+00000234                            ; ===============================================================
+00000234                            ; ---------------------------------------------------------------
+00000234                            ; Subroutine to setup/reset VDP in order to display properly
+00000234                            ; ---------------------------------------------------------------
+00000234                            
+00000234                            ErrorHandler_SetupVDP:	__global
+00000234                          M __global__errorhandler_setupvdp:
+00000234                          M errorhandler_setupvdp:
+00000234 4BF9 00C0 0004             	lea 	VDP_Ctrl, a5 			; a5 = VDP_Ctrl
+0000023A 4DED FFFC                  	lea 	-4(a5), a6				; a6 = VDP_Data
+0000023E                            
+0000023E                            	; Make sure there is no pending writes to VDP
+0000023E 4A55                       	tst.w	(a5)
+00000240                            
+00000240                            	; Make sure there are no DMA's occuring, otherwise wait
+00000240                            	@wait_dma:
+00000240 44D5                       		move.w	(a5), ccr				; is DMA occuring?
+00000242 69FC                       		bvs.s	@wait_dma				; wait until it's finished
+00000244                            
+00000244                            	; Setup VDP registers for Error Handler screen
+00000244 41FA 0000                  	lea 	@VDPConfig(pc), a0
+00000248                            
+00000248                            	@setup_regs:
+00000248 3018                       		move.w	(a0)+, d0
+0000024A 6A00                       		bpl.s	@done
+0000024C 3A80                       		move.w	d0, (a5)
+0000024E 60F8                       		bra.s	@setup_regs
+00000250                            
+00000250                            	@done:
+00000250                            
+00000250                            	; Remove all sprites, reset horizontal and vertical scrolling
+00000250 7000                       	moveq	#0, d0
+00000252                            	vram	$0000, (a5)				; reset sprites and horizontal scrolling (HSRAM)
+00000252 2ABC 4000 0000           M 	move.l	#($40000000+(($0000&$3fff)<<16)+(($0000&$c000)>>14)),(a5)
+00000258 2C80                       	move.l	d0, (a6)				; ''
+0000025A 2ABC 4000 0010             	move.l	#$40000010, (a5) 		; reset vertical scrolling
+00000260 2C80                       	move.l	d0, (a6)				; ''
+00000262                            	
+00000262                            	; Fill screen with black
+00000262                            	cram	$00, (a5)
+00000262 2ABC C000 0000           M 	move.l	#($c0000000+($00<<16)),(a5)
+00000268 3C80                       	move.w	d0, (a6)
+0000026A                            
+0000026A 4E75                       	rts
+0000026C                            
+0000026C                            ; ---------------------------------------------------------------
+0000026C                            ; Error screen's VDP configuration
+0000026C                            ; ---------------------------------------------------------------
+0000026C                            
+0000026C                            @VDPConfig:
+0000026C 8004                       	dc.w	$8004							; $00, disable HInts
+0000026E 8134                       	dc.w	$8134							; $01, disable DISP
+00000270 8220                       	dc.w	$8200+VRAM_PlaneA/$400			; $02, set Plane A nametable offset in VRAM
+00000272 8404                       	dc.w	$8400+VRAM_PlaneB/$2000 		; $04, set Plane B nametable offset in VRAM
+00000274 8500                       	dc.w	$8500							; $05, set Sprites offset to $0000
+00000276 8700                       	dc.w	$8700							; $07, set backdrop color
+00000278 8B00                       	dc.w	$8B00							; $0B, set VScroll=full, HScroll=full
+0000027A 8C81                       	dc.w	$8C81							; $0C, use 320 pixels horizontal resolution
+0000027C 8D00                       	dc.w	$8D00							; $0D, set HScroll table offset to $0000
+0000027E 8F02                       	dc.w	$8F02							; $0F, set auto-increment to $02
+00000280 9011                       	dc.w	$9011							; $10, use 512x512 plane resolution
+00000282 9100                       	dc.w	$9100							; $11, reset Window X-position
+00000284 9200                       	dc.w	$9200							; $12, reset Window Y-position
+00000286 0000                       	dc.w	0								; WARNING! Make sure the next word is positive!
+00000288                            
+00000288                            
+00000288                            ; ===============================================================
+00000288                            ; ---------------------------------------------------------------
+00000288                            ; Console loading programme for Error Handler
+00000288                            ; ---------------------------------------------------------------
+00000288                            
+00000288                            ErrorHandler_ConsoleConfig:
+00000288                            
+00000288                            	; ---------------------------------------------------------------
+00000288                            	; Font decompression programme
+00000288                            	; ---------------------------------------------------------------
+00000288                            	; NOTICE: It's possible to generate several "samples" of font
+00000288                            	;	with different color indecies at different VRAM locations.
+00000288                            	;	However, this is not used for this Error Handler
+00000288                            	; ---------------------------------------------------------------
+00000288                            
+00000288                            	dcvram	VRAM_Font					; font offset in VRAM
+00000288 4400 0000                M 	dc.l	($40000000+((vram_font&$3fff)<<16)+((vram_font&$c000)>>14))
+0000028C 0000 0001 0010 0011        	dc.w	$0000, $0001, $0010, $0011	; decompression table for 1bpp nibbles
+00000294 0100 0101 0110 0111        	dc.w	$0100, $0101, $0110, $0111	; ''
+0000029C 1000 1001 1010 1011        	dc.w	$1000, $1001, $1010, $1011	; ''
+000002A4 1100 1101 1110 1111        	dc.w	$1100, $1101, $1110, $1111	; ''
+000002AC                            
+000002AC FFFF                       	dc.w	-1							; end marker
+000002AE                            
+000002AE                            	; ---------------------------------------------------------------
+000002AE                            	; Console RAM initial config
+000002AE                            	; ---------------------------------------------------------------
+000002AE                            
+000002AE                            	dcvram	VRAM_PlaneA					; screen start address / plane nametable pointer
+000002AE 4000 0002                M 	dc.l	($40000000+((vram_planea&$3fff)<<16)+((vram_planea&$c000)>>14))
+000002B2 0028                       	dc.w	40							; number of characters per line
+000002B4 0028                       	dc.w	40							; number of charasters on the first line (meant to be the same as the above)
+000002B6 0000                       	dc.w	0							; base font pattern (tile id for ASCII $00 + palette flags)
+000002B8 0080                       	dc.w	$80							; size of screen row (in bytes)
+000002BA                            
+000002BA 00FF                       	dc.w	$2000/$20-1					; size of screen (in tiles - 1)
+000002BC                            
+000002BC                            	; ---------------------------------------------------------------
+000002BC                            	; CRAM data
+000002BC                            	; ---------------------------------------------------------------
+000002BC                            	; FORMAT:
+000002BC                            	;	dc.w	Color1, ..., ColorN, -X*2
+000002BC                            	;		X = Number of longs words to fill until line ends
+000002BC                            	;
+000002BC                            	; NOTICE: Transparent color at the beginning of a palette line is
+000002BC                            	;	auto-filled with $000 (black), hence Color1 is index #1, etc
+000002BC                            	;
+000002BC                            	; WARNING: Caution is required when calculating -X*2 as it's used
+000002BC                            	;	for a jump offset directly in Console_Init code.
+000002BC                            	;
+000002BC                            	; WARNING: Make sure size of colors you pass (+automatic
+000002BC                            	;	transparency color) and fill size sums to $20 bytes strictly!
+000002BC                            	;	-- You can only fill with 4 bytes precision!
+000002BC                            	;	-- Use dummy colors if neccessary.
+000002BC                            	; ---------------------------------------------------------------
+000002BC                            
+000002BC 0EEE FFF2                  	dc.w	$0EEE, -7*2					; line 0: white text
+000002C0 00CE FFF2                  	dc.w	$00CE, -7*2					; line 1: yellow text
+000002C4 0EEA FFF2                  	dc.w	$0EEA, -7*2					; line 2: lighter blue text
+000002C8 0E86 FFF2                  	dc.w	$0E86, -7*2					; line 3: darker blue text
+000002CC                            
+000002CC                            ; ---------------------------------------------------------------
+000002CC                            ; Error Handler interface data
+000002CC                            ; ---------------------------------------------------------------
+000002CC                            
+000002CC                            Str_SetErrorScreen:
+000002CC 0000 0001 0026 00          	dc.b	_pal1, _newl, _setx, 1, _setw, 38, 0
+000002D3                            
+000002D3                            Str_Address:
+000002D3 0041 6464 7265 7373 3A20+  	dc.b	_pal1, 'Address: ', _pal0, _sym|long|split, _pal2, _disp, 0
+000002E2                            
+000002E2                            Str_Location:
+000002E2 004C 6F63 6174 696F 6E3A+  	dc.b	_pal1, 'Location: ', _pal2, _hex|long, 0
+000002F0                            
+000002F0                            Str_Module:
+000002F0 004D 6F64 756C 653A 2000+  	dc.b	_pal1, 'Module: ', _pal0, _sym|long|split|forced, _pal2, _disp|weak, 0
+000002FE                            
+000002FE                            Str_Caller:
+000002FE 0043 616C 6C65 723A 2000+   	dc.b	_pal1, 'Caller: ', _pal0, _sym|long|split, _pal2, _disp, 0
+0000030C                            
+0000030C                            Str_USP:
+0000030C 0010 0075 7370 3A20 0000+  	dc.b	_setx, $10, _pal0, 'usp: ', _pal2, _hex|long, 0
+00000317                            
+00000317                            Str_SR:
+00000317 0003 0073 723A 2000 0000   	dc.b	_setx, $03, _pal0, 'sr: ', _pal2, _hex|word, 0
+00000321                            
+00000321                            Str_VInt:
+00000321 0056 496E 743A 2000        	dc.b	_pal1, 'VInt: ', 0
+00000329                            
+00000329                            Str_HInt:
+00000329 0048 496E 743A 2000        	dc.b	_pal1, 'HInt: ', 0
+00000332 00                         	even
+00000332                            
+00000332                            ; ---------------------------------------------------------------
+00000332                            ; Error Handler 1bpp font graphics
+00000332                            ; ---------------------------------------------------------------
+00000332                            
+00000332                            Art1bpp_Font:
+00000332 0000                       	dc.w	Art1bpp_Font_End-Art1bpp_Font-1			; font size - 1
+00000334                            
+00000334 0000 0000 0000 0000 183C+  	dc.l	$00000000, $00000000, $183C3C18, $18001800, $6C6C6C00, $00000000, $6C6CFE6C, $FE6C6C00
+00000354 187E C07C 06FC 1800 00C6+  	dc.l	$187EC07C, $06FC1800, $00C60C18, $3060C600, $386C3876, $CCCC7600, $18183000, $00000000
+00000374 1830 6060 6030 1800 6030+  	dc.l	$18306060, $60301800, $60301818, $18306000, $00EE7CFE, $7CEE0000, $0018187E, $18180000
+00000394 0000 0000 1818 3000 0000+  	dc.l	$00000000, $18183000, $000000FE, $00000000, $00000000, $00383800, $060C1830, $60C08000
+000003B4 7CC6 CEDE F6E6 7C00 1878+  	dc.l	$7CC6CEDE, $F6E67C00, $18781818, $18187E00, $7CC60C18, $3066FE00, $7CC6063C, $06C67C00
+000003D4 0C1C 3C6C FE0C 0C00 FEC0+  	dc.l	$0C1C3C6C, $FE0C0C00, $FEC0FC06, $06C67C00, $7CC6C0FC, $C6C67C00, $FEC6060C, $18181800
+000003F4 7CC6 C67C C6C6 7C00 7CC6+  	dc.l	$7CC6C67C, $C6C67C00, $7CC6C67E, $06C67C00, $001C1C00, $001C1C00, $00181800, $00181830
+00000414 0C18 3060 3018 0C00 0000+  	dc.l	$0C183060, $30180C00, $0000FE00, $00FE0000, $6030180C, $18306000, $7CC6060C, $18001800
+00000434 7CC6 C6DE DCC0 7E00 386C+  	dc.l	$7CC6C6DE, $DCC07E00, $386CC6C6, $FEC6C600, $FC66667C, $6666FC00, $3C66C0C0, $C0663C00
+00000454 F86C 6666 666C F800 FEC2+  	dc.l	$F86C6666, $666CF800, $FEC2C0F8, $C0C2FE00, $FE62607C, $6060F000, $7CC6C0C0, $DEC67C00
+00000474 C6C6 C6FE C6C6 C600 3C18+  	dc.l	$C6C6C6FE, $C6C6C600, $3C181818, $18183C00, $3C181818, $D8D87000, $C6CCD8F0, $D8CCC600
+00000494 F060 6060 6062 FE00 C6EE+  	dc.l	$F0606060, $6062FE00, $C6EEFED6, $D6C6C600, $C6E6E6F6, $DECEC600, $7CC6C6C6, $C6C67C00
+000004B4 FC66 667C 6060 F000 7CC6+  	dc.l	$FC66667C, $6060F000, $7CC6C6C6, $C6D67C06, $FCC6C6FC, $D8CCC600, $7CC6C07C, $06C67C00
+000004D4 7E5A 1818 1818 3C00 C6C6+  	dc.l	$7E5A1818, $18183C00, $C6C6C6C6, $C6C67C00, $C6C6C6C6, $6C381000, $C6C6D6D6, $FEEEC600
+000004F4 C66C 3838 386C C600 6666+  	dc.l	$C66C3838, $386CC600, $6666663C, $18183C00, $FE860C18, $3062FE00, $7C606060, $60607C00
+00000514 C060 3018 0C06 0200 7C0C+  	dc.l	$C0603018, $0C060200, $7C0C0C0C, $0C0C7C00, $10386CC6, $00000000, $00000000, $000000FF
+00000534 3030 1800 0000 0000 0000+  	dc.l	$30301800, $00000000, $0000780C, $7CCC7E00, $E0607C66, $6666FC00, $00007CC6, $C0C67C00
+00000554 1C0C 7CCC CCCC 7E00 0000+  	dc.l	$1C0C7CCC, $CCCC7E00, $00007CC6, $FEC07C00, $1C3630FC, $30307800, $000076CE, $C67E067C
+00000574 E060 7C66 6666 E600 1800+  	dc.l	$E0607C66, $6666E600, $18003818, $18183C00, $0C001C0C, $0C0CCC78, $E060666C, $786CE600
+00000594 1818 1818 1818 1C00 0000+  	dc.l	$18181818, $18181C00, $00006CFE, $D6D6C600, $0000DC66, $66666600, $00007CC6, $C6C67C00
+000005B4 0000 DC66 667C 60F0 0000+  	dc.l	$0000DC66, $667C60F0, $000076CC, $CC7C0C1E, $0000DC66, $6060F000, $00007CC0, $7C067C00
+000005D4 3030 FC30 3036 1C00 0000+  	dc.l	$3030FC30, $30361C00, $0000CCCC, $CCCC7600, $0000C6C6, $6C381000, $0000C6C6, $D6FE6C00
+000005F4 0000 C66C 386C C600 0000+  	dc.l	$0000C66C, $386CC600, $0000C6C6, $CE76067C, $0000FC98, $3064FC00, $0E181870, $18180E00
+00000614 1818 1800 1818 1800 7018+  	dc.l	$18181800, $18181800, $7018180E, $18187000, $76DC0000, $00000000
+0000062C                            
+0000062C                            Art1bpp_Font_End:
+0000062C                            
+0000062C                            ; ---------------------------------------------------------------
+0000062C                            ; Core modules
+0000062C                            ; ---------------------------------------------------------------
+0000062C                            
+0000062C                            	include	'..\core\Symbols.asm'
+0000062C                            
+0000062C =0000DEB2                  _ValidHeader = $DEB2
+0000062C                            
+0000062C                            ; ===============================================================
+0000062C                            ; ---------------------------------------------------------------
+0000062C                            ; Subroutine to find nearest symbol for given offset
+0000062C                            ; ---------------------------------------------------------------
+0000062C                            ; INPUT:
+0000062C                            ;		d1	.l		Offset
+0000062C                            ;
+0000062C                            ; OUTPUT:
+0000062C                            ;		d0	.w		Status (0 = ok, -1 = error)
+0000062C                            ;		d1	.l		Offset displacement
+0000062C                            ;		a1			Pointer to compressed symbol text
+0000062C                            ;
+0000062C                            ; USES:
+0000062C                            ;		a1-a3 / d0-d3
+0000062C                            ; ---------------------------------------------------------------
+0000062C                            
+0000062C                            GetSymbolByOffset:
+0000062C 43FA 0000                  	lea		SymbolData(pc), a1
+00000630 0C59 DEB2                  	cmp.w	#_ValidHeader, (a1)+	; verify header
+00000634 6600                       	bne.s	@return_error
+00000636                            
+00000636 70FE                       	moveq	#-2, d0
+00000638 D059                       	add.w	(a1)+, d0				; d0 = (lastBlock+1)*4, also relative pointer to the Huffman decoding table
+0000063A 74FC                       	moveq	#-4, d2					; d2 will be 4-byte boundary mask
+0000063C 7600                       	moveq	#0, d3					; d3 will be gain value
+0000063E                            
+0000063E 4841                       	swap	d1						; d1 = block
+00000640 4881                       	ext.w	d1						; sign extend block id: xx00..xx7F --> 0000..007F
+00000642 D241                       	add.w	d1, d1					; d1 = block*2
+00000644 D241                       	add.w	d1, d1					; d1 = block*4
+00000646 B240                       	cmp.w	d0, d1					; is the offset's block within [0..lastBlock+1]?
+00000648 6200                       	bhi.s	@return_error			; if not, branch
+0000064A 6700                       	beq.s	@load_prev_block		; if strictly lastBlock+1, fetch the previous one ...
+0000064C                            
+0000064C                            	@load_block:
+0000064C 2031 1000                  		move.l	(a1,d1), d0 			; d0 = relative offset
+00000650 6700                       		beq.s	@load_prev_block		; if block is empty, branch
+00000652 47F1 0800                  		lea 	(a1,d0.l), a3			; a3 = Block structure
+00000656 4841                       		swap	d1						; d1 = offset
+00000658                            
+00000658 7000                       		moveq	#0, d0
+0000065A 301B                       		move.w	(a3)+, d0				; d0 = symbols heap relative offset
+0000065C B253                       		cmp.w	(a3), d1				; compare the requested offset with the lowest in the block
+0000065E 6500                       		blo.s	@load_prev_block_2		; if even lower, find nearest offset in the previous block
+00000660                            
+00000660                            		; WARNING: The following instruction assumes blocks will not be reloaded anymore
+00000660 43F3 08FE                  		lea		-2(a3,d0.l), a1			; a1 = symbols heap
+00000664                            										; d0 = (high - low)
+00000664 45E9 FFFC                  		lea 	-4(a1), a2 				; a2 = high
+00000668                            										; a3 = low
+00000668                            		@search_loop:
+00000668 E248                       			lsr.w	#1, d0					; 8		; d0 = (high - low) / 2
+0000066A C042                       			and.w	d2, d0					; 4		; find nearest 4-byte struct for the displacement
+0000066C                            
+0000066C B273 0000                  			cmp.w	(a3,d0), d1				; 14	; compare the requested offset with the guessed entry
+00000670 6500                       			blo.s	@search_lower_half		; 8/10
+00000672 6200                       			bhi.s	@search_higher_half		; 8/10
+00000674                            
+00000674 D6C0                       			adda.w	d0, a3
+00000676 6000                       			bra.s	@load_symbol
+00000678                            
+00000678                            		; -----------------------------------------------------------
+00000678                            		@search_higher_half:
+00000678 47F3 0004                  			lea 	4(a3,d0), a3			; 12	; limit "low" to "middle"+1 of previously observed area
+0000067C 200A                       			move.l	a2, d0					; 4
+0000067E 908B                       			sub.l	a3, d0					; 8		; d0 = (high - low)
+00000680 6AE6                       			bpl.s	@search_loop			; 8/10	; if (low >= high), branch
+00000682                            
+00000682 594B                       			subq.w	#4, a3
+00000684 6000                       			bra.s	@load_symbol
+00000686                            
+00000686                            		; -----------------------------------------------------------
+00000686                            		@search_lower_half:
+00000686 45F3 00FC                  			lea 	-4(a3,d0), a2			; 12	; limit "high" to "middle"-1 of previously observed area
+0000068A 200A                       			move.l	a2, d0					; 4		;
+0000068C 908B                       			sub.l	a3, d0					; 8		; d0 = (high - low)
+0000068E 6AD8                       			bpl.s	@search_loop			; 8/10	; if (low >= high), branch
+00000690                            
+00000690 47D2                       			lea		(a2), a3
+00000692                            
+00000692                            		@load_symbol:
+00000692 925B                       			sub.w	(a3)+, d1				; d1 = displacement
+00000694 7400                       			moveq	#0, d2
+00000696 341B                       			move.w	(a3)+, d2				; d2 = symbol pointer, relative to the heap
+00000698 D3C2                       			adda.l	d2, a1
+0000069A                            
+0000069A 4841                       			swap	d1						; ''
+0000069C                            			; NOTICE: You should be able to access SymbolData+4(pc,d1) now ...
+0000069C 4241                       			clr.w	d1						; ''
+0000069E 4841                       			swap	d1						; andi.l #$FFFF, d1
+000006A0 D283                       			add.l	d3, d1
+000006A2 7000                       			moveq	#0, d0					; return success
+000006A4 4E75                       			rts
+000006A6                            
+000006A6                            ; ---------------------------------------------------------------
+000006A6                            @return_error:
+000006A6 70FF                       	moveq	#-1, d0				; return -1
+000006A8 4E75                       	rts
+000006AA                            
+000006AA                            	; ---------------------------------------------------------------
+000006AA                            	@load_prev_block:
+000006AA 4841                       		swap	d1
+000006AC                            	
+000006AC                            	@load_prev_block_2:
+000006AC 7000                       		moveq	#0, d0
+000006AE 3001                       		move.w	d1, d0
+000006B0 D680                       		add.l	d0, d3				; increase offset gain by the offset within the previous block
+000006B2 5283                       		addq.l	#1, d3				; also increase offset gain by 1 to compensate for ...
+000006B4 323C FFFF                  		move.w	#$FFFF, d1			; ... setting offset to $FFFF instead of $10000
+000006B8 4841                       		swap	d1
+000006BA 5941                       		subq.w	#4, d1				; decrease block number
+000006BC 6A8E                       		bpl.s	@load_block			; if block is positive, branch
+000006BE 70FF                       		moveq	#-1, d0				; return -1
+000006C0 4E75                       		rts
+000006C2                            
+000006C2                            
+000006C2                            ; ===============================================================
+000006C2                            ; ---------------------------------------------------------------
+000006C2                            ; Subroutine to decode compressed symbol name to string buffer
+000006C2                            ; ---------------------------------------------------------------
+000006C2                            ; INPUT:
+000006C2                            ;		a0			String buffer pointer
+000006C2                            ;		a1			Pointer to the compressed symbol data
+000006C2                            ;		a6			VPD Data Port
+000006C2                            ;		d5	.w		Base pattern
+000006C2                            ;
+000006C2                            ; OUTPUT:
+000006C2                            ;		(a0)++	ASCII characters upon conversion
+000006C2                            ;
+000006C2                            ; USES:
+000006C2                            ;		a2-a3, d1-d4
+000006C2                            ; ---------------------------------------------------------------
+000006C2                            
+000006C2                            DecodeSymbol:
+000006C2 47FA 0000                  	lea		SymbolData(pc), a3
+000006C6 0C5B DEB2                  	cmp.w	#_ValidHeader, (a3)+			; verify the header
+000006CA 6600                       	bne.s	@return_cc
+000006CC D6D3                       	add.w	(a3), a3						; a3 = Huffman code table
+000006CE                            
+000006CE 7800                       	moveq	#0,d4							; d4 will handle byte feeding from bitstream
+000006D0                            
+000006D0                            ; ---------------------------------------------------------------
+000006D0                            	@decode_new_node:
+000006D0 7200                       		moveq	#0, d1							; d1 will hold code
+000006D2 7400                       		moveq	#0, d2							; d2 will hold code length (in bits)
+000006D4 45D3                       		lea		(a3), a2						; a2 will hold current position in the decode table
+000006D6                            
+000006D6                            	; ---------------------------------------------------------------
+000006D6                            	@code_extend:
+000006D6 51CC 0000                  		dbf 	d4, @stream_ok					; if bits remain in byte, branch
+000006DA 1619                       		move.b	(a1)+, d3
+000006DC 7807                       		moveq	#7, d4
+000006DE                            
+000006DE                            	@stream_ok:
+000006DE D603                       		add.b	d3, d3							; get a bit from the bitstream ...
+000006E0 D341                       		addx.w	d1, d1							; ... add it to current code
+000006E2 5242                       		addq.w	#1, d2							; count this bit
+000006E4                            
+000006E4                            		@code_check_loop:
+000006E4 B252                       			cmp.w	(a2), d1 						; does this node has the same code?
+000006E6 6200                       			bhi.s	@code_check_next				; if not, check next
+000006E8 65EC                       			blo.s	@code_extend					; if no nodes are found, branch
+000006EA B42A 0002                  			cmp.b	2(a2), d2						; is this code of the same length?
+000006EE 6700                       			beq.s	@code_found 					; if not, branch
+000006F0 65E4                       			blo.s	@code_extend					; if length is lower, append code
+000006F2                            	
+000006F2                            		@code_check_next:
+000006F2 584A                       			addq.w	#4, a2
+000006F4 B252                       			cmp.w	(a2), d1 						; does this node has the same code?
+000006F6 62FA                       			bhi.s	@code_check_next				; if not, check next
+000006F8 65DC                       			blo.s	@code_extend					; if no nodes are found, branch
+000006FA B42A 0002                  			cmp.b	2(a2), d2						; is this code of the same length?
+000006FE 65D6                       			blo.s	@code_extend					; if length is lower, append code
+00000700 66F0                       			bne.s	@code_check_next
+00000702                            
+00000702                            	@code_found:
+00000702 10EA 0003                  		move.b	3(a2), (a0)+					; get decoded character
+00000706 6700                       		beq.s	@decode_done					; if it's null character, branch
+00000708                            		
+00000708 51CF FFC6                  		dbf		d7, @decode_new_node
+0000070C 4E94                       		jsr		(a4)
+0000070E 64C0                       		bcc.s	@decode_new_node
+00000710 4E75                       		rts
+00000712                            
+00000712                            ; ---------------------------------------------------------------
+00000712                            @decode_done:
+00000712 5348                       	subq.w	#1, a0				; put the last character back
+00000714 4E75                       	rts
+00000716                            
+00000716                            ; ---------------------------------------------------------------
+00000716                            @return_cc:						; return with Carry clear (cc)
+00000716 7000                       	moveq	#0,d0
+00000718 4E75                       	rts
+0000071A                            	include	'..\core\Formatter - Hex.asm'
+0000071A                            
+0000071A                            ; ===============================================================
+0000071A                            ; ---------------------------------------------------------------
+0000071A                            ; Error handling and debugging modules
+0000071A                            ; 2016-2017, Vladikcomper
+0000071A                            ; ---------------------------------------------------------------
+0000071A                            ; String formatters : Hexidecimal number
+0000071A                            ; ---------------------------------------------------------------
+0000071A                            ; INPUT:
+0000071A                            ;		d1		Value
+0000071A                            ;
+0000071A                            ; OUTPUT:
+0000071A                            ;		(a0)++	ASCII characters upon conversion
+0000071A                            ;
+0000071A                            ; WARNING!
+0000071A                            ;	1) Formatters can only use registers a3 / d0-d4
+0000071A                            ;	2) Formatters should decrement d7 after each symbol write,
+0000071A                            ;		return Carry flag from the last decrement;
+0000071A                            ;		stop if carry is set (means buffer is full)
+0000071A                            ; ---------------------------------------------------------------
+0000071A                            
+0000071A                            FormatHex_Handlers:
+0000071A 4EFA 0000                  	jmp		FormatHex_Word(pc)			; $00		; handler for word
+0000071E                            ; ---------------------------------------------------------------
+0000071E 4EFA 0000                  	jmp		FormatHex_LongWord(pc)		; $04		; handler for longword
+00000722                            ; ---------------------------------------------------------------
+00000722                            ;	jmp		FormatHex_Byte(pc)			; $08		; handler for byte
+00000722                            
+00000722                            FormatHex_Byte:
+00000722 760F                       	moveq	#$F,d3
+00000724 3401                       	move.w	d1,d2
+00000726 E84A                       	lsr.w	#4,d2
+00000728 C443                       	and.w	d3,d2
+0000072A 10FB 2000                  	move.b	HexDigitToChar(pc,d2), (a0)+
+0000072E                            	
+0000072E 51CF 0000                  	dbf		d7, @buffer_ok
+00000732 4E94                       	jsr		(a4)
+00000734 6500                       	bcs.s	FormatHex_Return
+00000736                            @buffer_ok
+00000736                            
+00000736 C243                       	and.w	d3,d1
+00000738 10FB 1000                  	move.b	HexDigitToChar(pc,d1), (a0)+
+0000073C 51CF 0000                  	dbf		d7, FormatHex_Return
+00000740 4ED4                       	jmp		(a4)						; call buffer flush function and return buffer status
+00000742                            
+00000742                            ; ---------------------------------------------------------------
+00000742                            FormatHex_LongWord:
+00000742 4841                       	swap	d1
+00000744 6100                       	bsr.s	FormatHex_Word
+00000746 6500                       	bcs.s	FormatHex_Return			; if buffer terminated, branch
+00000748                            
+00000748                            FormatHex_Word_Swap:
+00000748 4841                       	swap	d1
+0000074A                            
+0000074A                            ; ---------------------------------------------------------------
+0000074A                            FormatHex_Word:
+0000074A 7404                       	moveq	#4,d2
+0000074C 760F                       	moveq	#$F,d3
+0000074E                            
+0000074E                            	rept 4-1
+0000074E                            		rol.w	d2,d1
+0000074E                            		move.b	d1,d4
+0000074E                            		and.w	d3,d4						; get digit
+0000074E                            		move.b	HexDigitToChar(pc,d4), (a0)+
+0000074E                            		dbf		d7, *+6
+0000074E                            		jsr		(a4)						; call buffer flush function
+0000074E                            		bcs.s	FormatHex_Return			; if buffer terminated, branch
+0000074E                            	endr
+0000074E E579                     M 	rol.w	d2,d1
+00000750 1801                     M 	move.b	d1,d4
+00000752 C843                     M 	and.w	d3,d4
+00000754 10FB 4000                M 	move.b	hexdigittochar(pc,d4),(a0)+
+00000758 51CF 0004                M 	dbf	d7,*+6
+0000075C 4E94                     M 	jsr	(a4)
+0000075E 6500                     M 	bcs.s	formathex_return
+00000760 E579                     M 	rol.w	d2,d1
+00000762 1801                     M 	move.b	d1,d4
+00000764 C843                     M 	and.w	d3,d4
+00000766 10FB 4000                M 	move.b	hexdigittochar(pc,d4),(a0)+
+0000076A 51CF 0004                M 	dbf	d7,*+6
+0000076E 4E94                     M 	jsr	(a4)
+00000770 6500                     M 	bcs.s	formathex_return
+00000772 E579                     M 	rol.w	d2,d1
+00000774 1801                     M 	move.b	d1,d4
+00000776 C843                     M 	and.w	d3,d4
+00000778 10FB 4000                M 	move.b	hexdigittochar(pc,d4),(a0)+
+0000077C 51CF 0004                M 	dbf	d7,*+6
+00000780 4E94                     M 	jsr	(a4)
+00000782 6500                     M 	bcs.s	formathex_return
+00000784                            
+00000784 E579                       	rol.w	d2,d1
+00000786 1801                       	move.b	d1,d4
+00000788 C843                       	and.w	d3,d4						; get digit
+0000078A 10FB 4000                  	move.b	HexDigitToChar(pc,d4), (a0)+
+0000078E 51CF 0000                  	dbf		d7, FormatHex_Return
+00000792 4ED4                       	jmp		(a4)						; call buffer flush function and return buffer status
+00000794                            
+00000794                            FormatHex_Return:
+00000794 4E75                       	rts									; return buffer status
+00000796                            
+00000796                            ; ---------------------------------------------------------------
+00000796                            HexDigitToChar:
+00000796 3031 3233 3435 3637 3839+  	dc.b	'0123456789ABCDEF'
+000007A6                            	include	'..\core\Formatter - Bin.asm'
+000007A6                            
+000007A6                            ; ===============================================================
+000007A6                            ; ---------------------------------------------------------------
+000007A6                            ; Error handling and debugging modules
+000007A6                            ; 2016-2017, Vladikcomper
+000007A6                            ; ---------------------------------------------------------------
+000007A6                            ; String formatters : Binary number
+000007A6                            ; ---------------------------------------------------------------
+000007A6                            ; INPUT:
+000007A6                            ;		d1		Value
+000007A6                            ;
+000007A6                            ; OUTPUT:
+000007A6                            ;		(a0)++	ASCII characters upon conversion
+000007A6                            ;
+000007A6                            ; WARNING!
+000007A6                            ;	1) Formatters can only use registers a3 / d0-d4
+000007A6                            ;	2) Formatters should decrement d7 after each symbol write,
+000007A6                            ;		return Carry flag from the last decrement;
+000007A6                            ;		stop if carry is set (means buffer is full)
+000007A6                            ; ---------------------------------------------------------------
+000007A6                            
+000007A6                            FormatBin_Handlers:
+000007A6 4EFA 0000                  	jmp 	FormatBin_Word(pc)	 			; $00	Word display handler
+000007AA                            ; ---------------------------------------------------------------
+000007AA 4EFA 0000                  	jmp 	FormatBin_LongWord(pc) 			; $04	Longword display handler
+000007AE                            ; ---------------------------------------------------------------
+000007AE                            ;	jmp		FormatBin_Byte(pc)				; $08	Byte display handler
+000007AE                            
+000007AE                            FormatBin_Byte:
+000007AE 7407                       	moveq	#8-1, d2
+000007B0                            
+000007B0                            	@loop:
+000007B0 7018                       		moveq	#'0'/2,d0
+000007B2 D201                       		add.b	d1,d1
+000007B4 D100                       		addx.b	d0,d0
+000007B6 10C0                       		move.b	d0, (a0)+
+000007B8                            
+000007B8 51CF 0000                  		dbf		d7, @buffer_ok
+000007BC 4E94                       		jsr		(a4)
+000007BE 6500                       		bcs.s	@quit
+000007C0                            	@buffer_ok:
+000007C0                            
+000007C0 51CA FFEE                  		dbf		d2, @loop
+000007C4                            
+000007C4                            @quit:
+000007C4 4E75                       	rts
+000007C6                            
+000007C6                            ; ---------------------------------------------------------------
+000007C6                            FormatBin_LongWord:
+000007C6 4841                       	swap	d1
+000007C8 6100                       	bsr.s	FormatBin_Word
+000007CA 6500                       	bcs.s	FormatBin_Return
+000007CC 4841                       	swap	d1
+000007CE                            
+000007CE                            FormatBin_Word:
+000007CE 740F                       	moveq	#16-1, d2
+000007D0                            
+000007D0                            	@loop:
+000007D0 7018                       		moveq	#'0'/2,d0
+000007D2 D241                       		add.w	d1,d1
+000007D4 D100                       		addx.b	d0,d0
+000007D6 10C0                       		move.b	d0, (a0)+
+000007D8                            
+000007D8 51CF 0000                  		dbf		d7, @buffer_ok
+000007DC 4E94                       		jsr		(a4)
+000007DE 6500                       		bcs.s	FormatBin_Return
+000007E0                            	@buffer_ok:
+000007E0                            
+000007E0 51CA FFEE                  		dbf		d2, @loop
+000007E4                            		
+000007E4                            FormatBin_Return:
+000007E4 4E75                       	rts
+000007E6                            	include	'..\core\Formatter - Dec.asm'
+000007E6                            
+000007E6                            ; ===============================================================
+000007E6                            ; ---------------------------------------------------------------
+000007E6                            ; Error handling and debugging modules
+000007E6                            ; 2016-2017, Vladikcomper
+000007E6                            ; ---------------------------------------------------------------
+000007E6                            ; String formatters : Decimal number
+000007E6                            ; ---------------------------------------------------------------
+000007E6                            ; INPUT:
+000007E6                            ;		d1		Value
+000007E6                            ;
+000007E6                            ; OUTPUT:
+000007E6                            ;		(a0)++	ASCII characters upon conversion
+000007E6                            ;
+000007E6                            ; WARNING!
+000007E6                            ;	1) Formatters can only use registers a3 / d0-d4
+000007E6                            ;	2) Formatters should decrement d7 after each symbol write,
+000007E6                            ;		return Carry flag from the last decrement;
+000007E6                            ;		stop if carry is set (means buffer is full)
+000007E6                            ; ---------------------------------------------------------------
+000007E6                            
+000007E6                            FormatDec_Handlers:
+000007E6 4EFA 0000                  	jmp 	FormatDec_Word(pc)	 			; $00	Word display handler
+000007EA                            ; ---------------------------------------------------------------
+000007EA 4EFA 0000                  	jmp 	FormatDec_LongWord(pc) 			; $04	Longword display handler
+000007EE                            ; ---------------------------------------------------------------
+000007EE 47FA 0000                  	lea 	DecimalBase_Byte(pc), a3			; $08	Byte display handler
+000007F2 0241 00FF                  	andi.w	#$FF, d1								; ...
+000007F6 6000                       	bra.s 	FormatDec			 				; ...
+000007F8                            
+000007F8                            ; ---------------------------------------------------------------
+000007F8                            FormatDec_Word:
+000007F8 47FA 0000                  	lea 	DecimalBase_Word(pc), a3
+000007FC                            
+000007FC                            FormatDec:
+000007FC 4200                       	clr.b	d0						; d0 will be trim zeros switcher
+000007FE 7609                       	moveq	#9, d3					; d3 will be DBcc iterator base
+00000800 381B                       	move.w	(a3)+, d4				; d4 = decimal base
+00000802                            
+00000802                            FormatDec_Cont:
+00000802                            	@ProcessDigit:
+00000802 3403                       		move.w	d3, d2
+00000804                            
+00000804                            		@FindDigit:
+00000804 9244                       			sub.w	d4, d1
+00000806 55CA FFFC                  			dbcs	d2, @FindDigit
+0000080A                            
+0000080A D244                       		add.w	d4, d1							; restore digit
+0000080C 9443                       		sub.w	d3, d2
+0000080E 4442                       		neg.w	d2								; d2 = digit
+00000810 8002                       		or.b	d2, d0							; have we met non-zero digit yet?
+00000812 6700                       		beq.s	@NextDigit						; if not, branch
+00000814 0602 0030                  		add.b	#'0', d2
+00000818 10C2                       		move.b	d2, (a0)+
+0000081A                            
+0000081A 51CF 0000                  		dbf		d7, @NextDigit
+0000081E 4E94                       		jsr		(a4)
+00000820 6500                       		bcs.s	FormatDec_Return
+00000822                            
+00000822                            	@NextDigit:
+00000822 381B                       		move.w	(a3)+, d4
+00000824 6ADC                       		bpl.s	@ProcessDigit
+00000826                            
+00000826                            	; The last digit is done manually
+00000826 0601 0030                  	add.b	#'0', d1
+0000082A 10C1                       	move.b	d1, (a0)+
+0000082C 51CF 0000                  	dbf		d7, FormatDec_Return
+00000830 4ED4                       	jmp		(a4)
+00000832                            
+00000832                            FormatDec_Return:
+00000832 4E75                       	rts
+00000834                            
+00000834                            ; ---------------------------------------------------------------
+00000834                            FormatDec_LongWord:
+00000834 47FA 0000                  	lea 	DecimalBase_Long(pc), a3
+00000838 4200                       	clr.b	d0						; d0 will be trim zeros switcher
+0000083A 7609                       	moveq	#9, d3					; d3 will be DBcc iterator base
+0000083C 281B                       	move.l	(a3)+, d4				; d4 = decimal base
+0000083E                            
+0000083E                            	@ProcessDigit:
+0000083E 3403                       		move.w	d3, d2
+00000840                            		
+00000840                            		@FindDigit:
+00000840 9284                       			sub.l	d4, d1
+00000842 55CA FFFC                  			dbcs	d2, @FindDigit
+00000846                            
+00000846 D284                       		add.l	d4, d1							; restore digit
+00000848 9443                       		sub.w	d3, d2
+0000084A 4442                       		neg.w	d2								; d2 = digit
+0000084C 8002                       		or.b	d2, d0							; have we met non-zero digit yet?
+0000084E 6700                       		beq.s	@NextDigit						; if not, branch
+00000850 0602 0030                  		add.b	#'0', d2
+00000854 10C2                       		move.b	d2, (a0)+
+00000856                            		
+00000856 51CF 0000                  		dbf		d7, @NextDigit
+0000085A 4E94                       		jsr		(a4)
+0000085C 65D4                       		bcs.s	FormatDec_Return
+0000085E                            
+0000085E                            	@NextDigit:
+0000085E 281B                       		move.l	(a3)+, d4				; load next decimal base
+00000860 6ADC                       		bpl.s	@ProcessDigit			; if base is positive, branch
+00000862                            										; otherwise, base is word-sized ...
+00000862                            
+00000862 609E                       	bra.s	FormatDec_Cont		; continue drawing with word-sized version
+00000864                            										; note that lower word of D4 already contains next decimal base ...
+00000864                            
+00000864                            ; ---------------------------------------------------------------
+00000864                            DecimalBase_Long:
+00000864 3B9A CA00                  	dc.l	1000000000
+00000868 05F5 E100                  	dc.l	100000000
+0000086C 0098 9680                  	dc.l	10000000
+00000870 000F 4240                  	dc.l	1000000
+00000874 0001 86A0                  	dc.l	100000
+00000878 0000 2710                  	dc.l	10000
+0000087C FFFF                       	dc.w	-1				; marks switching between 'long' and 'word' modes
+0000087E 03E8                       	dc.w	1000
+00000880 0064                       	dc.w	100
+00000882 000A                       	dc.w	10
+00000884 FFFF                       	dc.w	-1				; marks end of digit searching
+00000886                            
+00000886                            ; ---------------------------------------------------------------
+00000886                            DecimalBase_Word:
+00000886 2710                       	dc.w	10000
+00000888 03E8                       	dc.w	1000
+0000088A                            
+0000088A                            DecimalBase_Byte:
+0000088A 0064                       	dc.w	100
+0000088C 000A                       	dc.w	10
+0000088E FFFF                       	dc.w	-1				; marks end of digit searching
+00000890                            	include	'..\core\Formatter - Sym.asm'
+00000890                            
+00000890                            ; ===============================================================
+00000890                            ; ---------------------------------------------------------------
+00000890                            ; Error handling and debugging modules
+00000890                            ; 2016-2017, Vladikcomper
+00000890                            ; ---------------------------------------------------------------
+00000890                            ; String formatters : Symbols
+00000890                            ; ---------------------------------------------------------------
+00000890                            ; INPUT:
+00000890                            ;		d1		Value
+00000890                            ;
+00000890                            ; OUTPUT:
+00000890                            ;		(a0)++	ASCII characters upon conversion
+00000890                            ;
+00000890                            ; WARNING!
+00000890                            ;	1) Formatters can only use registers a3 / d0-d4
+00000890                            ;	2) Formatters should decrement d7 after each symbol write,
+00000890                            ;		return Carry flag from the last decrement;
+00000890                            ;		stop if carry is set (means buffer is full)
+00000890                            ; ---------------------------------------------------------------
+00000890                            
+00000890                            FormatSym_Handlers:
+00000890 48C1                       	ext.l	d1							; $00		; handler for word
+00000892 6000                       	bra.s	FormatSym					; $02
+00000894                            ; ---------------------------------------------------------------
+00000894 4EFA 0000                  	jmp		FormatSym(pc)				; $04		; handler for longword
+00000898                            ; ---------------------------------------------------------------
+00000898 4881                       	ext.w	d1							; $08		; handler for byte
+0000089A 48C1                       	ext.l	d1
+0000089C                            
+0000089C                            FormatSym:
+0000089C 0803 0003                  	btst	#3, d3							; is "display just label part so far" bit set?
+000008A0 6600                       	bne.s	@0								; if yes, branch
+000008A2 487A 0000                  	pea		FormatString_CodeHandlers+$40(pc); otherwise, display displacement after this routine is finished
+000008A6                            @0:
+000008A6 48E7 5060                  	movem.l	d1/d3/a1-a2, -(sp)
+000008AA 4EBA FD80                  	jsr		GetSymbolByOffset(pc)			; IN:	d1 = offset
+000008AE 6600                       	bne.s	FormatSym_UnknownSymbol			; OUT:	d0/Z = error status, d1 = displacement, a1 = symbol pointer
+000008B0 2E81                       	move.l	d1, (sp)						; replace offset stored in stack as D1 with displacement
+000008B2 4EBA FE0E                  	jsr		DecodeSymbol(pc)				; IN:	a1 = symbol pointer
+000008B6 4CDF 060A                  	movem.l	(sp)+, d1/d3/a1-a2				; NOTICE: This doesn't affect CCR, so this routine still returns Carry
+000008BA                            
+000008BA                            FormatSym_Return:
+000008BA 4E75                       	rts
+000008BC                            
+000008BC                            ; ---------------------------------------------------------------
+000008BC                            FormatSym_UnknownSymbol:
+000008BC 4CDF 060A                  	movem.l	(sp)+, d1/d3/a1-a2
+000008C0 0803 0002                    	btst	#2, d3							; is "draw <unknown> on error" bit set?
+000008C4 6700                       	beq.s	FormatSym_ReturnNC				; if not, branch
+000008C6 47FA 0000                  	lea		FormatSym_Str_Unknown(pc), a3
+000008CA 4EFA 0000                  	jmp		FormatString_CodeHandlers+$52(pc)	; jump to code D0 (string) handler, but skip instruction that sets A3
+000008CE                            
+000008CE                            ; ---------------------------------------------------------------
+000008CE                            FormatSym_ReturnNC:
+000008CE 70FF                       	moveq	#-1, d0							; reset Carry, keep D0 an error code
+000008D0 4E75                       	rts
+000008D2                            
+000008D2                            ; ---------------------------------------------------------------
+000008D2                            FormatSym_Str_Unknown:
+000008D2 3C75 6E6B 6E6F 776E 3E00   	dc.b	'<unknown>',0
+000008DC                            
+000008DC                            ; ---------------------------------------------------------------
+000008DC                            ; INPUT:
+000008DC                            ;		d1	.l	Displacement
+000008DC                            ; ---------------------------------------------------------------
+000008DC                            
+000008DC                            FormatSym_Displacement:
+000008DC 10FC 002B                  	move.b	#'+', (a0)+
+000008E0 51CF 0000                  	dbf		d7, @buffer_ok
+000008E4 4E94                       	jsr		(a4)
+000008E6 65D2                       	bcs.s	FormatSym_Return
+000008E8                            @buffer_ok:
+000008E8                            
+000008E8 4841                       	swap	d1
+000008EA 4A41                       	tst.w	d1
+000008EC 6700 FE5A                  	beq		FormatHex_Word_Swap
+000008F0 4EBA FE58                  	jsr		FormatHex_Word(pc)
+000008F4 4EFA FE52                  	jmp		FormatHex_Word_Swap(pc)
+000008F8                            
+000008F8                            ; ---------------------------------------------------------------
+000008F8                            ; INPUT:
+000008F8                            ;		d1	.l	Offset
+000008F8                            ;		d3	.b	Control byte
+000008F8                            ; ---------------------------------------------------------------
+000008F8                            
+000008F8                            FormatSym_Offset:
+000008F8 0803 0003                  	btst	#3, d3							; is "don't draw offset" flag set?
+000008FC 66BC                       	bne.s	FormatSym_Return				; WARNING: Should return NC
+000008FE 4EFA FE42                  	jmp		FormatHex_LongWord(pc)
+00000902                            
+00000902                            	include	'..\core\Format String.asm'
+00000902                            
+00000902                            ; ===============================================================
+00000902                            ; ---------------------------------------------------------------
+00000902                            ; Error handling and debugging modules
+00000902                            ; 2016-2017, Vladikcomper
+00000902                            ; ---------------------------------------------------------------
+00000902                            ; String formatter module
+00000902                            ; ---------------------------------------------------------------
+00000902                            ; INPUT:
+00000902                            ;		a0		Pointer to a string buffer
+00000902                            ;		a1		Pointer to format sequence
+00000902                            ;		a2		Pointer to arguments list
+00000902                            ;		a4		Buffer flush function
+00000902                            ;		d7	.w	Number of characters before buffer flush
+00000902                            ;
+00000902                            ; USES:
+00000902                            ;		a0-a2
+00000902                            ; ---------------------------------------------------------------
+00000902                            
+00000902                            FormatString_reglist	reg	d0-d4/a3
+00000902 =00000007                  FormatString_regnum		equ	7
+00000902                            
+00000902 =00000080                  _hex	equ		$80
+00000902 =00000090                  _dec	equ		$90
+00000902 =000000A0                  _bin	equ		$A0
+00000902 =000000B0                  _sym	equ		$B0
+00000902 =000000C0                  _disp	equ		$C0
+00000902 =000000D0                  _str	equ		$D0
+00000902                            
+00000902 =00000000                  byte	equ		0
+00000902 =00000001                  word	equ		1
+00000902 =00000003                  long	equ		3
+00000902                            
+00000902                            ; for number formatters ...
+00000902 =00000008                  signed	equ		8
+00000902                            
+00000902                            ; for symbol formatters ...
+00000902 =00000008                  split	equ		8
+00000902 =00000004                  forced	equ		4				; display <unknown> if symbol was not found
+00000902                            
+00000902                            ; for symbol displacement or offset formatters ...
+00000902 =00000008                  weak	equ		8				; don't draw offset after <unknown> symbol
+00000902                            
+00000902                            ; ---------------------------------------------------------------
+00000902                            FormatString:
+00000902 48E7 F810                  	movem.l	FormatString_reglist, -(sp)
+00000906                            
+00000906                            	; NOTICE: This loop shouldn't use registers D0/D1, as control codes B0..BF, C0..CF
+00000906                            	;	that are executed consequently use it to pass parameters inbetween.
+00000906                            	@copy_loop:
+00000906 10D9                       		move.b	(a1)+, (a0)+
+00000908 5FCF FFFC                  		dble	d7, @copy_loop				; if character's code is below $80 and not $00, copy string ...
+0000090C 6E00                       		bgt.s	@flush
+0000090E 6700                       		beq.s	@quit						; if char $00 was fetched, quit
+00000910                            
+00000910                            	@flag:
+00000910                            		; Process special character
+00000910 1620                       		move.b	-(a0), d3					; d3 = special character that was pushed out of the string
+00000912 7470                       		moveq	#$70, d2					; d2 = $00, $10, $20, $30, $40, $60, $70
+00000914 C403                       		and.b	d3, d2						; d2 = code offset based on character's code, aligned on $10-byte boundary
+00000916 4EBB 2000                  		jsr		FormatString_CodeHandlers(pc, d2)	; jump to an appropriate special character handler
+0000091A 64EA                       		bcc.s	@copy_loop					; if string buffer is good, branch
+0000091C                            
+0000091C                            	@quit_no_flush:
+0000091C 4CDF 081F                  		movem.l	(sp)+, FormatString_reglist
+00000920 4E75                       		rts
+00000922                            
+00000922                            	@flush:
+00000922 4E94                       		jsr		(a4)						; flush buffer
+00000924 64E0                       		bcc.s	@copy_loop					; if flashing was ok, branch
+00000926 60F4                       		bra.s	@quit_no_flush
+00000928                            
+00000928                            @quit:
+00000928 5348                       	subq.w	#1, a0		; because D7 wasn't decremented?
+0000092A 4E94                       	jsr		(a4)							; call flush buffer function
+0000092C 4CDF 081F                  	movem.l	(sp)+, FormatString_reglist
+00000930                            
+00000930                            @return:
+00000930 4E75                       	rts
+00000932                            
+00000932                            ; --------------------------------------------------------------
+00000932                            FormatString_CodeHandlers:
+00000932                            
+00000932                            	; codes 80..8F : Display hex number
+00000932 47FA FDE6                  	lea		FormatHex_Handlers(pc), a3			; $00
+00000936 B702                       	eor.b	d3, d2								; $04	; d2 = lower 4 bits of char code, encodes argument size (valid values are: 0, 1, 3, see below)
+00000938 D402                       	add.b	d2, d2								; $06	; multiply 4-bit code by 2 as instructions in the code handlers below are word-sized
+0000093A 4EFB 2000                  	jmp		@ArgumentFetchFlow(pc,d2)			; $08	; jump to an appropriate insturction (note that even invalid codes won't crash)
+0000093E 4E71                       	nop											; $0C
+00000940 4E71                       	nop											; $0E
+00000942                            
+00000942                            	; codes 90..9F : Display decimal number
+00000942 47FA FEA2                  	lea		FormatDec_Handlers(pc), a3			; $00
+00000946 B702                       	eor.b	d3, d2								; $04	; d2 = lower 4 bits of char code, encodes argument size (valid values are: 0, 1, 3, see below)
+00000948 D402                       	add.b	d2, d2								; $06	; multiply 4-bit code by 2 as instructions in the code handlers below are word-sized
+0000094A 4EFB 2000                  	jmp		@ArgumentFetchFlow(pc,d2)			; $08	; jump to an appropriate insturction (note that even invalid codes won't crash)
+0000094E 4E71                       	nop											; $0C
+00000950 4E71                       	nop											; $0E
+00000952                            
+00000952                            	; codes A0..AF : Display binary number
+00000952 47FA FE52                  	lea		FormatBin_Handlers(pc), a3			; $00
+00000956 B702                       	eor.b	d3, d2								; $04	; d2 = lower 4 bits of char code, encodes argument size (valid values are: 0, 1, 3, see below)
+00000958 D402                       	add.b	d2, d2								; $06	; multiply 4-bit code by 2 as instructions in the code handlers below are word-sized
+0000095A 4EFB 2000                  	jmp		@ArgumentFetchFlow(pc,d2)			; $08	; jump to an appropriate instruction (note that even invalid codes won't crash)
+0000095E 5348                       @d0	subq.w	#1, a0								; $0C	; overwrite null-terminator (part of "String" section, see below)
+00000960 4E75                       	rts											; $0E
+00000962                            
+00000962                            	; codes B0..BF : Display symbol
+00000962 47FA FF2C                  	lea		FormatSym_Handlers(pc), a3			; $00
+00000966 1403                       	move.b	d3, d2								; $04
+00000968 0242 0003                  	and.w	#3, d2								; $06	; d2 = 0, 1, 3 ... (ignore handlers for signed values)
+0000096C D442                       	add.w	d2, d2								; $0A	; multiply 4-bit code by 2 as instructions in the code handlers below are word-sized
+0000096E 4EFB 2000                  	jmp		@ArgumentFetchFlow(pc,d2)			; $0C	; jump to an appropriate instruction (note that even invalid codes won't crash)
+00000972                            
+00000972                            	; codes C0..CF : Display symbol's displacement (to be used after codes B0..BF, if extra formatting is due)
+00000972 4A40                       	tst.w	d0									; $00	; check "GetSymbolByOffset" (see "FormatSym" code)
+00000974 6B00                       	bmi.s	@c0									; $02	; if return code is -1 (error), assume d1 is OFFSET, display it directly
+00000976 4A81                       	tst.l	d1									; $04	; assume d1 is DISPLACEMENT, test it
+00000978 6700                       	beq.s	@return2							; $06	; if displacement is zero, branch
+0000097A 4EFA FF60                  	jmp		FormatSym_Displacement(pc)			; $08
+0000097E 4EFA FF78                  @c0	jmp		FormatSym_Offset(pc)				; $0C
+00000982                            
+00000982                            	; codes D0..DF : String
+00000982 265A                       	movea.l	(a2)+, a3							; $00	; a3 = string ptr
+00000984 10DB                       @d1	move.b	(a3)+, (a0)+						; $02	; copy char
+00000986 67D6                       	beq.s	@d0									; $04	; if char isn't null-terminator, branch
+00000988 51CF FFFA                  	dbf		d7, @d1								; $06	; decrease buffer capacity
+0000098C 4E94                       	jsr		(a4)								; $0A	; flush buffer
+0000098E 64F4                       	bcc.s	@d1									; $0C	; if buffer is ok, branch
+00000990                            @return2:
+00000990 4E75                       	rts											; $0E	; return C
+00000992                            
+00000992                            	; codes E0..EF : Drawing command (ignore)
+00000992 5248                       	addq.w	#1, a0								; $00	; restore control character back
+00000994 6000                       	bra.s	@AfterRestoreCharacter				; $02
+00000996                            
+00000996                            	; NOTICE: Code handlers continue below and overlap with the following code ...
+00000996                            
+00000996                            ; --------------------------------------------------------------
+00000996                            ; WARNING!
+00000996                            ;	The code in the following blocks are critical and shouldn't
+00000996                            ;	be altered anymore. Each instruction MUST take 2 bytes,
+00000996                            ;	so even the invalid codes won't crash, but only break
+00000996                            ;	the flow ...
+00000996                            ; --------------------------------------------------------------
+00000996                            
+00000996                            @ArgumentFetchFlow:
+00000996 504B                       	addq.w	#8, a3							; $00 :$04	; code 0 : Display byte
+00000998 321A                       	move.w	(a2)+, d1						; $02 :$06	; code 1 : Display word
+0000099A 4ED3                       	jmp		(a3)							; $04 :$08	; code 2 : ## invalid : displays garbage word
+0000099C                            ; --------------------------------------------------------------
+0000099C 584B                       	addq.w	#4, a3							; $06 :$0A	; code 3 : Display longword
+0000099E 221A                       	move.l	(a2)+, d1						; $08 :$0C	; code 4 : ## invalid ##: displays word, but loads longword
+000009A0 4ED3                       	jmp		(a3)							; $0A :$0E	; code 5 : ## invalid ##: displays garbage word
+000009A2                            ; --------------------------------------------------------------
+000009A2                            	; codes F0..FF : Drawing command, one-byte argument (ignore)
+000009A2 5248                       	addq.w	#1, a0							; $0C :$00	; code 6 : ## invalid ##: restores control character and puts another one
+000009A4 6000                       	bra.s	@AfterRestoreCharacter2			; $0E :$02	; code 7 : ## invalid ##: does nothing
+000009A6                            ; --------------------------------------------------------------
+000009A6 504B                       	addq.w	#8, a3							; $10		; code 8 : Display signed byte
+000009A8 321A                       	move.w	(a2)+, d1						; $12		; code 9 : Display signed word
+000009AA 6000                       	bra.s	@CheckValueSign					; $14		; code A : ## invalid ##: displays garbage signed word
+000009AC                            ; --------------------------------------------------------------
+000009AC 584B                       	addq.w	#4, a3							; $16		; code B : Display signed longword
+000009AE 221A                       	move.l	(a2)+, d1						; $18		; code C : ## invalid ##: displays signed word, but loads longword
+000009B0                            ; --------------------------------------------------------------
+000009B0                            @CheckValueSign:
+000009B0 6A00                       	bpl.s	@positive						; $1A		; code D : ## invalid ##: displays garbage signed word
+000009B2 4481                       	neg.l	d1								; $1C		; code E : ## invalid ##: displays gargage pseudo-negative word
+000009B4 10FC 002D                  	move.b	#'-', (a0)+						; $1E		; code F : ## invalid ##: displays gargage pseudo-non-negative word
+000009B8 5347                       	subq.w	#1, d7							; are there characters left in the buffer?
+000009BA 65D4                       	bcs.s	@return2						; if not, stop output
+000009BC 4ED3                       	jmp		(a3)							; draw the actual value using an appropriate handler
+000009BE                            
+000009BE                            @positive:
+000009BE 10FC 002B                  	move.b	#'+', (a0)+
+000009C2 5347                       	subq.w	#1, d7							; are there characters left in the buffer?
+000009C4 65CA                       	bcs.s	@return2						; if not, stop output
+000009C6 4ED3                       	jmp		(a3)							; draw the actual value using an appropriate handler
+000009C8                            
+000009C8                            ; --------------------------------------------------------------
+000009C8                            @AfterRestoreCharacter2:
+000009C8 51CF 0000                  	dbf		d7, @AfterRestoreCharacter3
+000009CC 4E94                       	jsr		(a4)
+000009CE 65C0                       	bcs.s	@return2  
+000009D0                            
+000009D0                            @AfterRestoreCharacter3:
+000009D0 10D9                       	move.b	(a1)+, (a0)+
+000009D2                            
+000009D2                            @AfterRestoreCharacter:
+000009D2 51CF FFBC                  	dbf		d7, @return2
+000009D6 4ED4                       	jmp		(a4)
+000009D8                            	include	'..\core\Console.asm'
+000009D8                            
+000009D8                            ; ===============================================================
+000009D8                            ; ---------------------------------------------------------------
+000009D8                            ; Error handling and debugging modules
+000009D8                            ; 2016-2017, Vladikcomper
+000009D8                            ; ---------------------------------------------------------------
+000009D8                            ; Console Module
+000009D8                            ; ---------------------------------------------------------------
+000009D8                            
+000009D8                            ; ---------------------------------------------------------------
+000009D8                            ; RAM structure
+000009D8                            ; ---------------------------------------------------------------
+000009D8                            
+000009D8                            			rsreset
+000009D8 =00000000                  Console_RAM				equ		__RS
+000009D8 =00000000                  Console.ScreenPosReq	rs.l	1				;		screen position request for VDP
+000009D8 =00000004                  Console.CharsPerLine	rs.w	1				; d2	number of characters per line
+000009D8 =00000006                  Console.CharsRemaining	rs.w	1				; d3	remaining number of characters
+000009D8 =00000008                  Console.BasePattern		rs.w	1				; d4	base pattern
+000009D8 =0000000A                  Console.ScreenRowSz		rs.w	1				; d6	row size within screen position
+000009D8 =0000000C                  Console.Validator		rs.b	1				;		should contain $5D to ensure this is valid console memory area
+000009D8                            						rs.b	1				;		<<FREE>>
+000009D8 =0000000E                  Console_RAM.size		equ		__RS-Console_RAM
+000009D8                            
+000009D8                            ; Drawing flags supported in strings
+000009D8 =000000E0                  _newl	equ		$E0
+000009D8 =000000E6                  _cr		equ		$E6
+000009D8 =000000E8                  _pal0	equ		$E8
+000009D8 =000000EA                  _pal1	equ		$EA
+000009D8 =000000EC                  _pal2	equ		$EC
+000009D8 =000000EE                  _pal3	equ		$EE
+000009D8                            
+000009D8 =000000F0                  _setw	equ		$F0
+000009D8 =000000F4                  _setoff	equ		$F4
+000009D8 =000000F8                  _setpat	equ		$F8
+000009D8 =000000FA                  _setx	equ		$FA
+000009D8                            
+000009D8 =0000005D                  _ConsoleEnable	equ	$5D
+000009D8                            
+000009D8                            ; ===============================================================
+000009D8                            ; ---------------------------------------------------------------
+000009D8                            ; Initialize console module
+000009D8                            ; ---------------------------------------------------------------
+000009D8                            ; INPUT:
+000009D8                            ;		a1		Console config
+000009D8                            ;		a2		Console font graphics (1bpp)
+000009D8                            ;		a3		Console RAM pointer
+000009D8                            ;
+000009D8                            ; OUTPUT:
+000009D8                            ;		d5	.l	Current on-screen position
+000009D8                            ;
+000009D8                            ; USES:
+000009D8                            ;		d0-d4, a5-a6
+000009D8                            ; ---------------------------------------------------------------
+000009D8                            
+000009D8                            Console_Init:
+000009D8 4BF9 00C0 0004             	lea		VDP_Ctrl, a5
+000009DE 4DED FFFC                  	lea		-4(a5), a6
+000009E2                            
+000009E2                            	; Load console font
+000009E2                            	@font_prg_loop:
+000009E2 4A51                       		tst.w	(a1)
+000009E4 6B00                       		bmi.s	@font_done
+000009E6 2A99                       		move.l	(a1)+, (a5)				; VDP => Setup font offset in VRAM
+000009E8 41D2                       		lea		(a2), a0				; load font offset
+000009EA 3818                       		move.w	(a0)+, d4				; load font size - 1
+000009EC 4EBA 0000                  		jsr		Decomp1bpp(pc)			; decompress font (input: a0-a1/a6, uses: a0/d0-d4)
+000009F0 43E9 0020                  		lea		$20(a1), a1
+000009F4 60EC                       		bra.s	@font_prg_loop
+000009F6                            
+000009F6                            @font_done:
+000009F6 5449                       	addq.w	#2, a1					; skip end marker
+000009F8                            
+000009F8                            	; Init Console RAM
+000009F8 4E63                       	move.l	a3, usp					; remember Console RAM pointer in USP to restore it in later calls
+000009FA 2A19                       	move.l	(a1)+, d5				; d4 = start VRAM pos
+000009FC 26C5                       	move.l	d5,	(a3)+				; Console RAM => copy screen position (long)
+000009FE 26D9                       	move.l	(a1)+, (a3)+			; Console RAM => copy number of characters per line (word) + characters remaining for the current line (word)
+00000A00 26D9                       	move.l	(a1)+, (a3)+			; Console RAM => copy base pattern (word) + screen row size (word)
+00000A02 36FC 5D00                  	move.w	#_ConsoleEnable<<8, (a3)+ ; Console RAM => set validator and clear the last byte (UNUSED)
+00000A06                            
+00000A06                            	; WARNING! Don't touch d5 from now on
+00000A06                            
+00000A06                            	; Clear screen
+00000A06 47FA 0000                  	lea		Console_FillTile(pc), a3
+00000A0A 2A85                       	move.l	d5, (a5)				; VDP => Setup VRAM for screen namespace
+00000A0C 7000                       	moveq	#0, d0					; d0 = fill pattern
+00000A0E 3219                       	move.w	(a1)+, d1				; d1 = size of screen in tiles - 1
+00000A10 4E93                       	jsr		(a3)					; fill screen
+00000A12                            	vram	$0000, (a5)				; VDP => Setup VRAM at tile 0
+00000A12 2ABC 4000 0000           M 	move.l	#($40000000+(($0000&$3fff)<<16)+(($0000&$c000)>>14)),(a5)
+00000A18 7200                       	moveq	#0, d1					; d1 = number of tiles to fill - 1
+00000A1A 4E93                       	jsr		(a3)					; clear first tile
+00000A1C                            
+00000A1C                            
+00000A1C                            Console_LoadPalette: __global
+00000A1C                          M __global__console_loadpalette:
+00000A1C                          M console_loadpalette:
+00000A1C                            
+00000A1C                            	; Load palette
+00000A1C                            	cram	$00, (a5)				; VDP => Setup CRAM write at offset $00
+00000A1C 2ABC C000 0000           M 	move.l	#($c0000000+($00<<16)),(a5)
+00000A22 7000                       	moveq	#0, d0					; d0 = black color
+00000A24 7603                       	moveq	#4-1, d3				; d3 = number of palette lines - 1
+00000A26                            
+00000A26                            	@fill_palette_line:
+00000A26 3C80                       		move.w	d0, (a6)			; transparent color is always black
+00000A28 3419                       		move.w	(a1)+, d2			; get CRAM data entry
+00000A2A 3C82                       	@0:	move.w	d2, (a6)			; write to CRAM
+00000A2C 3419                       		move.w	(a1)+, d2			; get next CRAM data entry
+00000A2E 6AFA                       		bpl.s	@0					; if color, branch
+00000A30                            
+00000A30 7200                       		moveq	#0, d1
+00000A32 4EB3 2010                  		jsr		$10(a3,d2)			; fill the rest of cram by a clever jump (WARNING! Precision required!)
+00000A36 51CB FFEE                  		dbf		d3, @fill_palette_line
+00000A3A                            
+00000A3A                            	; Finalize
+00000A3A 3ABC 8174                  	move.w	#$8174, (a5)			; VDP => Enable display
+00000A3E 2A85                       	move.l	d5, (a5)				; VDP => Enable console for writing
+00000A40 4E75                       	rts
+00000A42                            
+00000A42                            ; ---------------------------------------------------------------
+00000A42                            Console_FillTile:
+00000A42                            	rept 8
+00000A42                            		move.l	d0, (a6)
+00000A42                            	endr
+00000A42 2C80                     M 	move.l	d0,(a6)
+00000A44 2C80                     M 	move.l	d0,(a6)
+00000A46 2C80                     M 	move.l	d0,(a6)
+00000A48 2C80                     M 	move.l	d0,(a6)
+00000A4A 2C80                     M 	move.l	d0,(a6)
+00000A4C 2C80                     M 	move.l	d0,(a6)
+00000A4E 2C80                     M 	move.l	d0,(a6)
+00000A50 2C80                     M 	move.l	d0,(a6)
+00000A52 51C9 FFEE                  	dbf		d1, Console_FillTile
+00000A56 4E75                       	rts
+00000A58                            
+00000A58                            
+00000A58                            ; ===============================================================
+00000A58                            ; ---------------------------------------------------------------
+00000A58                            ; Setup console cursor position based on XY coordinates
+00000A58                            ; ---------------------------------------------------------------
+00000A58                            ; INPUT:
+00000A58                            ;		d0	.w	X-position
+00000A58                            ;		d1	.w	Y-position
+00000A58                            ; ---------------------------------------------------------------
+00000A58                            
+00000A58                            Console_SetPosAsXY_Stack: __global
+00000A58                          M __global__console_setposasxy_stack:
+00000A58                          M console_setposasxy_stack:
+00000A58 4CAF 0003 0004             	movem.w	4(sp), d0-d1
+00000A5E                            
+00000A5E                            Console_SetPosAsXY: __global
+00000A5E                          M __global__console_setposasxy:
+00000A5E                          M console_setposasxy:
+00000A5E 48E7 6010                  	movem.l	d1-d2/a3, -(sp)
+00000A62 4E6B                       	move.l	usp, a3
+00000A64 0C2B 005D 000C             	cmp.b	#_ConsoleEnable, Console.Validator(a3)
+00000A6A 6600                       	bne.s	@quit
+00000A6C                            
+00000A6C 3413                       	move.w	(a3), d2
+00000A6E 0242 E000                  	and.w	#$E000, d2				; clear out displacement, leave base offset only
+00000A72 C2EB 000A                  	mulu.w	Console.ScreenRowSz(a3), d1
+00000A76 D441                       	add.w	d1, d2
+00000A78 D440                       	add.w	d0, d2
+00000A7A D440                       	add.w	d0, d2
+00000A7C 3682                       	move.w	d2, (a3)
+00000A7E 23D3 00C0 0004             	move.l	(a3), VDP_Ctrl
+00000A84                            
+00000A84                            @quit:
+00000A84 4CDF 0806                  	movem.l	(sp)+, d1-d2/a3
+00000A88 4E75                       	rts
+00000A8A                            
+00000A8A                            
+00000A8A                            ; ===============================================================
+00000A8A                            ; ---------------------------------------------------------------
+00000A8A                            ; Get current line position in XY-coordinates
+00000A8A                            ; ---------------------------------------------------------------
+00000A8A                            ; OUTPUT:
+00000A8A                            ;		d0	.w	X-position
+00000A8A                            ;		d1	.w	Y-position
+00000A8A                            ; ---------------------------------------------------------------
+00000A8A                            
+00000A8A                            Console_GetPosAsXY: __global
+00000A8A                          M __global__console_getposasxy:
+00000A8A                          M console_getposasxy:
+00000A8A 2F0B                       	move.l	a3, -(sp)
+00000A8C 4E6B                       	move.l	usp, a3
+00000A8E 0C2B 005D 000C             	cmp.b	#_ConsoleEnable, Console.Validator(a3)
+00000A94 6600                       	bne.s	@quit
+00000A96 7200                       	moveq	#0, d1
+00000A98 3213                       	move.w	(a3), d1
+00000A9A 0241 1FFF                  	and.w	#$1FFF, d1						; clear out base offset, leave displacement only
+00000A9E 82EB 000A                  	divu.w	Console.ScreenRowSz(a3), d1		; d1 = row
+00000AA2 2001                       	move.l	d1, d0
+00000AA4 4840                       	swap	d0
+00000AA6 E248                       	lsr.w	d0
+00000AA8                            @quit:
+00000AA8 265F                       	move.l	(sp)+, a3
+00000AAA 4E75                       	rts
+00000AAC                            
+00000AAC                            ; ===============================================================
+00000AAC                            ; ---------------------------------------------------------------
+00000AAC                            ; Subroutine to transfer console to a new line
+00000AAC                            ; ---------------------------------------------------------------
+00000AAC                            
+00000AAC                            Console_StartNewLine: __global
+00000AAC                          M __global__console_startnewline:
+00000AAC                          M console_startnewline:
+00000AAC 2F0B                       	move.l	a3, -(sp)
+00000AAE 4E6B                       	move.l	usp, a3
+00000AB0 0C2B 005D 000C             	cmp.b	#_ConsoleEnable, Console.Validator(a3)
+00000AB6 6600                       	bne.s	@quit
+00000AB8                            
+00000AB8 3F00                       	move.w	d0, -(sp)
+00000ABA 3013                       	move.w	(a3), d0
+00000ABC D06B 000A                  	add.w	Console.ScreenRowSz(a3), d0
+00000AC0                            	; TODOh: Check if offset is out of plane boundaries
+00000AC0 0240 5FFF                  	and.w	#$5FFF, d0			; make sure line stays within plane
+00000AC4 3680                       	move.w	d0, (a3)			; save new position
+00000AC6 23DB 00C0 0004             	move.l	(a3)+, VDP_Ctrl
+00000ACC 36DB                       	move.w	(a3)+, (a3)+		; reset characters on line counter (copy "CharsPerLine" to "CharsRemaining")
+00000ACE                            
+00000ACE 301F                       	move.w	(sp)+, d0
+00000AD0                            @quit:
+00000AD0 265F                       	move.l	(sp)+, a3
+00000AD2 4E75                       	rts
+00000AD4                            
+00000AD4                            
+00000AD4                            ; ===============================================================
+00000AD4                            ; ---------------------------------------------------------------
+00000AD4                            ; Subroutine to set console's base pattern
+00000AD4                            ; ---------------------------------------------------------------
+00000AD4                            ; INPUT:
+00000AD4                            ;		d1	.w	Base pattern
+00000AD4                            ; ---------------------------------------------------------------
+00000AD4                            
+00000AD4                            Console_SetBasePattern: __global
+00000AD4                          M __global__console_setbasepattern:
+00000AD4                          M console_setbasepattern:
+00000AD4 2F0B                       	move.l	a3, -(sp)
+00000AD6 4E6B                       	move.l	usp, a3
+00000AD8 0C2B 005D 000C             	cmp.b	#_ConsoleEnable, Console.Validator(a3)
+00000ADE 6600                       	bne.s	@quit
+00000AE0 3741 0008                  	move.w	d1, Console.BasePattern(a3)
+00000AE4                            	
+00000AE4                            @quit:
+00000AE4 265F                       	move.l	(sp)+, a3
+00000AE6 4E75                       	rts
+00000AE8                            
+00000AE8                            ; ===============================================================
+00000AE8                            ; ---------------------------------------------------------------
+00000AE8                            ; Subroutine to set console's base pattern
+00000AE8                            ; ---------------------------------------------------------------
+00000AE8                            ; INPUT:
+00000AE8                            ;		d1	.w	Base pattern
+00000AE8                            ; ---------------------------------------------------------------
+00000AE8                            
+00000AE8                            Console_SetWidth: __global
+00000AE8                          M __global__console_setwidth:
+00000AE8                          M console_setwidth:
+00000AE8 2F0B                       	move.l	a3, -(sp)
+00000AEA 4E6B                       	move.l	usp, a3
+00000AEC 0C2B 005D 000C             	cmp.b	#_ConsoleEnable, Console.Validator(a3)
+00000AF2 6600                       	bne.s	@quit
+00000AF4 584B                       	addq.w	#4, a3
+00000AF6 36C1                       	move.w	d1, (a3)+
+00000AF8 36C1                       	move.w	d1, (a3)+
+00000AFA                            
+00000AFA                            @quit:
+00000AFA 265F                       	move.l	(sp)+, a3
+00000AFC 4E75                       	rts
+00000AFE                            
+00000AFE                            
+00000AFE                            ; ---------------------------------------------------------------
+00000AFE                            ; Subroutine to draw string on screen
+00000AFE                            ; ---------------------------------------------------------------
+00000AFE                            ; INPUT:
+00000AFE                            ;		a0		Pointer to null-terminated string
+00000AFE                            ;		d1	.w	Base pattern (*_WriteLine_WithPattern only)
+00000AFE                            ;
+00000AFE                            ; OUTPUT:
+00000AFE                            ;		a0		Pointer to the end of string
+00000AFE                            ;
+00000AFE                            ; MODIFIES:
+00000AFE                            ;		a0
+00000AFE                            ; ---------------------------------------------------------------
+00000AFE                            
+00000AFE                            Console_WriteLine_WithPattern: __global
+00000AFE                          M __global__console_writeline_withpattern:
+00000AFE                          M console_writeline_withpattern:
+00000AFE 61D4                       	bsr.s	Console_SetBasePattern
+00000B00                            
+00000B00                            ; ---------------------------------------------------------------
+00000B00                            Console_WriteLine: __global
+00000B00                          M __global__console_writeline:
+00000B00                          M console_writeline:
+00000B00 487A FFAA                  	pea		Console_StartNewLine(pc)
+00000B04                            
+00000B04                            ; ---------------------------------------------------------------
+00000B04                            Console_Write: __global
+00000B04                          M __global__console_write:
+00000B04                          M console_write:
+00000B04 48E7 7E12                  	movem.l	d1-d6/a3/a6, -(sp)
+00000B08 4E6B                       	move.l	usp, a3
+00000B0A 0C2B 005D 000C             	cmp.b	#_ConsoleEnable, Console.Validator(a3)
+00000B10 6600                       	bne.s	@quit
+00000B12                            
+00000B12                            	; Load console variables
+00000B12 2A1B                       	move.l	(a3)+, d5			; d5 = VDP screen position request
+00000B14 4C93 005C                  	movem.w	(a3), d2-d4/d6		; d2 = number of characters per line
+00000B18                            
+00000B18 4846                       	swap	d6					; d3 = number of characters remaining until next line
+00000B1A                            								; d4 = base pattern
+00000B1A                            								; d6 = screen position increment value
+00000B1A 4DF9 00C0 0000             	lea		VDP_Data, a6		; a6 = VDP_Data
+00000B20                            
+00000B20                            	; First iteration in @loop, unrolled
+00000B20 7200                       	moveq	#0, d1
+00000B22 1218                       	move.b	(a0)+, d1			; load first char
+00000B24 6E00                       	bgt.s	@loop				; if not a null-terminator or flag, branch
+00000B26 6B00                       	bmi.s	@flag				; if char is a flague, branch
+00000B28                            
+00000B28                            @done:
+00000B28 4893 001C                  	movem.w	d2-d4, (a3)			; save d2-d4 (ignore d6 as it won't get changes anyways ...)
+00000B2C 2705                       	move.l	d5, -(a3)			; save screen position
+00000B2E                            	
+00000B2E                            @quit:
+00000B2E 4CDF 487E                  	movem.l	(sp)+, d1-d6/a3/a6
+00000B32 4E75                       	rts
+00000B34                            
+00000B34                            ; ---------------------------------------------------------------
+00000B34                            	@loop:
+00000B34 51CB 0000                  		dbf		d3, @writechar
+00000B38 D642                       		add.w	d2, d3				; restore number of characters per line
+00000B3A DA86                       		add.l	d6, d5
+00000B3C 0885 001D                  		bclr	#29, d5
+00000B40 2D45 0004                  		move.l	d5, 4(a6)			; setup screen position
+00000B44                            
+00000B44                            	@writechar:
+00000B44 D244                       		add.w	d4, d1  			; add base pattern
+00000B46 3C81                       		move.w	d1, (a6)			; draw
+00000B48                            
+00000B48                            	@nextchar:
+00000B48 7200                       		moveq	#0, d1
+00000B4A 1218                       		move.b	(a0)+, d1			; load next char
+00000B4C 6EE6                       		bgt.s	@loop				; if not a null-terminator or flag, branch
+00000B4E 67D8                       		beq.s	@done				; if null-terminator, branch
+00000B50                            
+00000B50                            	; Process drawing flag
+00000B50                            @flag:
+00000B50 0241 001E                  	and.w	#$1E, d1					; d2 = $00, $02, $04, $06, $08, $0A, $0C, $0E, $10, $12, $14, $16, $18, $1A, $1C, $1E
+00000B54 4EFB 1000                  	jmp		@CommandHandlers(pc, d1)
+00000B58                            
+00000B58                            ; ---------------------------------------------------------------
+00000B58                            @CommandHandlers:
+00000B58                            
+00000B58                            	; For flags E0-EF (no arguments)
+00000B58 DA86                       	add.l	d6, d5						; $00	; codes E0-E1 : start a new line
+00000B5A 721D                       	moveq	#29, d1 					; $02	; codes E2-E3 : <<UNUSED>>
+00000B5C 0385                       	bclr	d1, d5						; $04	; codes E4-E5 : <<UNUSED>>
+00000B5E 6000                       	bra.s	@reset_line					; $06	; codes E6-E7 : reset position to the beginning of line
+00000B60 6000                       	bra.s	@set_palette_line_0			; $08	; codes E8-E9 : set palette line #0
+00000B62 6000                       	bra.s	@set_palette_line_1			; $0A	; codes EA-EB : set palette line #1
+00000B64 6000                       	bra.s	@set_palette_line_2			; $0C	; codes EC-ED : set palette line #2
+00000B66 6000                       	bra.s	@set_palette_line_3			; $0E	; codes EE-EF : set palette line #3
+00000B68                            
+00000B68                            	; For flags F0-FF (one-byte arguments)
+00000B68 1418                       	move.b	(a0)+, d2					; $10	; codes F0-F1 : set characters per line, reset line
+00000B6A 6000                       	bra.s	@reset_line					; $12	; codes F2-F3 : <<UNUSED>>
+00000B6C 1818                       	move.b	(a0)+, d4					; $14	; codes F4-F5 : set low byte of base pattern (raw)
+00000B6E 60D8                       	bra.s	@nextchar					; $16	; codes F6-F7 : <<UNUSED>>
+00000B70 6000                       	bra.s	@set_base_pattern_high_byte	; $18	; codes F8-F9 : set high byte of base pattern (raw)
+00000B72 1218                       	move.b	(a0)+, d1					; $1A	; codes FA-FB : set x-position
+00000B74 D241                       	add.w	d1, d1						; $1C	; codes FC-FD : <<UNUSED>>
+00000B76 7680                       	moveq	#-$80, d3					; $1E	; codes FE-FF : <<UNUSED>>
+00000B78 4843                       	swap	d3							;
+00000B7A CA83                       	and.l	d3, d5						;
+00000B7C 4841                       	swap	d1							;
+00000B7E 8A81                       	or.l	d1, d5						;
+00000B80                            ;	bra.s	@reset_line					; restore d3 anyways, as it's corrupted
+00000B80                            
+00000B80                            @reset_line:
+00000B80 3602                       	move.w	d2, d3
+00000B82 2D45 0004                  	move.l	d5, 4(a6)
+00000B86 60C0                       	bra.s	@nextchar
+00000B88                            
+00000B88                            ; ---------------------------------------------------------------
+00000B88                            @set_palette_line_0:
+00000B88 0244 07FF                  	and.w	#$7FF, d4
+00000B8C 60BA                       	bra.s	@nextchar
+00000B8E                            
+00000B8E                            ; ---------------------------------------------------------------
+00000B8E                            @set_palette_line_1:
+00000B8E 0244 07FF                  	and.w	#$7FF, d4
+00000B92 0044 2000                  	or.w	#$2000, d4
+00000B96 60B0                       	bra.s	@nextchar
+00000B98                            
+00000B98                            ; ---------------------------------------------------------------
+00000B98                            @set_palette_line_2:
+00000B98 0244 07FF                  	and.w	#$7FF, d4
+00000B9C 0044 4000                  	or.w	#$4000, d4
+00000BA0 60A6                       	bra.s	@nextchar
+00000BA2                            
+00000BA2                            ; ---------------------------------------------------------------
+00000BA2                            @set_palette_line_3:
+00000BA2 0044 6000                  	or.w	#$6000, d4
+00000BA6 60A0                       	bra.s	@nextchar
+00000BA8                            
+00000BA8                            ; ---------------------------------------------------------------
+00000BA8                            @set_base_pattern_high_byte:
+00000BA8 3F04                       	move.w	d4, -(sp)
+00000BAA 1E98                       	move.b	(a0)+, (sp)
+00000BAC 381F                       	move.w	(sp)+, d4
+00000BAE 6098                       	bra.s	@nextchar
+00000BB0                            
+00000BB0                            
+00000BB0                            ; ---------------------------------------------------------------
+00000BB0                            ; Subroutine to provide writting of formatted strings
+00000BB0                            ; ---------------------------------------------------------------
+00000BB0                            ; INPUT:
+00000BB0                            ;		a1		Pointer to source formatted string
+00000BB0                            ;		a2		Arguments buffer pointer
+00000BB0                            ;		a5		VDP Control port
+00000BB0                            ;		a6		VDP Data port
+00000BB0                            ;
+00000BB0                            ; USES:
+00000BB0                            ;		a0-a2, d7
+00000BB0                            ; ---------------------------------------------------------------
+00000BB0                            
+00000BB0                            Console_WriteLine_Formatted: __global
+00000BB0                          M __global__console_writeline_formatted:
+00000BB0                          M console_writeline_formatted:
+00000BB0 487A FEFA                  	pea		Console_StartNewLine(pc)
+00000BB4                            
+00000BB4                            ; ---------------------------------------------------------------
+00000BB4                            Console_Write_Formatted: __global
+00000BB4                          M __global__console_write_formatted:
+00000BB4                          M console_write_formatted:
+00000BB4                            
+00000BB4 =00000010                  @buffer_size = $10
+00000BB4                            
+00000BB4 2F0C                       	move.l	a4, -(sp)
+00000BB6                            
+00000BB6 49FA 0000                  	lea		@FlushBuffer(pc), a4		; flushing function
+00000BBA 4FEF FFF0                  	lea		-@buffer_size(sp), sp		; allocate string buffer
+00000BBE 41D7                       	lea		(sp), a0					; a0 = string buffer
+00000BC0                            
+00000BC0                            
+00000BC0 7E0E                       	moveq	#@buffer_size-2, d7			; d7 = number of characters before flush -1
+00000BC2 4EBA FD3E                  	jsr		FormatString(pc)
+00000BC6 4FEF 0010                  	lea		@buffer_size(sp), sp		; free string buffer
+00000BCA                            	
+00000BCA 285F                       	move.l	(sp)+, a4
+00000BCC 4E75                       	rts
+00000BCE                            
+00000BCE                            ; ---------------------------------------------------------------
+00000BCE                            ; Flush buffer callback raised by FormatString
+00000BCE                            ; ---------------------------------------------------------------
+00000BCE                            ; INPUT:
+00000BCE                            ;		a0		Buffer position
+00000BCE                            ;		d7	.w	Number of characters remaining in buffer - 1
+00000BCE                            ;
+00000BCE                            ; OUTPUT:
+00000BCE                            ;		a0		Buffer position after flushing
+00000BCE                            ;		d7	.w	Number of characters before next flush - 1
+00000BCE                            ;		Carry	0 = continue operation
+00000BCE                            ;				1 = terminate FormatString with error condition
+00000BCE                            ;
+00000BCE                            ; WARNING: This function shouldn't modify d0-d4 / a1-a3!
+00000BCE                            ; ---------------------------------------------------------------
+00000BCE                            
+00000BCE                            @FlushBuffer:
+00000BCE 4218                       	clr.b	(a0)+					; finalize buffer
+00000BD0                            
+00000BD0 4447                       	neg.w	d7
+00000BD2 0647 000F                  	add.w	#@buffer_size-1, d7
+00000BD6 90C7                       	sub.w	d7, a0					; a0 = start of the buffer
+00000BD8                            
+00000BD8                            
+00000BD8 2F08                       	move.l	a0, -(sp)
+00000BDA 4EBA FF28                  	jsr		Console_Write(pc)		; call the real flush function
+00000BDE 205F                       	move.l	(sp)+, a0
+00000BE0 7E0E                       	moveq	#@buffer_size-2, d7		; d7 = number of characters before flush -1
+00000BE2 4E75                       	rts								; WARNING! Must return NC
+00000BE4                            
+00000BE4                            	include	'..\core\1bpp - Decompress.asm'
+00000BE4                            
+00000BE4                            ; ===============================================================
+00000BE4                            ; ---------------------------------------------------------------
+00000BE4                            ; Error handling and debugging modules
+00000BE4                            ; 2016-2017, Vladikcomper
+00000BE4                            ; ---------------------------------------------------------------
+00000BE4                            ; Fast 1bpp decompressor
+00000BE4                            ; ---------------------------------------------------------------
+00000BE4                            ; INPUT:
+00000BE4                            ;		a0		Source 1bpp art
+00000BE4                            ;		a1		Decode table (generated or manual)
+00000BE4                            ;		d4	.w	Size of art in bytes - 1
+00000BE4                            ;		a6		VDP Data Port
+00000BE4                            ;
+00000BE4                            ; USES:
+00000BE4                            ;		a0, d0-d2/d4
+00000BE4                            ; ---------------------------------------------------------------
+00000BE4                            
+00000BE4                            Decomp1bpp:
+00000BE4 741E                       	moveq	#$1E, d2
+00000BE6                            
+00000BE6                            	@row:
+00000BE6 1018                       		move.b	(a0)+, d0				; d0 = %aaaa bbbb
+00000BE8 1200                       		move.b	d0, d1
+00000BEA E609                       		lsr.b	#3, d1					; d1 = %000a aaab
+00000BEC C242                       		and.w	d2, d1					; d1 = %000a aaa0
+00000BEE 3CB1 1000                  		move.w	(a1,d1), (a6)			; decompress first nibble
+00000BF2                            	
+00000BF2 D000                       		add.b	d0, d0					; d0 = %aaab bbb0
+00000BF4 C042                       		and.w	d2, d0					; d0 = %000b bbb0
+00000BF6 3CB1 0000                  		move.w	(a1,d0), (a6)			; decompress second nibble
+00000BFA                            		
+00000BFA 51CC FFEA                  		dbf		d4, @row
+00000BFE                            
+00000BFE 4E75                       	rts
+00000C00                            
+00000C00                            ; ---------------------------------------------------------------
+00000C00                            
+00000C00                            SymbolData:
