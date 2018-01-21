@@ -1,0 +1,3 @@
+Skipped definition of macro "align" (lines 14-16)
+Symbol Vectors at offset 0 ignored: its offset is less than the previous symbol successfully fetched
+Symbol loc_32C at offset 31C ignored: its offset is less than the previous symbol successfully fetched

@@ -1,0 +1,6 @@
+This is contents included from common-include.txt file:
+## This is a comment and should be skipped upon
+#ifdef TestSymbol
+	 TestSymbol was defined in global scope!
+#endif
+End of contents from common-include.txt file
