@@ -2,13 +2,14 @@
 # Working with Error Handler bundles
 
 **IMPORTANT**
+
 Do not change files in *bundle-\** folders directly!
 These folders store auto-assembled and ready to install bundles targeting various assemblers/environments. Their contents are ignored by git and gets overwritten every time you run `build-bundles.bat`.
 
 ## Trivia
 
 To keep maintaining different versions of bundles easier, they are mostly built from the "shared" pieces of code using `cbundle` utility (source code is available in the same repository).
-Additionally, all the constants that refer to location inside Error Handler blob (`ErrorHandler.bin__) are formed automatically by `ConvSym` utility when the blob is built.
+Additionally, all the constants that refer to location inside Error Handler blob (`ErrorHandler.bin__`) are formed automatically by `ConvSym` utility when the blob is built.
 
 ## Supported assemblers (environments)
 
