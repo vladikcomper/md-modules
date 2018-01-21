@@ -9,7 +9,7 @@ These folders store auto-assembled and ready to install bundles targeting variou
 ## Trivia
 
 To keep maintaining different versions of bundles easier, they are mostly built from the "shared" pieces of code using `cbundle` utility (source code is available in the same repository).
-Additionally, all the constants that refer to location inside Error Handler blob (`ErrorHandler.bin__`) are formed automatically by `ConvSym` utility when the blob is built.
+Additionally, all the constants that refer to location inside Error Handler blob (`ErrorHandler.bin`) are formed automatically by `ConvSym` utility when the blob is built.
 
 ## Supported assemblers (environments)
 
