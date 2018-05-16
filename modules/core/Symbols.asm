@@ -22,7 +22,7 @@ GetSymbolByOffset:
 	cmp.w	#_ValidHeader, (a1)+	; verify header
 	bne.s	@return_error
 
-	moveq	#-2, d0
+	moveq	#-4, d0
 	add.w	(a1)+, d0				; d0 = (lastBlock+1)*4, also relative pointer to the Huffman decoding table
 	moveq	#-4, d2					; d2 will be 4-byte boundary mask
 	moveq	#0, d3					; d3 will be gain value
