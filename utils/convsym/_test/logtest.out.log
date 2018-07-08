@@ -1,0 +1,11 @@
+0: StartLabel
+A: SpaceBeforeLabel
+B: SpaceAndTabBeforeLabel
+14: SpaceBeforeOffset
+15: SpaceAndTabBeforeOffset
+28: SpaceBeforeLabelAndOffset
+29: IAmReallyTriedOfDescribingCases
+32: LookIAmStillTypingSomeLabels
+33: TabsAndSpacesAllOverThePlace
+64: CorruptedLine
+C8: .OtherCharactersShouldNotBeTheProblem

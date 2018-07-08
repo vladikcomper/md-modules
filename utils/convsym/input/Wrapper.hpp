@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.0									*
+ * ConvSym utility version 2.1									*
  * Input formats base controller								*
- * (c) 2017, Vladikcomper										*
+ * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 /* Base class for the input formats handlers */
@@ -20,16 +20,18 @@ struct InputWrapper {
 /* Standard input wrappers */
 #include "ASM68K_Listing.hpp"
 #include "ASM68K_Sym.hpp"
-#include "AS_Listing.hpp"
+#include "AS_Listing.hpp" 
+#include "Log.hpp"
 
 /* Input wrappers map */
-InputWrapper* getInputWrapper( const char * name ) {
+InputWrapper* getInputWrapper( const string& name ) {
 
 	map<string, function<InputWrapper*()> >
 	wrappersTable {
 		{ "asm68k_sym", []() { return new Input__ASM68K_Sym(); } },
 		{ "asm68k_lst", []() { return new Input__ASM68K_Listing(); } },
-		{ "as_lst", []() { return new Input__AS_Listing(); } }
+		{ "as_lst", []() { return new Input__AS_Listing(); } },         
+		{ "log", []() { return new Input__Log(); } }
 	};
 
 	auto entry = wrappersTable.find( name );

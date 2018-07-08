@@ -15,6 +15,8 @@ copy s2built.bin.model s2built.bin
 ..\convsym s1built.lst s1built.log -input asm68k_lst -output log -inopt "/localSign=@ /localJoin=. /ignoreMacroExp+ /ignoreMacroDefs+ /addMacrosAsOpcodes+ /processLocals+"
 ..\convsym test.lst test.log -input asm68k_lst -output log
 
+..\convsym logtest.in.log logtest.out.log -input log -output log -inopt "/separator=: /useDecimal+"
+
 cls
 
 FC /B sonic1.deb1 sonic1.deb1.model
@@ -27,5 +29,7 @@ FC /B sonic3k.deb2 sonic3k.deb2.model
 
 FC s1built.log s1built.log.model
 FC test.log test.log.model
+
+FC logtest.out.log logtest.out.log.model
 
 pause

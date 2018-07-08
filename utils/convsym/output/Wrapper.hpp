@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.0									*
+ * ConvSym utility version 2.1									*
  * Output formats base controller								*
- * (c) 2017, Vladikcomper										*
+ * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 
@@ -64,7 +64,7 @@ struct OutputWrapper {
 #include "ASM.hpp"
 
 /* Input wrappers map */
-OutputWrapper* getOutputWrapper( const char * name ) {
+OutputWrapper* getOutputWrapper( const string& name ) {
 
 	map<string, function<OutputWrapper*()> >
 	wrappersTable {

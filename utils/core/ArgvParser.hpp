@@ -45,7 +45,7 @@ namespace ArgvParser {
 
 					case record::string:
 						_GET_NEXT_ARGUMENT
-						*((const char**)parameter->second.target) = argv[i];
+						*((string*)parameter->second.target) = argv[i];
 						break;
 						
 					default:

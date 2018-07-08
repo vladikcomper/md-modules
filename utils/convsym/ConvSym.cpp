@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.0									*
+ * ConvSym utility version 2.1									*
  * Main definitions file										*
- * (c) 2017, Vladikcomper										*
+ * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 #define _CPPHeaders_
@@ -50,8 +50,8 @@ int main (int argc, const char ** argv) {
 	/* Provide help if no sufficient arguments were passed */
 	if (argc<2) {
 		printf(
-			"ConvSym utility version 2.0\n"
-			"2016-2017, vladikcomper\n"
+			"ConvSym utility version 2.1\n"
+			"2016-2018, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
 			"  convsym [input_file] [output_file] <options>\n"
@@ -85,6 +85,12 @@ int main (int argc, const char ** argv) {
 			"\n"
 			"  -outopt [options]\n"
 			"    Additional options for the output parser. There parameters are specific to the selected -output format.\n"
+			"\n"   
+			"  -toupper\n"
+			"    Convert all symbols names to uppercase.\n"    
+			"\n"   
+			"  -tolower\n"
+			"    Convert all symbols names to lowercase.\n"
 			"\n"
 			"  -filter [regex]\n"
 			"    Enables filtering of the symbol list fetched from the [input_file] based on a regular expression.\n"
@@ -99,6 +105,8 @@ int main (int argc, const char ** argv) {
 	bool optAppend = false;								// enable or disable append mode
 	bool optDebug = false;								// enable or disable debug output
 	bool optFilterExclude = false;						// regex-based filter mode: include or exclude matched symbols
+	bool optToUpper = false;
+	bool optToLower = false;
 
 	uint32_t baseOffset = 0;
 	uint32_t offsetLeftBoundary = 0;
@@ -107,11 +115,11 @@ int main (int argc, const char ** argv) {
 	uint32_t appendOffset = 0;
 	uint32_t pointerOffset = 0;
 
-	const char *inputWrapperName = "asm68k_sym";		// default input format
-	const char *outputWrapperName = "deb2";				// default output format
-	const char *inputOpts = "";							// default options for input format
-	const char *outputOpts = "";						// default options for output format
-	const char *filterRegexStr = "";					// default filter expression
+	string inputWrapperName = "asm68k_sym";		// default input format
+	string outputWrapperName = "deb2";			// default output format
+	string inputOpts = "";						// default options for input format
+	string outputOpts = "";						// default options for output format
+	string filterRegexStr = "";					// default filter expression
 
 	/* Parse command line arguments */
 	const char *inputFileName = argv[1];
@@ -131,7 +139,9 @@ int main (int argc, const char ** argv) {
 				{ "-org",		{ type: ArgvParser::record::hexNumber,	target: &appendOffset											} },
 				{ "-ref",		{ type: ArgvParser::record::hexNumber,	target: &pointerOffset											} },
 				{ "-filter",	{ type: ArgvParser::record::string,		target: &filterRegexStr											} },
-				{ "-exclude",	{ type: ArgvParser::record::flag,		target: &optFilterExclude										} }
+				{ "-exclude",	{ type: ArgvParser::record::flag,		target: &optFilterExclude										} },
+				{ "-toupper",	{ type: ArgvParser::record::flag,		target: &optToUpper												} },
+				{ "-tolower",	{ type: ArgvParser::record::flag,		target: &optToLower												} }
 			};
 
 		/* Decode parameters acording to list defined by "ParametersList" variable */
@@ -153,21 +163,43 @@ int main (int argc, const char ** argv) {
 		}
 		appendOffset = -1;
 	}
-	if ( optFilterExclude && !*filterRegexStr ) {
+	if ( optFilterExclude && !filterRegexStr.length() ) {
 		IO::Log( IO::warning, "Using -exclude parameter without -filter [regex]. The -exclude parameter has no effect" );
+	}
+	if ( optToUpper && optToLower ) {
+		IO::Log( IO::warning, "Using conflicting parameters: -toupper and -tolower. The -toupper parameter has no effect" );
 	}
 
 	/* Retrieve symbols from the input file */
 	map<uint32_t, string> Symbols;
 	InputWrapper * input = getInputWrapper( inputWrapperName );
-	try { Symbols = input->parse( inputFileName, baseOffset, offsetLeftBoundary, offsetRightBoundary, inputOpts ); }
-	catch (const char* err) { IO::Log( IO::fatal, err ); return -1; }
+	try {
+		Symbols = input->parse( inputFileName, baseOffset, offsetLeftBoundary, offsetRightBoundary, inputOpts.c_str() ); 
+	}
+	catch (const char* err) { 
+		IO::Log( IO::fatal, err ); 
+		return -1; 
+	}
+	
+	/* Apply transformation to symbols */
+	if ( optToUpper ) {
+		for ( auto it = Symbols.begin(); it != Symbols.end(); it++ ) {
+			transform(it->second.begin(), it->second.end(), it->second.begin(), ::toupper);
+		}
+		transform(filterRegexStr.begin(), filterRegexStr.end(), filterRegexStr.begin(), ::toupper);
+	}    
+	if ( optToLower ) {
+		for ( auto it = Symbols.begin(); it != Symbols.end(); it++ ) {
+			transform(it->second.begin(), it->second.end(), it->second.begin(), ::tolower);
+		}                                                         
+		transform(filterRegexStr.begin(), filterRegexStr.end(), filterRegexStr.begin(), ::tolower);
+	}
 	
 	/* Pre-filter symbols based on regular expression */
-	if ( *filterRegexStr ) {
+	if ( filterRegexStr.length() > 0 ) {
 		const auto regexExpression = regex( filterRegexStr );
 		for ( auto it = Symbols.cbegin(); it != Symbols.cend(); /*it++*/ ) {	// NOTICE: Do not increment iterator here (see below)
-			bool matched = regex_match( it->second, regexExpression);
+			bool matched = regex_match( it->second, regexExpression );
 			if ( matched == optFilterExclude ) {	// will erase element: if mode=exclude and matched, if mode=include and !matched
 				it = Symbols.erase( it );
 			}
@@ -181,7 +213,7 @@ int main (int argc, const char ** argv) {
 	if ( Symbols.size() > 0 ) {
 		OutputWrapper * output = getOutputWrapper( outputWrapperName );
 		try {
-			output->parse( Symbols, outputFileName, appendOffset, pointerOffset, outputOpts );
+			output->parse( Symbols, outputFileName, appendOffset, pointerOffset, outputOpts.c_str() );
 		}
 		catch (const char* err) {
 			IO::Log( IO::fatal, err );
