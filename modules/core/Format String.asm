@@ -123,8 +123,8 @@ FormatString_CodeHandlers:
 	; codes D0..DF : String
 	movea.l	(a2)+, a3							; $00	; a3 = string ptr
 @d1	move.b	(a3)+, (a0)+						; $02	; copy char
-	beq.s	@d0									; $04	; if char isn't null-terminator, branch
-	dbf		d7, @d1								; $06	; decrease buffer capacity
+	dbeq	d7, @d1								; $04	; loop until either buffer ends or zero-terminator is met
+	beq.s	@d0									; $08	; if met zero-terminator, branch
 	jsr		(a4)								; $0A	; flush buffer
 	bcc.s	@d1									; $0C	; if buffer is ok, branch
 @return2:
