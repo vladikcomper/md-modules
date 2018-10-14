@@ -1,6 +1,6 @@
 #!/bin/bash
 
-convsym=./../ConvSym
+convsym=./../convsym
 
 cd _test
 

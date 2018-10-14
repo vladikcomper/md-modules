@@ -1,4 +1,4 @@
-SET PATH=..\..\..\exec;..\..\..\exec\as;d:\sega\emulators\kega\
+SET PATH=..\..\..\exec;..\..\..\exec\as;..\..\..\..\utils\convsym;d:\sega\emulators\kega\
 
 @echo off
 cbundle test_flow
@@ -29,4 +29,3 @@ if exist test_flow-as.gen (
 	fusion test_flow-as.gen
 	del test_flow-as.lst
 )
-pause

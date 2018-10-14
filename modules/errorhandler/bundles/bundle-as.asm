@@ -4,10 +4,10 @@
 
 #define BUNDLE-AS
 
-#file bundle-as\Debugger.asm
+#file bundle-as/Debugger.asm
 #include Debugger.asm
 #endf
 
-#file bundle-as\ErrorHandler.asm
+#file bundle-as/ErrorHandler.asm
 #include ErrorHandler.asm
 #endf

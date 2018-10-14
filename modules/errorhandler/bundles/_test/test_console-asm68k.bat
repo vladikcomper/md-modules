@@ -1,5 +1,5 @@
 @echo off
-SET PATH=..\..\..\exec;..\..\..\exec\as;d:\sega\emulators\kega\
+SET PATH=..\..\..\exec;..\..\..\exec\as;..\..\..\..\utils\convsym;d:\sega\emulators\kega\
 
 if exist test_console-asm68k.gen del test_console-asm68k.gen
 asm68k /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- test_console-asm68k.asm, test_console-asm68k.gen, test_console-asm68k.sym, test_console-asm68k.lst
