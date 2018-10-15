@@ -40,6 +40,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		//	/ignoreMacroDefs?		- specify if macro definitions listings should be ignored (lines between "macro" and "endm"); default: +
 		//	/ignoreMacroExp?		- specify if lines representing macro expansions should be ignored; default: -
 		//	/addMacrosAsOpcodes?	- set if macros that process label as parameter (defined as "macro *") should be recognized when used; default: +
+		//	/processLocals?			- specify whether local labels will processed
 
 		// Default processing options
 		bool optIgnoreMacroExpansions = false;
@@ -88,6 +89,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		#define IS_START_OF_LABEL(X)	((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(optProcessLocalLabels&&X==localLabelSymbol)||X=='_')
 		#define IS_LABEL_CHAR(X)		((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(unsigned)(X-'0')<10||X=='?'||X=='_')
 		#define IS_INDENTION(X)			(X==' '||X=='\t')
+		#define IS_ENDOFLINE(X)			(X=='\r'||X=='\n')
 
 
 		// For every string in a listing file ...
@@ -139,7 +141,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 				while ( IS_NAME_CHAR(*ptr) ) ptr++;	// iterate through label characters
 
 				// Make sure label ends properly
-				if ( IS_INDENTION(*ptr) || *ptr==':' || *ptr=='\n' ) {
+				if ( IS_INDENTION(*ptr) || *ptr==':' || IS_ENDOFLINE(*ptr) ) {
 					*ptr++ = 0x00;			// mark labels end, so "sLabel" is a proper c-string containing label alone now
 				}
 				else {
@@ -188,7 +190,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 				// Fetch label's opcode into std::string object
 				while ( IS_INDENTION(*ptr) ) ptr++; 	// skip indention
             	uint8_t* const ptr_start = ptr;
-				do { ptr++; } while ( !IS_INDENTION(*ptr) && *ptr!='\n' );
+				do { ptr++; } while ( !IS_INDENTION(*ptr) && !IS_ENDOFLINE(*ptr) );
 				*ptr++ = 0x00;
 				string strOpcode( (char*)ptr_start, ptr-ptr_start-1 );		// construct opcode string
 				if ( strOpcode[0] == localLabelSymbol ) {					// in case opcode is a local label reference
@@ -243,13 +245,13 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 								// If line starts with label, skip it ...
 								if ( !IS_INDENTION(*ptr) ) {
-									do { ptr++; } while ( !IS_INDENTION(*ptr) && *ptr!='\n' && *ptr );
+									do { ptr++; } while ( !IS_INDENTION(*ptr) && !IS_ENDOFLINE(*ptr) && *ptr );
 								}
 								
 								// Fetch opcode, if present ...
 								while ( IS_INDENTION(*ptr) ) ptr++;
 				            	uint8_t* const ptr_start = ptr;
-								do { ptr++; } while ( !IS_INDENTION(*ptr) && *ptr!='\n' );
+								do { ptr++; } while ( !IS_INDENTION(*ptr) && !IS_ENDOFLINE(*ptr) );
 								*ptr++ = 0x00;
 								
 								// If opcode is "endm", stop processing
@@ -316,6 +318,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		#undef IS_START_OF_LABEL
 		#undef IS_LABEL_CHAR
 		#undef IS_INDENTION
+		#undef IS_ENDOFLINE
 
 		return SymbolMap;
 
