@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * Bundle Compilation utility v.1.0								*
+ * Bundle Compilation utility v.1.1								*
  * Script parser module											*
- * (c) 2017, Vladikcomper										*
+ * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 namespace Parser {
@@ -30,11 +30,11 @@ namespace Parser {
 	};
 	struct lineData {
 		lineType type;
-		string content;
+		std::string content;
 	};
 
 	/* Directive definitions */
-	const map<string,lineType> directives {
+	const std::map<std::string, lineType> directives {
 		{ "define",	dir_define	},
 		{ "undef",	dir_undef	},
 		{ "include",dir_include	},
@@ -51,7 +51,7 @@ namespace Parser {
 	int lineNumber;
 	IO::FileInput* input = nullptr;
 	IO::FileOutput* output = nullptr;
-	set<string> symbols;
+	std::set<std::string> symbols;
 
 	/* Prototypes */
     void parseFile(const char* path);
@@ -62,32 +62,32 @@ namespace Parser {
 	lineData parseLine() {
 
 		const int sBufferSize = 1024;
-		char sBuffer[ sBufferSize ];
+		uint8_t sBuffer[ sBufferSize ];
 
 		// Attempt to read string from the input file
-		if ( input && input->readString( sBuffer, sBufferSize ) ) {
+		if ( input && ( input->readLine( sBuffer, sBufferSize ) >= 0 ) ) {
 			lineNumber++;
-			char * ptr = sBuffer;
+			uint8_t * ptr = sBuffer;
 
 			// If line is a script directive ...
 			if ( *ptr++ == '#' ) {
 
 				// If the next character isn't # (## indicates comment)
 				if ( *ptr != '#' ) {
-	             	char * ptr_start;
+	             	uint8_t * ptr_start;
 	
 					// Fetch directive name
 					ptr_start = ptr++;
-	             	while ( *ptr!=' ' && *ptr!='\n' && *ptr!=0x00 ) ptr++;
-					string strDirective( ptr_start, ptr-ptr_start );
+	             	while ( *ptr!=' ' && *ptr!=0x00 ) ptr++;
+					std::string strDirective( (char*)ptr_start, ptr-ptr_start );
 	
 					// Fetch directive argument (if present)
 					ptr_start = ptr;
 					if ( *ptr==' ' ) {
 						ptr_start = ++ptr;
-	             		while ( *ptr!=' ' && *ptr!='\n' && *ptr!=0x00 ) ptr++;
+	             		while ( *ptr!=' ' && *ptr!=0x00 ) ptr++;
 					}
-					string strArgument( ptr_start, ptr-ptr_start );
+					std::string strArgument( (char*)ptr_start, ptr-ptr_start );
 
 					// Parse directive and return
 					auto directiveData = directives.find( strDirective );
@@ -101,7 +101,7 @@ namespace Parser {
 						IO::Log( IO::error, "%s:%d: Unknown directive %s", fileName, lineNumber, strDirective.c_str() );
 						return {
 							type: error,
-							content: string()
+							content: std::string()
 						};
 					}
 
@@ -111,7 +111,7 @@ namespace Parser {
 				else {
 					return {
 						type: comment,
-						content: string()
+						content: std::string()
 					};
 				}
 	
@@ -121,7 +121,7 @@ namespace Parser {
 			else {
 				return {
 					type: raw,
-					content: string(sBuffer)
+					content: std::string( (char*)sBuffer )
 				};
 			}
 		}
@@ -130,7 +130,7 @@ namespace Parser {
 		else {
 			return {
 				type: eof,
-				content: string()
+				content: std::string()
 			};
 		}
 	}
@@ -181,7 +181,7 @@ namespace Parser {
 			switch (data.type) {
 				case raw:
 					if ( output ) {
-						output->putString( data.content.c_str() );
+						output->putLine( data.content.c_str() );
 					}
 					break;
 

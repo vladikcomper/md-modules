@@ -1,8 +1,8 @@
 
-
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.0									*
+ * Debugging Modules Utilities Core								*
  * Basic Input / Output wrapper 								*
+ * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 namespace IO {
@@ -137,6 +137,11 @@ namespace IO {
 			fputs( str, file );
 		}
 
+		inline void putLine( const char * str ) {				// put *unformatted* string
+			fputs( str, file );
+			fputc( '\n', file );
+		}
+
 		inline void writeString( const char * format, ...) {	// write a formatted string to file
 			va_list args;
 			va_start (args, format);
@@ -168,7 +173,7 @@ namespace IO {
 		inline uint16_t readWord() {	// read word (unmodified)
 			uint16_t word;
 			if ( !fread( &word, 2, 1, file ) ) {
-				throw "Failed to read from a binary file";
+				throw "readWord() failed, possibly end of file reached";
 			}
 			return word;
 		}
@@ -176,7 +181,7 @@ namespace IO {
 		inline uint16_t readBEWord() {	// read word (LE to BE conversion)
 			uint8_t buffer[2];
 			if ( !fread( &buffer, 2, 1, file ) ) {
-				throw "Failed to read from a binary file";
+				throw "readBEWord() failed, possibly end of file reached";
 			}
 			return (buffer[0]<<8) + buffer[1];
 		}
@@ -184,7 +189,7 @@ namespace IO {
 		inline uint32_t readLong() {	// read long (unmodified)
 			uint32_t dword;
 			if ( !fread( &dword, 4, 1, file ) ) {
-				throw "Failed to read from a binary file";
+				throw "readLong() failed, possibly end of file reached";
 			}
 			return dword;
 		}
@@ -192,17 +197,32 @@ namespace IO {
 		inline uint32_t readBELong() {	// read long (LE to BE conversion)
 			uint8_t buffer[4];
 			if ( !fread( &buffer, 4, 1, file ) ) {
-				throw "Failed to read from a binary file";
+				throw "readBELong() failed, possibly end of file reached";
 			}
 			return (buffer[0]<<24) + (buffer[1]<<16) + (buffer[2]<<8) + buffer[3];
 		}
 		
-		inline void readData( void* const buffer, int size ) {	// read series of data
-			fread( (char*)buffer, 1, size, file );
+		inline void readData( uint8_t* const buffer, int size ) {	// read series of data
+			if ( !fread( (char*)buffer, size, 1, file ) ) {
+				throw "readData() failed, possibly end of file reached";
+			}
 		};
 
-		inline bool readString( void* const buffer, int size ) {
-			return fgets( (char*)buffer, size, file ) != NULL;
+		inline int readLine( uint8_t* const buffer, int size, bool trim_ending = true ) {	// read line from file and strip newline characters
+			if ( fgets( (char*)buffer, size, file ) != nullptr ) {
+				int line_length;
+				if ( trim_ending ) {
+					line_length = strcspn( (char*)buffer, "\r\n" );
+					buffer[ line_length ] = 0x00;
+				}
+				else {
+					line_length = strlen( (char*) buffer );
+				}
+				return line_length;
+			}
+			else {
+				return -1;
+			}
 		}
 
 	};

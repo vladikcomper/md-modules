@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.1									*
+ * ConvSym utility version 2.5									*
  * Input wrapper for log files									*
  * ------------------------------------------------------------	*/
 
@@ -24,7 +24,7 @@ struct Input__Log : public InputWrapper {
 	 * @param offsetRightBoundary Right boundary for the calculated offsets
 	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
 	 */
-	map<uint32_t, string>
+	std::map<uint32_t, std::string>
 	parse(	const char *fileName,
 			uint32_t baseOffset = 0x000000,
 			uint32_t offsetLeftBoundary = 0x000000,
@@ -39,7 +39,7 @@ struct Input__Log : public InputWrapper {
 		char labelSeparator = ':';
 		bool optUseDecimal = false;
 		
-		const map<string, OptsParser::record>
+		const std::map<std::string, OptsParser::record>
 			OptsList {
 				{ "separator",	{ type: OptsParser::record::p_char, target: &labelSeparator	} },
 				{ "useDecimal",	{ type: OptsParser::record::p_bool, target: &optUseDecimal	} }
@@ -50,16 +50,18 @@ struct Input__Log : public InputWrapper {
 		// Setup buffer, symbols list and file for input
 		const int sBufferSize = 1024;
 		uint8_t sBuffer[ sBufferSize ];
-		map<uint32_t, string> SymbolMap;
+		std::map<uint32_t, std::string> SymbolMap;
 		IO::FileInput input = IO::FileInput( fileName, IO::text );
-		if ( !input.good() ) { throw "Couldn't open input file"; }	
+		if ( !input.good() ) { 
+			throw "Couldn't open input file"; 
+		}	
 
 		// Define re-usable conditions
 		#define IS_HEX_CHAR(X) 			((unsigned)(X-'0')<10||(unsigned)(X-'A')<6||(unsigned)(X-'a')<6)  
 		#define IS_NUMERIC(X) 			((unsigned)(X-'0')<10)
 		#define SKIP_SPACES(X)			while ( *X==' ' || *X=='\t' ) X++
 
-		while ( input.readString( sBuffer, sBufferSize ) ) {
+		while ( input.readLine( sBuffer, sBufferSize ) >= 0 ) {
 
 			uint8_t* ptr = sBuffer;						// WARNING: Unsigned type is required here for certain range-based optimizations
 			
@@ -88,7 +90,7 @@ struct Input__Log : public InputWrapper {
 			
 			// Fetch label ... 
 			char* sLabel = (char*)ptr;
-			while ( !(*ptr == '\n' || *ptr == '\t' || *ptr == ' ') && *ptr ) {
+			while ( !(*ptr == '\t' || *ptr == ' ') && *ptr ) {
 				ptr++;
 			}
 			*ptr = 0x00;
@@ -97,7 +99,7 @@ struct Input__Log : public InputWrapper {
 			offset -= baseOffset;
 			if ( offset >= offsetLeftBoundary && offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
 				IO::Log( IO::debug, "Adding %s as label...", sLabel );
-				SymbolMap.insert( { offset, string(sLabel) } );    
+				SymbolMap.insert( { offset, std::string(sLabel) } );    
 			}
 			
 		}

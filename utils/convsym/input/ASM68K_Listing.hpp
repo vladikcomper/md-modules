@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.1									*
+ * ConvSym utility version 2.5									*
  * Input wrapper for the ASM68K listing format					*
  * ------------------------------------------------------------	*/
 
@@ -24,7 +24,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 	 * @param offsetRightBoundary Right boundary for the calculated offsets
 	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
 	 */
-	map<uint32_t, string>
+	std::map<uint32_t, std::string>
 	parse(	const char *fileName,
 			uint32_t baseOffset = 0x000000,
 			uint32_t offsetLeftBoundary = 0x000000,
@@ -49,14 +49,13 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		bool optProcessLocalLabels = true;
 
 		// Variables
-		long lineCounter = 0;
-		string strLastGlobalLabel("");		// default global label name
+		std::string strLastGlobalLabel("");	// default global label name
 		char localLabelSymbol = '@';		// default symbol for local labels
 		char localLabelRef = '.';			// default symbol to reference local labels within global ones
 		int32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
 
 		// Fetch options from "-inopt" agrument's value
-		const map<string, OptsParser::record>
+		const std::map<std::string, OptsParser::record>
 			OptsList {
 				{ "localSign",			{ type: OptsParser::record::p_char,		target:	&localLabelSymbol			} },
 				{ "localJoin",			{ type: OptsParser::record::p_char,		target:	&localLabelRef				} },
@@ -71,14 +70,14 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		// Setup buffer, symbols list and file for input
 		const int sBufferSize = 1024;
 		uint8_t sBuffer[ sBufferSize ];
-		map<uint32_t, string> SymbolMap;
+		std::map<uint32_t, std::string> SymbolMap;
 		IO::FileInput input = IO::FileInput( fileName, IO::text );
 		if ( !input.good() ) { throw "Couldn't open input file"; }
 
 
 		// Vocabulary for assembly directives that support labels
 		// NOTICE: This will be also extended with macro names
-		set<string> NamingOpcodes = {
+		std::set<std::string> NamingOpcodes = {
 			"=", "equ", "equs", "equr", "reg", "rs", "rsset", "set", "macro", "substr", "section", "group"
 		};
 
@@ -89,13 +88,26 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		#define IS_START_OF_LABEL(X)	((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(optProcessLocalLabels&&X==localLabelSymbol)||X=='_')
 		#define IS_LABEL_CHAR(X)		((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(unsigned)(X-'0')<10||X=='?'||X=='_')
 		#define IS_INDENTION(X)			(X==' '||X=='\t')
-		#define IS_ENDOFLINE(X)			(X=='\r'||X=='\n')
+		#define IS_ENDOFLINE(X)			(X=='\n'||X=='\r'||X==0x00)
 
 
 		// For every string in a listing file ...
-		while ( input.readString( sBuffer, sBufferSize ) ) {
+		for ( 
+				int lineCounter = 0, lineLength; 
+				lineLength = input.readLine( sBuffer, sBufferSize ), lineLength >= 0; 
+				++lineCounter 
+			) {
 
-        	lineCounter++;
+        	// If line is too short, do not proceed
+        	if ( lineLength <= 36 ) {
+        		IO::Log( IO::debug, "Line %d is too short, skipping", lineCounter );
+        		continue;
+        	}
+
+        	//// Bugfix: for when string separation was forced at null-terminator
+        	//if ( lineLength < sBufferSize ) {
+        	//	sBuffer[ lineLength+1 ] = 0x00;
+        	//}
 
 			uint8_t* const sLineOffset = sBuffer;		// E.g.: "00000AEE 301F <..>move.w (sp)+, d0\n"
 			uint8_t* const sLineText = sBuffer+36;		// E.g.: "move.w (sp)+, d0\n"
@@ -103,17 +115,22 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 			uint8_t* ptr = sBuffer;						// WARNING: Unsigned type is required here for certain range-based optimizations
 
-			// Read line offset
-			if ( !IS_HEX_CHAR(*ptr) ) { continue; }	ptr++;	// check digit #0 of offset
-			if ( !IS_HEX_CHAR(*ptr) ) { continue; }	ptr++;	// check digit #1 of offset
-			if ( !IS_HEX_CHAR(*ptr) ) { continue; }	ptr++;	// check digit #2 of offset
-			if ( !IS_HEX_CHAR(*ptr) ) { continue; }	ptr++;	// check digit #3 of offset
-			if ( !IS_HEX_CHAR(*ptr) ) { continue; }	ptr++;	// check digit #4 of offset
-			if ( !IS_HEX_CHAR(*ptr) ) { continue; }	ptr++;	// check digit #5 of offset
-			if ( !IS_HEX_CHAR(*ptr) ) { continue; }	ptr++;	// check digit #6 of offset
-			if ( !IS_HEX_CHAR(*ptr) ) { continue; }	ptr++;	// check digit #7 of offset
-			*ptr++ = 0x00;								// separate offset, so "sLineOffset" is proper c-string, containing only offset
-
+			// Check for proper offset at the beginning of the listing line
+			{
+				bool hasProperOffset = true;
+				for (int i = 0; i < 8; ++i) {
+					if ( !IS_HEX_CHAR(*ptr) ) {
+						hasProperOffset = false;
+						break;
+					}
+					ptr++;
+				}
+				if ( !hasProperOffset ) {
+					IO::Log( IO::debug, "Line %d doesn't have a proper offset, skipping...", lineCounter );
+					continue;
+				}
+				*ptr++ = 0x00;					// separate offset, so "sLineOffset" is proper c-string, containing only offset
+			}
 
 			// If this line represents an expression result, ignore
 			if ( *ptr == '=' ) {
@@ -137,6 +154,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 			// Scenario #1 : Line doesn't have indention, meaning it starts with a name
 			// NOTICE: In this case, label may use a wider range of allowed characters, hence it's referenced as "NAME" below ...
 			if ( IS_START_OF_NAME(*ptr) ) {
+				IO::Log( IO::debug, "Line %d: Possible label at the beginning of line", lineCounter );
 				sLabel = ptr++;					// assume this as label
 				while ( IS_NAME_CHAR(*ptr) ) ptr++;	// iterate through label characters
 
@@ -152,6 +170,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 			// Scenario #2 : Line starts with idention (space or tab)
 			// NOTICE: In this case, label cannot include certain characters allowed otherwise...
 			else if ( IS_INDENTION(*ptr) ) {
+				IO::Log( IO::debug, "Line %d: Possible label with idention", lineCounter );
 				do { ptr++; } while ( IS_INDENTION(*ptr) ); 	// skip idention
 				if ( IS_START_OF_LABEL(*ptr) ) {
 					sLabel = ptr++;						// assume this as label
@@ -167,13 +186,19 @@ struct Input__ASM68K_Listing : public InputWrapper {
 				}
 			}
 
+			// Scenario #3: Line doesn't seem to contain a label ...
+			else {
+				IO::Log( IO::debug, "Line %d: Didn't identify label, skipping", lineCounter );
+				continue;
+			}
+
 			// If label was determined ...
 			// WARNING: "ptr" should point past label's end!
 			if ( sLabel != nullptr ) {
 
 				// Construct full label's name as std::string object
 				bool labelIsLocal;
-				string strLabel;
+				std::string strLabel;
 				if ( *sLabel == localLabelSymbol ) {
 					labelIsLocal = true;
 					strLabel  = strLastGlobalLabel;
@@ -192,7 +217,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
             	uint8_t* const ptr_start = ptr;
 				do { ptr++; } while ( !IS_INDENTION(*ptr) && !IS_ENDOFLINE(*ptr) );
 				*ptr++ = 0x00;
-				string strOpcode( (char*)ptr_start, ptr-ptr_start-1 );		// construct opcode string
+				std::string strOpcode( (char*)ptr_start, ptr-ptr_start-1 );		// construct opcode string
 				if ( strOpcode[0] == localLabelSymbol ) {					// in case opcode is a local label reference
 					strOpcode = strLastGlobalLabel;
 					strOpcode += localLabelRef;
@@ -222,30 +247,34 @@ struct Input__ASM68K_Listing : public InputWrapper {
 						// If ignore macro definitions option is on ...
 						if ( optIgnoreMacroDefinitions ) {
 
-							int macroLineCounter = 0;
-							bool IOsuccessful;
-							while ( (IOsuccessful = input.readString( sBuffer, sBufferSize )) ) {
+							bool endmDirectiveReached = false;
 
-        						macroLineCounter++;
+							for (
+									int macroLineCounter = 0, macroLineLength;
+									macroLineLength = input.readLine( sBuffer, sBufferSize ), macroLineLength >= 0;
+									++macroLineCounter
+								) {
 
 								// Maintain line counter to warn if suspiciously many lines were processed as macro definition alone
-								if ( macroLineCounter == 1000 ) {
+								if ( macroLineCounter >= 1000 ) {
 									IO::Log( IO::warning,
 										// TODOh: Advise to enable ignore macro definitions option?
-										"Too many lines found in definition of \"%s\" macro. This is possibly due to a parsing error.",
+										"Too many lines found in definition of \"%s\" macro. This could be missing \"endm\" statemtnt or a parsing error.",
 										strLabel.c_str()
 									);
+									break;
 								}
 
-								ptr = sBuffer;
-
 								// Make sure this line includes assembly text
-								while ( *ptr && (ptr-sBuffer)<36 ) { ptr++; }
-								if ( (ptr-sBuffer)<36 ) continue;
+								if ( macroLineLength <= 36 ) {
+									continue;
+								}
+
+								ptr = sBuffer+36;
 
 								// If line starts with label, skip it ...
 								if ( !IS_INDENTION(*ptr) ) {
-									do { ptr++; } while ( !IS_INDENTION(*ptr) && !IS_ENDOFLINE(*ptr) && *ptr );
+									do { ptr++; } while ( !IS_INDENTION(*ptr) && !IS_ENDOFLINE(*ptr) );
 								}
 								
 								// Fetch opcode, if present ...
@@ -261,21 +290,26 @@ struct Input__ASM68K_Listing : public InputWrapper {
 										strLabel.c_str(), lineCounter, lineCounter+macroLineCounter
 									);
 									lineCounter += macroLineCounter;
+									endmDirectiveReached = true;
 									break;
 								}
 
 							}
 							
 							// If end of file was reached before "endm"
-							if ( !IOsuccessful ) {
+							if ( !endmDirectiveReached ) {
 								IO::Log( IO::error,
 									// TODOh: Advise to enable ignore macro definitions option?
 									"Couldn't reach end of \"%s\" macro. This is possibly due to a parsing error.",
 									strLabel.c_str()
 								);
+								break;
 							}
 
-							continue;				// cancel further processing
+							// Otherwise, cancel further processing
+							else {
+								continue;
+							}
 						}
 					}
 

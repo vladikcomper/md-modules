@@ -1,22 +1,22 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.0									*
+ * Debugging Modules Utilities Core								*
  * Bitstream helper class										*
- * (c) 2017, Vladikcomper										*
+ * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 #include <algorithm>
 
 class BitStream {
 
-	vector<uint8_t> * buffer;
+	std::vector<uint8_t> * buffer;
 	uint32_t currentBytePos;
 	uint8_t currentBitPos;
 
 public:
 
 	BitStream(): currentBytePos(0), currentBitPos(8) {	// Constructor
-		buffer = new vector<uint8_t>;
+		buffer = new std::vector<uint8_t>;
 		buffer->push_back( 0x00 );
 	};
 
@@ -61,8 +61,8 @@ public:
 			flush();
 		}
 
-		const uint8_t remainingBits = max( codeLength - currentBitPos, 0 );
-		(*buffer)[ currentBytePos ] |= (code>>remainingBits) << (currentBitPos -= min( currentBitPos, codeLength ));
+		const uint8_t remainingBits = std::max( codeLength - currentBitPos, 0 );
+		(*buffer)[ currentBytePos ] |= (code>>remainingBits) << (currentBitPos -= std::min( currentBitPos, codeLength ));
 
 		if ( remainingBits > 0 ) {
 			pushCode( code & ((1<<remainingBits) - 1), remainingBits );
@@ -80,8 +80,8 @@ public:
 			return;
 		}
 
-		const uint8_t remainingBits = max( codeLength - currentBitPos, 0 );
-		(*buffer)[ currentBytePos ] |= (code>>remainingBits) << (currentBitPos -= min( currentBitPos, codeLength ));
+		const uint8_t remainingBits = std::max( codeLength - currentBitPos, 0 );
+		(*buffer)[ currentBytePos ] |= (code>>remainingBits) << (currentBitPos -= std::min( currentBitPos, codeLength ));
 
 	};
 

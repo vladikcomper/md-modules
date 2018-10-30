@@ -1,23 +1,14 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.1									*
+ * ConvSym utility version 2.5									*
  * Main definitions file										*
  * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
-#define _CPPHeaders_
-
 // Standard C-libraries
-// NOTICE: Somehow, replacing these headers with C++ version makes program much slower
-#ifdef _CPPHeaders_
-	#include <cstdio>			// for I/O operations and file accesses
-	#include <cstdint>			// for uint8_t, uint16_t, etc.
-	#include <cstdarg>			// for va_start, va_end, etc.
-#else
-	#include <stdio.h>			// for I/O operations and file accesses
-	#include <stdint.h>			// for uint8_t, uint16_t, etc.
-	#include <stdarg.h>			// for va_start, va_end, etc.
-#endif
+#include <cstdio>			// for I/O operations and file accesses
+#include <cstdint>			// for uint8_t, uint16_t, etc.
+#include <cstdarg>			// for va_start, va_end, etc.
 
 // Standard C++ libraries
 #include <string>			// for strings processing
@@ -25,9 +16,7 @@
 #include <set>				// ''
 #include <map>				// ''
 #include <functional>		// for generic function template
-#include <regex>			// for "regex_match" et such ...
-
-using namespace std;
+#include <regex>			// for "regex_match" et al ...
 
 // Helper functions
 inline uint16_t swap16( uint16_t x ) { return (x>>8)|(x<<8); };
@@ -50,7 +39,7 @@ int main (int argc, const char ** argv) {
 	/* Provide help if no sufficient arguments were passed */
 	if (argc<2) {
 		printf(
-			"ConvSym utility version 2.1\n"
+			"ConvSym utility version 2.5\n"
 			"2016-2018, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
@@ -115,17 +104,17 @@ int main (int argc, const char ** argv) {
 	uint32_t appendOffset = 0;
 	uint32_t pointerOffset = 0;
 
-	string inputWrapperName = "asm68k_sym";		// default input format
-	string outputWrapperName = "deb2";			// default output format
-	string inputOpts = "";						// default options for input format
-	string outputOpts = "";						// default options for output format
-	string filterRegexStr = "";					// default filter expression
+	std::string inputWrapperName = "asm68k_sym";		// default input format
+	std::string outputWrapperName = "deb2";			// default output format
+	std::string inputOpts = "";						// default options for input format
+	std::string outputOpts = "";						// default options for output format
+	std::string filterRegexStr = "";					// default filter expression
 
 	/* Parse command line arguments */
 	const char *inputFileName = argv[1];
 	const char *outputFileName = argv[2];
 	{
-		const map <string, ArgvParser::record>
+		const std::map <std::string, ArgvParser::record>
 			ParametersList {
 				{ "-base",		{ type: ArgvParser::record::hexNumber,	target: &baseOffset												} },
 				{ "-range",		{ type: ArgvParser::record::hexRange,	target: &offsetLeftBoundary,	target2: &offsetRightBoundary	} },
@@ -135,7 +124,6 @@ int main (int argc, const char ** argv) {
 				{ "-inopt",		{ type: ArgvParser::record::string,		target: &inputOpts												} },
 				{ "-output",	{ type: ArgvParser::record::string,		target: &outputWrapperName										} },
 				{ "-outopt",	{ type: ArgvParser::record::string,		target: &outputOpts												} },
-				{ "-input",		{ type: ArgvParser::record::string,		target: &inputWrapperName										} },
 				{ "-org",		{ type: ArgvParser::record::hexNumber,	target: &appendOffset											} },
 				{ "-ref",		{ type: ArgvParser::record::hexNumber,	target: &pointerOffset											} },
 				{ "-filter",	{ type: ArgvParser::record::string,		target: &filterRegexStr											} },
@@ -165,41 +153,47 @@ int main (int argc, const char ** argv) {
 	}
 	if ( optFilterExclude && !filterRegexStr.length() ) {
 		IO::Log( IO::warning, "Using -exclude parameter without -filter [regex]. The -exclude parameter has no effect" );
+		optFilterExclude = false;
 	}
 	if ( optToUpper && optToLower ) {
 		IO::Log( IO::warning, "Using conflicting parameters: -toupper and -tolower. The -toupper parameter has no effect" );
+		optToUpper = false;
 	}
 
 	/* Retrieve symbols from the input file */
-	map<uint32_t, string> Symbols;
+	std::map<uint32_t, std::string> Symbols;
 	InputWrapper * input = getInputWrapper( inputWrapperName );
 	try {
 		Symbols = input->parse( inputFileName, baseOffset, offsetLeftBoundary, offsetRightBoundary, inputOpts.c_str() ); 
 	}
-	catch (const char* err) { 
-		IO::Log( IO::fatal, err ); 
+	catch (const char* err) {
+		std::string errorMessage ("Parsing input file failed: ");
+		errorMessage += err;
+		IO::Log( IO::fatal, errorMessage.c_str() );
+		delete input; 
 		return -1; 
 	}
+	delete input;
 	
 	/* Apply transformation to symbols */
 	if ( optToUpper ) {
 		for ( auto it = Symbols.begin(); it != Symbols.end(); it++ ) {
-			transform(it->second.begin(), it->second.end(), it->second.begin(), ::toupper);
+			std::transform(it->second.begin(), it->second.end(), it->second.begin(), ::toupper);
 		}
-		transform(filterRegexStr.begin(), filterRegexStr.end(), filterRegexStr.begin(), ::toupper);
+		std::transform(filterRegexStr.begin(), filterRegexStr.end(), filterRegexStr.begin(), ::toupper);
 	}    
 	if ( optToLower ) {
 		for ( auto it = Symbols.begin(); it != Symbols.end(); it++ ) {
-			transform(it->second.begin(), it->second.end(), it->second.begin(), ::tolower);
+			std::transform(it->second.begin(), it->second.end(), it->second.begin(), ::tolower);
 		}                                                         
-		transform(filterRegexStr.begin(), filterRegexStr.end(), filterRegexStr.begin(), ::tolower);
+		std::transform(filterRegexStr.begin(), filterRegexStr.end(), filterRegexStr.begin(), ::tolower);
 	}
 	
 	/* Pre-filter symbols based on regular expression */
 	if ( filterRegexStr.length() > 0 ) {
-		const auto regexExpression = regex( filterRegexStr );
+		const auto regexExpression = std::regex( filterRegexStr );
 		for ( auto it = Symbols.cbegin(); it != Symbols.cend(); /*it++*/ ) {	// NOTICE: Do not increment iterator here (see below)
-			bool matched = regex_match( it->second, regexExpression );
+			bool matched = std::regex_match( it->second, regexExpression );
 			if ( matched == optFilterExclude ) {	// will erase element: if mode=exclude and matched, if mode=include and !matched
 				it = Symbols.erase( it );
 			}
@@ -216,9 +210,13 @@ int main (int argc, const char ** argv) {
 			output->parse( Symbols, outputFileName, appendOffset, pointerOffset, outputOpts.c_str() );
 		}
 		catch (const char* err) {
-			IO::Log( IO::fatal, err );
+			std::string errorMessage ("Parsing output file failed: ");
+			errorMessage += err;
+			IO::Log( IO::fatal, errorMessage.c_str() );
+			delete output;
 			return -2;
 		}
+		delete output;
 	}
 	else {
 		IO::Log( IO::error, "No symbols passed for output, operation aborted" );

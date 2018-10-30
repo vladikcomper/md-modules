@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.1									*
+ * ConvSym utility version 2.5									*
  * Output wrapper for the Debug Information format version 2.0	*
  * ------------------------------------------------------------	*/
 
@@ -21,7 +21,7 @@ public:
 	 * Main function that generates the output
 	 */
 	void
-	parse(	map<uint32_t, string>& SymbolList,
+	parse(	std::map<uint32_t, std::string>& SymbolList,
 			const char * fileName,
 			uint32_t appendOffset = 0,
 			uint32_t pointerOffset = 0,
@@ -91,7 +91,7 @@ public:
 				uint32_t loc_Block = output.getCurrentOffset();	// remember offset, where this block starts ...
 
 				BitStream SymbolsHeap;
-				vector<SymbolRecord> offsetsData;
+				std::vector<SymbolRecord> offsetsData;
 
             	/* For every symbol within the block ... */
             	for ( ; block == (SymbolPtr->first>>16) && (SymbolPtr != SymbolList.cend()); ++SymbolPtr ) {

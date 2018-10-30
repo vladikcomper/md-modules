@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.1									*
+ * ConvSym utility version 2.5									*
  * Output formats base controller								*
  * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
@@ -52,7 +52,13 @@ struct OutputWrapper {
 
 	// Virtual function interface that handles generating output data
 	virtual void
-	parse( map<uint32_t, string>& SymbolMap, const char * fileName, uint32_t appendOffset = 0, uint32_t pointerOffset = 0, const char * opts = "" ) = 0;
+		parse( 
+			std::map<uint32_t, std::string>& SymbolMap, 
+			const char * fileName, 
+			uint32_t appendOffset = 0, 
+			uint32_t pointerOffset = 0,
+			const char * opts = "" 
+		) = 0;
 
 };
 
@@ -64,9 +70,9 @@ struct OutputWrapper {
 #include "ASM.hpp"
 
 /* Input wrappers map */
-OutputWrapper* getOutputWrapper( const string& name ) {
+OutputWrapper* getOutputWrapper( const std::string& name ) {
 
-	map<string, function<OutputWrapper*()> >
+	std::map<std::string, std::function<OutputWrapper*()> >
 	wrappersTable {
 		{ "deb1",	[]() { return new Output__Deb1();	} },
 		{ "deb2",	[]() { return new Output__Deb2();	} },

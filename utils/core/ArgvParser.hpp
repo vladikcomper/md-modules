@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.0									*
+ * Debugging Modules Utilities Core								*
  * Argument values parser helper 								*
- * (c) 2017, Vladikcomper										*
+ * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 
@@ -18,12 +18,16 @@ namespace ArgvParser {
 	/**
 	 * Function to parse command line arguments (argv, argc) according to parameter data structures
 	 */
-	inline void parse(const char ** argv, int argc, map<string,record> ParametersList ) {
+	inline void parse(const char ** argv, int argc, std::map<std::string,record> ParametersList ) {
 
 		for (int i=0; i<argc; ++i) {
 			
 			auto parameter = ParametersList.find( argv[i] );
-			#define _GET_NEXT_ARGUMENT if (++i==argc) { IO::Log(IO::fatal, "Expected value for parameter \"%s\"", parameter->first.c_str()); break; }
+			#define _GET_NEXT_ARGUMENT \
+				if (++i==argc) { \
+					IO::Log(IO::fatal, "Expected value for parameter \"%s\"", parameter->first.c_str()); \
+					break; \
+				}
 
 			if ( parameter != ParametersList.end() ) {
 				switch ( parameter->second.type ) {
@@ -45,7 +49,7 @@ namespace ArgvParser {
 
 					case record::string:
 						_GET_NEXT_ARGUMENT
-						*((string*)parameter->second.target) = argv[i];
+						*((std::string*)parameter->second.target) = argv[i];
 						break;
 						
 					default:

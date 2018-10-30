@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.1									*
+ * ConvSym utility version 2.5									*
  * Output wrapper for the Debug Information format version 1.0	*
  * ------------------------------------------------------------	*/
 
@@ -21,7 +21,7 @@ public:
 	 * Main function that generates the output
 	 */
 	void
-	parse(	map<uint32_t, string>& SymbolList,
+	parse(	std::map<uint32_t, std::string>& SymbolList,
 			const char * fileName,
 			uint32_t appendOffset = 0,
 			uint32_t pointerOffset = 0,
@@ -89,8 +89,8 @@ public:
 				IO::Log( IO::debug, "Block %02X:", block);
 				uint32_t loc_Block = output.getCurrentOffset();	// remember offset, where this block starts ...
 
-				vector<uint16_t> offsetsData;
-				vector<uint8_t> symbolsData;
+				std::vector<uint16_t> offsetsData;
+				std::vector<uint8_t> symbolsData;
 
             	/* For every symbol within the block ... */
             	for ( ; block == (SymbolPtr->first>>16) && (SymbolPtr != SymbolList.cend()); ++SymbolPtr ) {

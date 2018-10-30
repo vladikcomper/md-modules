@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.0									*
+ * Debugging Modules Utilities Core								*
  * Options parser helper class									*
- * (c) 2017, Vladikcomper										*
+ * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 
@@ -18,7 +18,7 @@ namespace OptsParser {
 	/**
 	 * Function to parse string consisting of options and their values
 	 */
-	void parse(const char* opts, map<string,record> OptsList) {
+	void parse(const char* opts, std::map<std::string, record> OptsList) {
 
     	const char * ptr = opts;
     	bool illegalCharactersFound = false;
@@ -35,7 +35,7 @@ namespace OptsParser {
 				// Fetch option name
 				ptr_start = ++ptr;
 				while ( !IS_VALID_OPERATOR(*ptr) && *ptr ) ptr++;
-				string strOptionName( ptr_start, ptr-ptr_start );
+				std::string strOptionName( ptr_start, ptr-ptr_start );
 				
 				// Fetch option operator
 				char cOptionOperator = *ptr;
@@ -57,7 +57,7 @@ namespace OptsParser {
 					while ( *ptr!=' ' && *ptr ) ptr++;
 					ptr_end = ptr;
 				}
-				string strOptionValue( ptr_start, ptr_end-ptr_start );
+				std::string strOptionValue( ptr_start, ptr_end-ptr_start );
 
             	// Decode option according to the options list
             	auto option = OptsList.find(strOptionName);
@@ -73,7 +73,7 @@ namespace OptsParser {
 							break;
 
 						case record::p_string:
-							*((string*)option->second.target) = strOptionValue;
+							*((std::string*)option->second.target) = strOptionValue;
 							break;
 
 						default:

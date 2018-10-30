@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.1									*
+ * ConvSym utility version 2.5									*
  * Output wrapper for assembly file with equates				*
  * ------------------------------------------------------------	*/
 
@@ -21,7 +21,7 @@ public:
 	 * Main function that generates the output
 	 */
 	void
-	parse(	map<uint32_t, string>& SymbolList,
+	parse(	std::map<uint32_t, std::string>& SymbolList,
 			const char * fileName,
 			uint32_t appendOffset = 0,
 			uint32_t pointerOffset = 0,

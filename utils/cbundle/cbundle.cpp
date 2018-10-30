@@ -1,23 +1,15 @@
 
 /* ------------------------------------------------------------ *
- * Bundle Compilation utility v.1.0								*
+ * Bundle Compilation utility v.1.1								*
  * Main definitions file										*
- * (c) 2017, Vladikcomper										*
+ * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
-#define _CPPHeaders_
-
 // Standard C-libraries
-// NOTICE: Somehow, replacing these headers with C++ version makes program much slower
-#ifdef _CPPHeaders_
-	#include <cstdio>			// for I/O operations and file accesses
-	#include <cstdint>			// for uint8_t, uint16_t, etc.
-	#include <cstdarg>			// for va_start, va_end, etc.
-#else
-	#include <stdio.h>			// for I/O operations and file accesses
-	#include <stdint.h>			// for uint8_t, uint16_t, etc.
-	#include <stdarg.h>			// for va_start, va_end, etc.
-#endif
+#include <cstdio>			// for I/O operations and file accesses
+#include <cstdint>			// for uint8_t, uint16_t, etc.
+#include <cstdarg>			// for va_start, va_end, etc.
+#include <cstring>			// for strlen, strncspn, etc.
 
 // Standard C++ libraries
 #include <string>			// for strings processing
@@ -25,7 +17,6 @@
 #include <set>				// ''
 #include <map>				// ''
 
-using namespace std;
 
 // Helper classes
 #include "../core/IO.hpp"

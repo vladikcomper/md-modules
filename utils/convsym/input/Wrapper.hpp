@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.1									*
+ * ConvSym utility version 2.5									*
  * Input formats base controller								*
  * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
@@ -12,8 +12,14 @@ struct InputWrapper {
 	virtual ~InputWrapper() { }
 
 	// Virtual function interface that handles input file parsing
-	virtual map<uint32_t, string>
-		parse( const char *fileName, uint32_t baseOffset, uint32_t offsetLeftBoundary, uint32_t offsetRightBoundary, const char * opts ) = 0;
+	virtual std::map<uint32_t, std::string>
+		parse( 
+			const char *fileName, 
+			uint32_t baseOffset, 
+			uint32_t offsetLeftBoundary, 
+			uint32_t offsetRightBoundary, 
+			const char * opts 
+		) = 0;
 
 };
 
@@ -24,9 +30,9 @@ struct InputWrapper {
 #include "Log.hpp"
 
 /* Input wrappers map */
-InputWrapper* getInputWrapper( const string& name ) {
+InputWrapper* getInputWrapper( const std::string& name ) {
 
-	map<string, function<InputWrapper*()> >
+	std::map<std::string, std::function<InputWrapper*()> >
 	wrappersTable {
 		{ "asm68k_sym", []() { return new Input__ASM68K_Sym(); } },
 		{ "asm68k_lst", []() { return new Input__ASM68K_Listing(); } },

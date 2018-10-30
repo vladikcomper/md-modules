@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.1									*
+ * ConvSym utility version 2.5									*
  * Input wrapper for the ASM68K compiler's symbol format		*
  * ------------------------------------------------------------	*/
 
@@ -22,7 +22,7 @@ struct Input__ASM68K_Sym : public InputWrapper {
 	 * @param offsetRightBoundary Right boundary for the calculated offsets
 	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
 	 */
-	map<uint32_t, string>
+	std::map<uint32_t, std::string>
 	parse(	const char *fileName,
 			uint32_t baseOffset = 0x000000,
 			uint32_t offsetLeftBoundary = 0x000000,
@@ -32,7 +32,7 @@ struct Input__ASM68K_Sym : public InputWrapper {
 		IO::FileInput input = IO::FileInput( fileName );
 		if ( !input.good() ) { throw "Couldn't open input file"; }
 
-		map<uint32_t, string> SymbolMap;
+		std::map<uint32_t, std::string> SymbolMap;
         input.setOffset( 0x0008 );
 
 		// Process data records
@@ -50,9 +50,9 @@ struct Input__ASM68K_Sym : public InputWrapper {
 
 			offset -= baseOffset;
 			if ( offset >= offsetLeftBoundary && offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
-				char label[ labelLength ];
-				input.readData( &label, labelLength );
-	            SymbolMap.insert( { offset, string( (const char*)&label, (size_t)labelLength ) } );
+				uint8_t label[ labelLength ];
+				input.readData( (uint8_t*)&label, labelLength );
+	            SymbolMap.insert( { offset, std::string( (const char*)&label, (size_t)labelLength ) } );
 			}
 			else {
 				input.setOffset( labelLength, IO::current );

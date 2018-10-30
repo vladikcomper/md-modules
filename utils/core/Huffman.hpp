@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.0									*
+ * Debugging Modules Utilities Core								*
  * Huffman encoder implementation								*
- * (c) 2017, Vladikcomper										*
+ * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 struct Huffman {
@@ -61,8 +61,8 @@ struct Huffman {
 	};
 
 	/* Define type for organized Huffman records */
-	typedef multiset<Record, sortByCode>
-	RecordSet;
+	typedef std::multiset<Record, sortByCode> 
+		RecordSet;
 
 
 	/* ------------------------ *
@@ -99,7 +99,7 @@ struct Huffman {
 	encode( const uint32_t freqTable[0x100] ) {
 
 		/* Generate unstructurized queue of Huffman nodes, sorted by the weight */
-		multimap<uint32_t, Node*> HuffmanQueue;
+		std::multimap<uint32_t, Node*> HuffmanQueue;
 
 		for ( int i=0; i<0x100; i++ ) {
 			if ( freqTable[i] > 0 ) {

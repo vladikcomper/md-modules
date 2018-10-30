@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.1									*
+ * ConvSym utility version 2.5									*
  * Input wrapper for the AS listing format						*
  * ------------------------------------------------------------	*/
 
@@ -25,7 +25,7 @@ struct Input__AS_Listing : public InputWrapper {
 	 * @param offsetRightBoundary Right boundary for the calculated offsets
 	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
 	 */
-	map<uint32_t, string>
+	std::map<uint32_t, std::string>
 	parse(	const char *fileName,
 			uint32_t baseOffset = 0x000000,
 			uint32_t offsetLeftBoundary = 0x000000,
@@ -36,13 +36,13 @@ struct Input__AS_Listing : public InputWrapper {
 
 		// Variables
 		uint8_t sBuffer[ sBufferSize ];
-		map<uint32_t, string> SymbolMap;
+		std::map<uint32_t, std::string> SymbolMap;
 		IO::FileInput input = IO::FileInput( fileName, IO::text );
 		if ( !input.good() ) { throw "Couldn't open input file"; }
 		int32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
 
 		// For every string in a listing file ...
-		while ( input.readString( sBuffer, sBufferSize ) ) {
+		while ( input.readLine( sBuffer, sBufferSize ) >= 0 ) {
 
 			// Known issues for the Sonic 2 disassembly:
 			//	* Some macros somehow define labels that looks like global ones (notably, _MOVE and such)
@@ -130,7 +130,7 @@ struct Input__AS_Listing : public InputWrapper {
 						// Add label to the symbols table
 						offset -= baseOffset;
 						if ( offset >= offsetLeftBoundary && offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
-				            SymbolMap.insert( { offset, string( (const char*)label ) } );
+				            SymbolMap.insert( { offset, std::string( (const char*)label ) } );
 						}
 					}
 					else {
