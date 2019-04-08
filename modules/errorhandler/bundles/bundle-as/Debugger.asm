@@ -79,20 +79,20 @@ setx	equ		$FA				; set x-position
 ; Import error handler global functions
 ; ---------------------------------------------------------------
 
-ErrorHandler___global__error_initconsole: label ErrorHandler+$146
-ErrorHandler___global__errorhandler_setupvdp: label ErrorHandler+$234
-ErrorHandler___global__console_loadpalette: label ErrorHandler+$A1C
-ErrorHandler___global__console_setposasxy_stack: label ErrorHandler+$A58
-ErrorHandler___global__console_setposasxy: label ErrorHandler+$A5E
-ErrorHandler___global__console_getposasxy: label ErrorHandler+$A8A
-ErrorHandler___global__console_startnewline: label ErrorHandler+$AAC
-ErrorHandler___global__console_setbasepattern: label ErrorHandler+$AD4
-ErrorHandler___global__console_setwidth: label ErrorHandler+$AE8
-ErrorHandler___global__console_writeline_withpattern: label ErrorHandler+$AFE
-ErrorHandler___global__console_writeline: label ErrorHandler+$B00
-ErrorHandler___global__console_write: label ErrorHandler+$B04
-ErrorHandler___global__console_writeline_formatted: label ErrorHandler+$BB0
-ErrorHandler___global__console_write_formatted: label ErrorHandler+$BB4
+ErrorHandler___global__error_initconsole: label ErrorHandler+$148
+ErrorHandler___global__errorhandler_setupvdp: label ErrorHandler+$23C
+ErrorHandler___global__console_loadpalette: label ErrorHandler+$A26
+ErrorHandler___global__console_setposasxy_stack: label ErrorHandler+$A62
+ErrorHandler___global__console_setposasxy: label ErrorHandler+$A68
+ErrorHandler___global__console_getposasxy: label ErrorHandler+$A94
+ErrorHandler___global__console_startnewline: label ErrorHandler+$AB6
+ErrorHandler___global__console_setbasepattern: label ErrorHandler+$ADE
+ErrorHandler___global__console_setwidth: label ErrorHandler+$AF2
+ErrorHandler___global__console_writeline_withpattern: label ErrorHandler+$B08
+ErrorHandler___global__console_writeline: label ErrorHandler+$B0A
+ErrorHandler___global__console_write: label ErrorHandler+$B0E
+ErrorHandler___global__console_writeline_formatted: label ErrorHandler+$BBA
+ErrorHandler___global__console_write_formatted: label ErrorHandler+$BBE
 
 ; ---------------------------------------------------------------
 ; Macros

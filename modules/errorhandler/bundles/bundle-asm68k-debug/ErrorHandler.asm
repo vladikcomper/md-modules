@@ -69,20 +69,20 @@ ErrorExcept:
 ; Import error handler global functions
 ; ---------------------------------------------------------------
 
-ErrorHandler.__global__error_initconsole equ ErrorHandler+$146
-ErrorHandler.__global__errorhandler_setupvdp equ ErrorHandler+$234
-ErrorHandler.__global__console_loadpalette equ ErrorHandler+$A1C
-ErrorHandler.__global__console_setposasxy_stack equ ErrorHandler+$A58
-ErrorHandler.__global__console_setposasxy equ ErrorHandler+$A5E
-ErrorHandler.__global__console_getposasxy equ ErrorHandler+$A8A
-ErrorHandler.__global__console_startnewline equ ErrorHandler+$AAC
-ErrorHandler.__global__console_setbasepattern equ ErrorHandler+$AD4
-ErrorHandler.__global__console_setwidth equ ErrorHandler+$AE8
-ErrorHandler.__global__console_writeline_withpattern equ ErrorHandler+$AFE
-ErrorHandler.__global__console_writeline equ ErrorHandler+$B00
-ErrorHandler.__global__console_write equ ErrorHandler+$B04
-ErrorHandler.__global__console_writeline_formatted equ ErrorHandler+$BB0
-ErrorHandler.__global__console_write_formatted equ ErrorHandler+$BB4
+ErrorHandler.__global__error_initconsole equ ErrorHandler+$148
+ErrorHandler.__global__errorhandler_setupvdp equ ErrorHandler+$23C
+ErrorHandler.__global__console_loadpalette equ ErrorHandler+$A26
+ErrorHandler.__global__console_setposasxy_stack equ ErrorHandler+$A62
+ErrorHandler.__global__console_setposasxy equ ErrorHandler+$A68
+ErrorHandler.__global__console_getposasxy equ ErrorHandler+$A94
+ErrorHandler.__global__console_startnewline equ ErrorHandler+$AB6
+ErrorHandler.__global__console_setbasepattern equ ErrorHandler+$ADE
+ErrorHandler.__global__console_setwidth equ ErrorHandler+$AF2
+ErrorHandler.__global__console_writeline_withpattern equ ErrorHandler+$B08
+ErrorHandler.__global__console_writeline equ ErrorHandler+$B0A
+ErrorHandler.__global__console_write equ ErrorHandler+$B0E
+ErrorHandler.__global__console_writeline_formatted equ ErrorHandler+$BBA
+ErrorHandler.__global__console_write_formatted equ ErrorHandler+$BBE
 
 
 ; ---------------------------------------------------------------
