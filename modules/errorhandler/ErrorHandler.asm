@@ -199,7 +199,7 @@ ErrorHandler:
 	; -----------------
 
 	movea.w	a4, a2
-	movea.w 2.w, a1							; a1 = stack top
+	movea.w ($880000+2).l, a1				; a1 = stack top
 	subq.w	#1, a1							; hotfix to convert stack pointer $0000 to $FFFF, decrement by 1 shouldn't make any difference otherwise
 
 	jsr		Console_GetPosAsXY(pc)			; d0/d1 = XY-pos
@@ -387,13 +387,15 @@ Str_IntHandler_Unknown:
 ; ---------------------------------------------------------------
 
 Error_GuessCaller:
-	movea.w	2.w, a1					; a1 = stack top boundary
+	movea.w	($880000+2).l, a1		; a1 = stack top boundary
 	subq.w	#4, a1					; subtract a longword to set offset you should pass through
 	cmpa.w	a2, a1
 	blo.s	@nocaller
 
 @try_offset:
-	cmp.w	#$40, (a2)				; does this seem like an offset?
+	moveq	#-$80, d1				; d1 = -$80
+	add.w	(a2), d1				; d1 = offset high byte - $80
+	cmp.w	#$20, d1				; is offset high byte between $80..$9F?
 	blo.s	@caller_found			; if yes, branch
 	addq.w	#2, a2					; try some next offsets
 	cmpa.w	a2, a1
