@@ -198,9 +198,9 @@ ErrorHandler:
 	; Stack contents
 	; -----------------
 
-	movea.w	a4, a2
-	movea.w ($880000+2).l, a1				; a1 = stack top
-	subq.w	#1, a1							; hotfix to convert stack pointer $0000 to $FFFF, decrement by 1 shouldn't make any difference otherwise
+	movea.l	a4, a2
+	movea.l ($880000).l, a1					; a1 = stack top
+	subq.l	#1, a1							; hotfix to convert stack pointer $0000 to $FFFF, decrement by 1 shouldn't make any difference otherwise
 
 	jsr		Console_GetPosAsXY(pc)			; d0/d1 = XY-pos
 	moveq	#28-3, d5
@@ -281,8 +281,8 @@ Error_DrawStackRow_Continue:
 
 	@loop:
 		moveq	#$FFFFFF00|_pal2, d1	; use light blue
-		cmp.w	a1, a2					; is current word out of stack?
-		blt.s	@0						; if not, branch
+		cmpa.l	a1, a2					; is current word out of stack?
+		blo.s	@0						; if not, branch
 		moveq	#$FFFFFF00|_pal3, d1	; use dark blue
 	@0:	move.b	d1, (a0)+				; setup color
 		move.w	(a2)+, d1
