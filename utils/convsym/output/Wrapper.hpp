@@ -82,7 +82,7 @@ OutputWrapper* getOutputWrapper( const std::string& name ) {
 
 	auto entry = wrappersTable.find( name );
 	if ( entry == wrappersTable.end() ) {
-		IO::Log( IO::fatal, "Unknown output format specifier: %s", name );
+		IO::Log( IO::fatal, "Unknown output format specifier: %s", name.c_str() );
 		throw "Bad output format specifier";
 	}
 

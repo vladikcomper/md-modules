@@ -162,18 +162,15 @@ int main (int argc, const char ** argv) {
 
 	/* Retrieve symbols from the input file */
 	std::map<uint32_t, std::string> Symbols;
-	InputWrapper * input = getInputWrapper( inputWrapperName );
 	try {
+		InputWrapper * input = getInputWrapper( inputWrapperName );
 		Symbols = input->parse( inputFileName, baseOffset, offsetLeftBoundary, offsetRightBoundary, inputOpts.c_str() ); 
+		delete input;
 	}
 	catch (const char* err) {
-		std::string errorMessage ("Parsing input file failed: ");
-		errorMessage += err;
-		IO::Log( IO::fatal, errorMessage.c_str() );
-		delete input; 
+		IO::Log( IO::fatal, "Input file parsing failed: %s", err ); 
 		return -1; 
 	}
-	delete input;
 	
 	/* Apply transformation to symbols */
 	if ( optToUpper ) {
@@ -205,18 +202,15 @@ int main (int argc, const char ** argv) {
 
 	/* Pass generated symbols list to the output wrapper */
 	if ( Symbols.size() > 0 ) {
-		OutputWrapper * output = getOutputWrapper( outputWrapperName );
 		try {
+			OutputWrapper * output = getOutputWrapper( outputWrapperName );
 			output->parse( Symbols, outputFileName, appendOffset, pointerOffset, outputOpts.c_str() );
+			delete output;
 		}
 		catch (const char* err) {
-			std::string errorMessage ("Parsing output file failed: ");
-			errorMessage += err;
-			IO::Log( IO::fatal, errorMessage.c_str() );
-			delete output;
+			IO::Log( IO::fatal, "Output file pasing failed: %s", err );
 			return -2;
 		}
-		delete output;
 	}
 	else {
 		IO::Log( IO::error, "No symbols passed for output, operation aborted" );

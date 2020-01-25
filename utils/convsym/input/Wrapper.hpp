@@ -42,7 +42,7 @@ InputWrapper* getInputWrapper( const std::string& name ) {
 
 	auto entry = wrappersTable.find( name );
 	if ( entry == wrappersTable.end() ) {
-		IO::Log( IO::fatal, "Unknown input format specifier: %s", name );
+		IO::Log( IO::fatal, "Unknown input format specifier: %s", name.c_str() );
 		throw "Bad input format specifier";
 	}
 
