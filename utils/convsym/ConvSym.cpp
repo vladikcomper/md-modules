@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.5									*
+ * ConvSym utility version 2.5.1								*
  * Main definitions file										*
  * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
@@ -39,7 +39,7 @@ int main (int argc, const char ** argv) {
 	/* Provide help if no sufficient arguments were passed */
 	if (argc<2) {
 		printf(
-			"ConvSym utility version 2.5\n"
+			"ConvSym utility version 2.5.1\n"
 			"2016-2018, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"

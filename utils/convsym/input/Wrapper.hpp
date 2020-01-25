@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.5									*
+ * ConvSym utility version 2.5.1								*
  * Input formats base controller								*
  * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
