@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.5.1								*
+ * ConvSym utility version 2.5.2								*
  * Output wrapper for the Debug Information format version 1.0	*
  * ------------------------------------------------------------	*/
 

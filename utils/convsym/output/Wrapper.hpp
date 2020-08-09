@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.5.1								*
+ * ConvSym utility version 2.5.2								*
  * Output formats base controller								*
- * (c) 2017-2018, Vladikcomper									*
+ * (c) 2017-2018, 2020, Vladikcomper							*
  * ------------------------------------------------------------	*/
 
 
