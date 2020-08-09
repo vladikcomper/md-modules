@@ -64,7 +64,7 @@ namespace IO {
 		 * Function to return error state
 		 */
 		inline bool good() {
-			return file!=nullptr;
+			return file != nullptr;
 		}
 
 		/**

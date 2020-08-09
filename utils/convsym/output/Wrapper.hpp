@@ -20,6 +20,12 @@ struct OutputWrapper {
 
 			IO::FileOutput* output = new IO::FileOutput( fileName, IO::append );
 
+			// Make sure IO operation was successful
+			if (!output->good()) {
+				IO::Log( IO::fatal, "Couldn't open file \"%s\"", fileName );
+				throw "IO error";
+			}
+
 			// If append mode is specified: append to the end of file
 			if ( appendOffset == -1 ) {
 				output->setOffset( 0, IO::end );			// move pointer to the end of file ...

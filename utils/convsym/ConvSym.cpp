@@ -208,7 +208,7 @@ int main (int argc, const char ** argv) {
 			delete output;
 		}
 		catch (const char* err) {
-			IO::Log( IO::fatal, "Output file pasing failed: %s", err );
+			IO::Log( IO::fatal, "Output generation failed: %s", err );
 			return -2;
 		}
 	}
