@@ -47,7 +47,7 @@ int main (int argc, const char ** argv) {
 			"\n"
 			"Available options:\n"
 			"  -input\n"
-			"    Selects input file format. Currently supported format specifiers: asm68k_sym, as_lst\n"
+			"    Selects input file format. Currently supported format specifiers: asm68k_sym, asm68k_lst, as_lst\n"
 			"    Default value is: asm68k_sym\n"
 			"\n"
 			"  -output\n"
