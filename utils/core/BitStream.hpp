@@ -20,6 +20,8 @@ public:
 		buffer->push_back( 0x00 );
 	};
 
+	// TODOh: Implement copy constructor and operator =.
+
 	~BitStream() {	// Destructor
 		delete buffer;
 	};
