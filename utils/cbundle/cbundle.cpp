@@ -66,6 +66,7 @@ int main (int argc, const char ** argv) {
 
 	/* Parse command line arguments */
 	const char *inputFileName = argv[1];
+	// TODOh: Implement "-debug" flag to toggle this option.
 	bool optDebug = true;
 	IO::LogLevel = optDebug ? IO::debug : IO::warning;
 	
