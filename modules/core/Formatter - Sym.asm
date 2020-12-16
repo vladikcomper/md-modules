@@ -72,11 +72,10 @@ FormatSym_Displacement:
 	bcs.s	FormatSym_Return
 @buffer_ok:
 
-	swap	d1
-	tst.w	d1
-	beq		FormatHex_Word_Swap
-	jsr		FormatHex_Word(pc)
-	jmp		FormatHex_Word_Swap(pc)
+	swap	d1								; swap displacement longword
+	tst.w	d1								; test higher 16-bits of displacement
+	beq		FormatHex_Word_Swapped			; if bits are empty, display displacement as word
+	bra		FormatHex_Long_Swapped			; otherwise, display longword
 
 ; ---------------------------------------------------------------
 ; INPUT:

@@ -46,10 +46,12 @@ FormatHex_Byte:
 ; ---------------------------------------------------------------
 FormatHex_LongWord:
 	swap	d1
+
+FormatHex_LongWord_Swapped:
 	bsr.s	FormatHex_Word
 	bcs.s	FormatHex_Return			; if buffer terminated, branch
 
-FormatHex_Word_Swap:
+FormatHex_Word_Swapped:
 	swap	d1
 
 ; ---------------------------------------------------------------
