@@ -418,7 +418,7 @@ ErrorHandler_SetupVDP:	__global
 	lea 	VDP_Ctrl, a5 			; a5 = VDP_Ctrl
 	lea 	-4(a5), a6				; a6 = VDP_Data
 
-	; Make sure there is no pending writes to VDP
+	; Make sure there are no pending writes to VDP
 	tst.w	(a5)
 
 	; Make sure there are no DMA's occuring, otherwise wait
@@ -511,7 +511,7 @@ ErrorHandler_ConsoleConfig:
 	; ---------------------------------------------------------------
 	; FORMAT:
 	;	dc.w	Color1, ..., ColorN, -X*2
-	;		X = Number of longs words to fill until line ends
+	;		X = Number of longwords to fill until line ends
 	;
 	; NOTICE: Transparent color at the beginning of a palette line is
 	;	auto-filled with $000 (black), hence Color1 is index #1, etc
