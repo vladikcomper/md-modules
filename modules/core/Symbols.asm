@@ -28,7 +28,7 @@ GetSymbolByOffset:
 	moveq	#0, d3					; d3 will be gain value
 
 	swap	d1						; d1 = block
-	ext.w	d1						; sign extend block id: xx00..xx7F --> 0000..007F
+	and.w	#$FF, d1				; mask higher 8-bits of block id, since MD has 24-bit address bus anyways ...
 	add.w	d1, d1					; d1 = block*2
 	add.w	d1, d1					; d1 = block*4
 	cmp.w	d0, d1					; is the offset's block within [0..lastBlock+1]?
