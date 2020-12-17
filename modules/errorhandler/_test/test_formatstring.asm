@@ -10,7 +10,23 @@
 	include "MDShell-v11.asm"
 
 ; ---------------------------------------------------------------
-	jmp		Main(pc)				; entry point
+	jmp		(Main).l					; entry point
+; ---------------------------------------------------------------
+
+; ---------------------------------------------------------------
+; Dummy labels for testing of offset decoding
+;
+; WARNING! All labels are rendered in lowercase, since
+; ASM68K's symbol's file is unsed.
+; ---------------------------------------------------------------
+
+short_data_chunk:
+	ds.b	$10				; $10 bytes
+
+long_data_chunk:
+	ds.b	$10001			; $10001 bytes
+	even
+
 ; ---------------------------------------------------------------
 
 	include	"..\..\core\Symbols.asm"
@@ -21,99 +37,102 @@
 	include	"..\..\core\Format String.asm"
 
 ; ---------------------------------------------------------------
+; Main routine
+; ---------------------------------------------------------------
+
+StringsBuffer = $FF0000
+ArgumentsStack = $FFFF8000
+
+_bufferSize = $20					; if you change this, you have to alter all the buffer overflow tests suites ...
+_canaryValue = $DC					; an arbitrary byte value, written after the buffer to detect overflows
+
 Main:
-	lea		$FF0000, a0
+	Console.Write <color|fgWhite,'Running "FormatString" tests...', endl>
 
 	lea		@TestsData(pc), a6		; a6 = tests data
-	lea		$FF0000, a5				; a5 = string buffer
+	lea		StringsBuffer, a5		; a5 = string buffer
 	moveq	#0, d1					; d1 will be tests counter
 
 	@RunTest:
-		Console.Write <color|fgWhite,'Test #', hex, '... '>, { <.b d1> }
-
-		lea		(sp), a3
-		move.w	(a6)+, d4
-		beq.s	@args_done
-		sub.w	d4, sp   
-		lea		(sp), a3
-		lsr.w	d4
-		subq.w	#1, d4
-		
-		@args_loop:
-			move.w	(a6)+, (a3)+
-			dbf		d4, @args_loop
-		
-		@args_done:
-
-		moveq	#0, d4
-		move.b	(a6)+, d4				; d4 = source string size
-
-		lea		(a5), a0				; a0 = buffer
-		lea		(a6), a1				; a1 = source string
-                                              
-		moveq	#$20-1, d7				; d7 = string buffer size -1
-		lea		(sp), a2
+		lea		(a5), a0						; a0 = buffer
+		movea.l	(a6), a1						; a1 = source string
+		lea		$A(a6), a2						; a2 = arguments stack
+		moveq	#_bufferSize-1, d7				; d7 = string buffer size -1
 		lea		@IdleFlush(pc), a4
-		jsr		FormatString
+		move.b	#_canaryValue, _bufferSize(a5)	; write down canary value after the end of the buffer
 
-		lea		(a3), sp				; restore stack pointer
+		jsr		FormatString					; HERE'S OUR STAR LADIES AND GENTLEMEN !~  LET'S SEE HOW IT SURVIVES THE TEST
 
-		add.w	d4, a6					; jump over the source string to get the resulting string ...
+		cmp.b	#_canaryValue, _bufferSize(a5)	; make sure canary value didn't get overwritten ...
+		bne.w	@BufferOverflow					; if it did, then writting past the end of the buffer is detected
+		sf.b	_bufferSize(a5)					; add null-terminator past the end of the buffer, so strings are displayed correctly ...
+
+		movea.l	4(a6), a1						; a1 = Compare string
 		moveq	#0, d4
-		move.b	(a6)+, d4				; d4 = correctly formatted output size
-		lea		(a6), a1				; a1 = correct
-										; a5 = actual
-										
-		lea		(a5), a2				; a2 = got
-		lea		(a1), a3				; a3 = expected
-		
-		adda.w	d4, a6					; a6 = pointer to the next test ...
-		move.l	a6, d0
-		addq.w	#1, d0
-		and.w	#-2, d0
-		movea.l	d0, a6
+		move.b	(a1)+, d4						; d4 = correctly formatted output size
 
+		lea		(a5), a2						; a2 = Got string
+		lea		(a1), a3						; a3 = Expected string
+		
 		sub.l	a5, a0	
-		move.w	a0, d3					; d3 = actual output size  
-		cmp.w	d3, d4
-		bne		@SizeMismatch
+		move.w	a0, d3							; d3 = actual output size  
+		cmp.w	d3, d4							; compare actual output size to the expected
+		bne		@SizeMismatch					; if they don't match, branch
 
 		subq.w	#1, d4
-		bmi.w	@GenericError
+		bmi.w	@CompareStringCorrupted
 
 		@compare_loop:
 			cmpm.b	(a1)+, (a5)+
 			bne.w	@ByteMismatch
 			dbf		d4, @compare_loop
 
-		Console.Write <color|fgGreen,'PASSED', endl>
-
 	@NextTest:
-		addq.w	#1, d1
-		tst.w	(a6)
-		bpl.w	@RunTest
+		addq.w	#1, d1							; increment test number
+		adda.w	8(a6), a6						; a6 => Next test
+		tst.w	(a6)							; is test header valid?
+		bpl.w	@RunTest						; if yes, keep doing tests
 		
-		Console.Write <color|fgGreen,'ALL TESTS PASSED SUCCESSFULLY', endl>
+	Console.Write <color|fgWhite,endl,'Number of completed tests: ',dec, endl>, { <.b d1> }
+	Console.Write <color|fgGreen,'ALL TESTS HAVE PASSED SUCCESSFULLY', endl>
+	rts
+
+	; -------------------------------------------------------------------------		
+	@PrintFailureHeader:
+		Console.Write <color|fgRed,'Test #', dec, ' FAILED', endl>, { <.b d1> }
 		rts
-		
-	@TestFailure:
+
+	; -------------------------------------------------------------------------		
+	@PrintFailureDiff:
 		Console.Write <color|fgWhite, 'Got:', endl, color|fgGrey, '"', str, '"', endl, color|fgWhite, 'Expected:', endl, color|fgGrey, '"', str, '"', endl >, { <.l a2>, <.l a3> }
+		
+	@HaltTests:
 		Console.Write <color|fgRed,'TEST FAILURE, STOPPING', endl>
 		rts
 
+	; -------------------------------------------------------------------------		
+	@BufferOverflow:
+		bsr	@PrintFailureHeader
+		Console.Write <color|fgRed,'Error: Writting past the end of buffer', endl>
+		bra @HaltTests
+
+	; -------------------------------------------------------------------------		
 	@SizeMismatch:
-		Console.Write <color|fgRed,'FAILED', endl, 'Error: Size mismatch (',hex,'<>',hex,')', endl>, { <.b d3>, <.b d4> }
-		bra	@TestFailure
+		bsr	@PrintFailureHeader
+		Console.Write <color|fgRed,'Error: Size mismatch (',hex,'<>',hex,')', endl>, { <.b d3>, <.b d4> }
+		bra	@PrintFailureDiff
 
+	; -------------------------------------------------------------------------		
 	@ByteMismatch:
-		Console.Write <color|fgRed,'FAILED', endl, 'Error: Byte mismatch (',hex,'<>',hex,')', endl>, { <.b -1(a1)>, <.b -1(a5)> }
-		bra	@TestFailure
+		bsr	@PrintFailureHeader
+		Console.Write <color|fgRed,'Error: Byte mismatch (',hex,'<>',hex,')', endl>, { <.b -1(a1)>, <.b -1(a5)> }
+		bra	@PrintFailureDiff
 		
-	@GenericError:
-		Console.Write <color|fgRed,'FAILED', endl, 'Error: General failure', endl>
-		bra	@TestFailure
-
-	rts
+	; -------------------------------------------------------------------------		
+	@CompareStringCorrupted:
+		bsr	@PrintFailureHeader
+		Console.Write <color|fgRed,'Error: Compare string corrupted', endl>
+		bra	@PrintFailureDiff
 
 ; --------------------------------------------------------------
 ; Buffer flush function
@@ -129,20 +148,26 @@ dcs	macro
 	@start\@:
 		dc.b	\1
 	@end\@:
+		dc.b	0				; also put a null-terminator, so MDShell may print it as C-string also ...
 	endm
 	
 addTest macro args,source_str,compare_str
-	dc.w	(@stack_end\@-@stack_beg\@)
 
-@stack_beg\@:
-	rept narg(args)
+@test_header\@:
+	dc.l	@source_string\@						; (a6) => Source string absolute pointer
+	dc.l	@compare_string\@						; 4(a6) => Compare string absolute pointer
+	dc.w	@test_end\@-@test_header\@				; 8(a6)	=> End of test relative pointer
+
+	rept narg(args)									; $A(a6) and on => Arguments stack
 		dc\args
 		shift args
 	endr
-@stack_end\@:	
 
-	dcs	<\source_str>
-	dcs <\compare_str>
+@source_string\@:
+	dc.b \source_str
+
+@compare_string\@:
+	dcs <\compare_str>								; this string also includes "length" byte for correct computations
 	even
 	
 @test_end\@:
@@ -207,76 +232,96 @@ addTest macro args,source_str,compare_str
 			<'-----------',$91,' ',$83,' ',$83,'--',$00>, &
 			<'-----------1234 01234567 89ABCDE'>   
 
-	; #0A: Multiple formatters test     
+	; #10: Multiple formatters test     
 	addTest { <.w 1234>, <.l $01234567>, <.l $89ABCDEF> }, &
 			<$99,' ',$A0,' ',$88,$00>, &
 			<'+1234 00100011 +67'>
 								
-	; #0B: String decoding test #1
+	; #11: String decoding test #1
 	addTest { <.l @SampleString1> }, &
 			<$D0,$00>, &
 			<'<String insertion test>'>
 			
-	; #0C: Buffer limit + String decoding test #1
+	; #12: Buffer limit + String decoding test #1
 	addTest { <.l @SampleString1>, <.l @SampleString1> }, &
 			<$D0,$D0,$00>, &
 			<'<String insertion test><String i'>
 			
-	; #0D: Buffer limit + String decoding test #2
+	; #13: Buffer limit + String decoding test #2
 	addTest { <.l @SampleString2> }, &
 			<$D0,$00>, &
 			<'This string takes all the buffer'>
 			
-	; #0E: Buffer limit + String decoding test #3
+	; #14: Buffer limit + String decoding test #3
 	addTest { <.l @SampleString2>, <.l @SampleString2> }, &
 			<$D0,$D0,$00>, &
 			<'This string takes all the buffer'>
 			
-	; #0F: Zero-length string decoding test #1
+	; #15: Zero-length string decoding test #1
 	addTest { <.l @EmptyString> }, &
 			<'[',$D0,']',$00>, &
 			<'[]'>
 						
-	; #10: Zero-length string decoding test #2
+	; #16: Zero-length string decoding test #2
 	addTest { <.l @EmptyString>, <.l @EmptyString>, <.l @EmptyString>, <.l @EmptyString> }, &
 			<$D0,$D0,'-',$D0,$D0,$00>, &
 			<'-'>
 			
-	; #11: Zero-length string decoding test #3
+	; #17: Zero-length string decoding test #3
 	addTest { <.l @EmptyString>, <.l @EmptyString> }, &
 			<'[',$D0,$D0,']',$00>, &
 			<'[]'>
 	
-	; #12: Character decoding test #1
+	; #18: Character decoding test #1
 	addTest { <.l @OneCharacterString> }, &
 			<$D0,$00>, &
 			<'a'>
 			
-	; #13: Character decoding test #2
+	; #19: Character decoding test #2
 	addTest { <.l @OneCharacterString>, <.l @OneCharacterString> }, &
 			<$D0,$D0,$00>, &
 			<'aa'>
 			
-	; #14: Buffer limit + Character decoding test #1
+	; #20: Buffer limit + Character decoding test #1
 	addTest { <.l @OneCharacterString> }, &
 			<'This string takes all the buffer',$D0,$00>, &
 			<'This string takes all the buffer'>
 			
-	; #15: Buffer limit + Character decoding test #2
+	; #21: Buffer limit + Character decoding test #2
 	addTest { <.l @OneCharacterString> }, &
 			<'This string takes almost all ..',$D0,$00>, &
 			<'This string takes almost all ..a'>    
 			
-	; #16: Buffer limit + Character decoding test #3
+	; #22: Buffer limit + Character decoding test #3
 	addTest { <.l @OneCharacterString>, <.l @OneCharacterString> }, &
 			<'This string takes almost all ..',$D0,$D0,$00>, &
 			<'This string takes almost all ..a'>
 			
-	; #17: Buffer limit + Character decoding test #4
+	; #23: Buffer limit + Character decoding test #4
 	addTest { <.l @OneCharacterString> }, &
 			<'This string takes almost all ..',$D0,'!',$00>, &
 			<'This string takes almost all ..a'>
-			
+
+	; #24: Labels test #1
+	addTest { <.l short_data_chunk> }, &
+			<$B3,$00>, &
+			<'short_data_chunk'>
+
+	; #25: Labels test #2
+	addTest { <.l short_data_chunk+1> }, &
+			<$B3,$00>, &
+			<'short_data_chunk+0001'>
+
+	; #26: Labels test #3
+	addTest { <.l long_data_chunk+$10001> }, &
+			<$B3,$00>, &
+			<'long_data_chunk+00010001'>
+
+	; #27: Buffer limit + Lables test
+	addTest { <.l long_data_chunk+$10001> }, &
+			<'Overflow>>> ',$B3,$00>, &
+			<'Overflow>>> long_data_chunk+0001'>
+
 	dc.w	-1
 	 
 ; --------------------------------------------------------------
@@ -299,5 +344,3 @@ addTest macro args,source_str,compare_str
 ; --------------------------------------------------------------
 
 SymbolData:
-	
-	dc.w	-1			; pad 2 bytes to avoid interfering with MDShell's automatic symbol table
