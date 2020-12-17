@@ -75,7 +75,7 @@ FormatSym_Displacement:
 	swap	d1								; swap displacement longword
 	tst.w	d1								; test higher 16-bits of displacement
 	beq		FormatHex_Word_Swapped			; if bits are empty, display displacement as word
-	bra		FormatHex_Long_Swapped			; otherwise, display longword
+	bra		FormatHex_LongWord_Swapped		; otherwise, display longword
 
 ; ---------------------------------------------------------------
 ; INPUT:
