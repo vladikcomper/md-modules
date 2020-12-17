@@ -32,7 +32,7 @@ fgRed	equ 	$03
 
 Console macro	string, args
 
-		; .Print method -----------------------------------------------------
+		; .Write method -----------------------------------------------------
 		if strcmp('\0','write')
 		
 				move.w	sr, -(sp)
@@ -98,7 +98,7 @@ Console macro	string, args
 						move.l	(sp)+, sp												; Restore stack to its previous state
 						move.w	(sp)+, sr
 
-		; .Print method -----------------------------------------------------
+		; .SetXY method -----------------------------------------------------
 		elseif strcmp('\0','setxy')
 
 				if narg>1
