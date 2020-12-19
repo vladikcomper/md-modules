@@ -9,14 +9,24 @@
 ; INPUT:
 ;		d1		Value
 ;
+;		d7	.w	Number of bytes left in buffer, minus one
+;		a0		String buffer
+;		a4		Buffer flush function
+;
 ; OUTPUT:
-;		(a0)++	ASCII characters upon conversion
+;		(a0)++	ASCII characters for the converted value
 ;
 ; WARNING!
 ;	1) Formatters can only use registers a3 / d0-d4
-;	2) Formatters should decrement d7 after each symbol write,
-;		return Carry flag from the last decrement;
-;		stop if carry is set (means buffer is full)
+;	2) Formatters should decrement d7 after each symbol write.
+;	3) When d7 decrements below 0, a buffer flush function
+;		loaded in a4 should be called. The standard function
+;		usually renders buffer's contents on the screen (see
+;		"Console_FlushBuffer"), then resets the buffer.
+;		This function will reload d7, a0 and Carry flag.
+;	4) If Carry flag is set after calling buffer flush function,
+;		formatter should halt all further processing and return,
+;		retaining the returned Carry bit.
 ; ---------------------------------------------------------------
 
 FormatHex_Handlers:
@@ -64,9 +74,9 @@ FormatHex_Word:
 		move.b	d1,d4
 		and.w	d3,d4						; get digit
 		move.b	HexDigitToChar(pc,d4), (a0)+
-		dbf		d7, *+6
-		jsr		(a4)						; call buffer flush function
-		bcs.s	FormatHex_Return			; if buffer terminated, branch
+		dbf		d7, *+6						; if buffer is not exhausted, branch
+		jsr		(a4)						; otherwise, call buffer flush function
+		bcs.s	FormatHex_Return			; if buffer is terminated, branch
 	endr
 
 	rol.w	d2,d1

@@ -124,14 +124,16 @@ GetSymbolByOffset:
 ; INPUT:
 ;		a0			String buffer pointer
 ;		a1			Pointer to the compressed symbol data
-;		a6			VPD Data Port
-;		d5	.w		Base pattern
+;
+;		d7	.w	Number of bytes left in buffer, minus one
+;		a0		String buffer
+;		a4		Buffer flush function
 ;
 ; OUTPUT:
-;		(a0)++	ASCII characters upon conversion
+;		(a0)++	ASCII characters for the converted value
 ;
 ; USES:
-;		a2-a3, d1-d4
+;		a1-a3, d1-d4
 ; ---------------------------------------------------------------
 
 DecodeSymbol:

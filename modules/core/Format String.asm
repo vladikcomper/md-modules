@@ -11,7 +11,7 @@
 ;		a1		Pointer to format sequence
 ;		a2		Pointer to arguments list
 ;		a4		Buffer flush function
-;		d7	.w	Number of characters before buffer flush
+;		d7	.w	Number of bytes left in buffer, minus one
 ;
 ; USES:
 ;		a0-a2
