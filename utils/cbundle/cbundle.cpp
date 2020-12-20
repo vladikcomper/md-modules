@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * Bundle Compilation utility v.1.1								*
+ * Bundle Compilation utility v.1.5								*
  * Main definitions file										*
- * (c) 2017-2018, Vladikcomper									*
+ * (c) 2017-2018, 2020, Vladikcomper							*
  * ------------------------------------------------------------	*/
 
 // Standard C-libraries
@@ -21,6 +21,7 @@
 // Helper classes
 #include "../core/IO.hpp"
 #include "../core/ArgvParser.hpp"
+
 #include "ScriptParser.hpp"
 
 /* Main function */
@@ -29,11 +30,11 @@ int main (int argc, const char ** argv) {
 	/* Provide help if called without enough options */
 	if (argc<2) {
 		printf(
-			"CBundle utility version 1.0\n"
-			"2017, vladikcomper\n"
+			"CBundle utility version 1.5\n"
+			"2017-2018, 2020, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
-			"  cbundle <script_file_path>\n"
+			"  cbundle [script_file_path]\n"
 			"\n"
 			"List of supported directives:\n"
 			"\n"
@@ -66,12 +67,32 @@ int main (int argc, const char ** argv) {
 
 	/* Parse command line arguments */
 	const char *inputFileName = argv[1];
-	// TODOh: Implement "-debug" flag to toggle this option.
-	bool optDebug = true;
+	bool optDebug = false;
+	{
+		const std::map <std::string, ArgvParser::record>
+			ParametersList {
+				{ "-debug",	{ type: ArgvParser::record::flag, target: &optDebug } }
+			};
+
+		/* Decode parameters acording to list defined by "ParametersList" variable */
+		try {
+			ArgvParser::parse( argv+2, argc-2, ParametersList );
+		}
+		catch (const char* err) {
+			IO::Log( IO::fatal, err );
+			return -1;
+		}
+	}
+
 	IO::LogLevel = optDebug ? IO::debug : IO::warning;
 	
 	/* Process input file */
-	Parser::parseFile( inputFileName );
+	bool result = Parser::parseFile( inputFileName );
+
+	if (result == false) {
+		IO::Log( IO::fatal, "Bundle generation failed." );
+		return -1;
+	}
 
 	return 0;
 

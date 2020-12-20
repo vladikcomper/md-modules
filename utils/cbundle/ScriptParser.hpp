@@ -1,9 +1,11 @@
 
 /* ------------------------------------------------------------ *
- * Bundle Compilation utility v.1.1								*
+ * Bundle Compilation utility v.1.5								*
  * Script parser module											*
- * (c) 2017-2018, Vladikcomper									*
+ * (c) 2017-2018, 2020, Vladikcomper							*
  * ------------------------------------------------------------	*/
+
+#define LINE_BUFFER_SIZE 4096
 
 namespace Parser {
 
@@ -28,9 +30,20 @@ namespace Parser {
 		dir_endf
 
 	};
+
 	struct lineData {
 		lineType type;
 		std::string content;
+	};
+
+	struct parseData {
+		IO::File * file;
+		const char * fileName;
+		long lineNumber;
+
+		parseData(IO::File * _file, const char * _fileName, long _lineNumber):
+			file(_file), fileName(_fileName), lineNumber(_lineNumber) { ; };
+		~parseData() { delete this->file; }
 	};
 
 	/* Directive definitions */
@@ -47,26 +60,22 @@ namespace Parser {
 	};
 
 	/* Global variables */
-	const char * fileName;
-	int lineNumber;
-	IO::FileInput* input = nullptr;
-	IO::FileOutput* output = nullptr;
 	std::set<std::string> symbols;
 
 	/* Prototypes */
-    void parseFile(const char* path);
+    bool parseFile(const char* path, parseData * out);
 
 	/**
 	 * Function to parse line
 	 */
-	lineData parseLine() {
+	lineData parseLine(parseData * in) {
 
-		const int sBufferSize = 1024;
+		const int sBufferSize = LINE_BUFFER_SIZE;
 		uint8_t sBuffer[ sBufferSize ];
 
 		// Attempt to read string from the input file
-		if ( input && ( input->readLine( sBuffer, sBufferSize ) >= 0 ) ) {
-			lineNumber++;
+		if ( in && in->file && ( ((IO::FileInput*)in->file)->readLine( sBuffer, sBufferSize ) >= 0 ) ) {
+			in->lineNumber++;
 			uint8_t * ptr = sBuffer;
 
 			// If line is a script directive ...
@@ -98,7 +107,7 @@ namespace Parser {
 						};
 					}
 					else {
-						IO::Log( IO::error, "%s:%d: Unknown directive %s", fileName, lineNumber, strDirective.c_str() );
+						IO::Log( IO::error, "%s:%d: Unknown directive \"#%s\"", in->fileName, in->lineNumber, strDirective.c_str() );
 						return {
 							type: error,
 							content: std::string()
@@ -138,25 +147,26 @@ namespace Parser {
 	/**
 	 * Function to skip block parsing
 	 */
-	lineType skipBlock(lineType terminator) {
+	lineType skipBlock(parseData * in, lineType terminator) {
 
 		while (1) {
         	
-        	lineData data = parseLine();
+        	lineData data = parseLine( in );
 			if ( data.type == terminator ) return data.type;
 			if ( data.type == dir_else ) return data.type;			// stop upon reaching else directive
+			if ( data.type == error ) return error;
 
 			// Process line type
 			switch (data.type) {
 				case dir_ifdef:
 				case dir_ifndef:
-					if ( skipBlock( dir_endif ) != dir_endif )
-						skipBlock( dir_endif );
+					if ( skipBlock( in, dir_endif ) != dir_endif )
+						skipBlock( in, dir_endif );
 					break;
 
 				case eof:
-					IO::Log( IO::error, "%s: Unexpected end of file while skipping block", fileName );
-					return eof;
+					IO::Log( IO::error, "%s: Unexpected end of file while skipping block", in->fileName );
+					return error;
 
 				default:
 					;
@@ -169,57 +179,89 @@ namespace Parser {
 	/**
 	 * Function to parse block
 	 */
-	lineType parseBlock(lineType terminator = eof) {
+	lineType parseBlock(parseData *in, parseData *out, lineType terminator = eof) {
 
 		while (1) {
 
-        	lineData data = parseLine();
+        	lineData data = parseLine( in );
 			if ( data.type == terminator ) return data.type;
 			if ( data.type == dir_else ) return data.type;			// stop upon reaching else directive
+			if ( data.type == error ) return error;
 
 			// Process line type
 			switch (data.type) {
 				case raw:
-					if ( output ) {
-						output->putLine( data.content.c_str() );
+					if ( out && out->file ) {
+						out->lineNumber++;
+						((IO::FileOutput*)out->file)->putLine( data.content.c_str() );
+					}
+					else {
+						IO::Log( IO::debug, "%s:%d: No valid output specified. Unable to write out line: \"%s\".", in->fileName, in->lineNumber, data.content.c_str() );
 					}
 					break;
 
 				case dir_define:
 					symbols.insert( data.content );
+					IO::Log( IO::debug, "%s:%d: Add \"%s\" to defined symbols list.", in->fileName, in->lineNumber, data.content.c_str() );
 					break;
 					
 				case dir_undef:
 					symbols.erase( data.content );
+					IO::Log( IO::debug, "%s:%d: Remove \"%s\" from defined symbols list.", in->fileName, in->lineNumber, data.content.c_str() );
 					break;
 
 				case dir_file:
 					{
-						void * prev_output = output;
-						output = new IO::FileOutput( data.content.c_str(), IO::text );
+						parseData out_inner = (parseData){
+							.file = new IO::FileOutput( data.content.c_str(), IO::text ),
+							.fileName = data.content.c_str(),
+							.lineNumber = 0
+						};
 
-                        parseBlock( dir_endf );
+						if (!out_inner.file->good()) {
+							IO::Log( IO::error, "%s:%d: Couldn't open file \"%s\" for writing.", in->fileName, in->lineNumber, data.content.c_str() );
+						
+							return error;
+						}
 
-						delete output;
-						output = (IO::FileOutput*)prev_output;
+                        lineType lastDirective = parseBlock( in, &out_inner, dir_endf );
+
+                        if (lastDirective == error) {
+                        	return error;
+                        }
 					}
 					break;
 
 				case dir_include:
-					parseFile( data.content.c_str() );
+					{
+						bool result = parseFile( data.content.c_str(), out );
+
+						if (!result) {
+							return error;
+						}
+					}
+
 					break;
 
 				case dir_ifdef:
 					{
 						lineType lastDirective;
 						if ( symbols.find(data.content) != symbols.end() ) {
-	    					lastDirective = parseBlock( dir_endif );
-	    					if ( lastDirective == dir_else ) skipBlock( dir_endif );
+	    					lastDirective = parseBlock( in, out, dir_endif );
+	    					if ( lastDirective == dir_else ) {
+	    						skipBlock( in, dir_endif );
+	    					}
 	    				}
 						else {
-							lastDirective = skipBlock( dir_endif );
-	    					if ( lastDirective == dir_else ) parseBlock( dir_endif );
+							lastDirective = skipBlock( in, dir_endif );
+	    					if ( lastDirective == dir_else ) {
+	    						parseBlock( in, out, dir_endif );
+	    					}
 						}
+
+                        if (lastDirective == error) {
+                        	return error;
+                        }
 					}
 					break;
 
@@ -227,26 +269,34 @@ namespace Parser {
 					{
 						lineType lastDirective;
 						if ( symbols.find(data.content) == symbols.end() ) {
-	    					lastDirective = parseBlock( dir_endif );
-	    					if ( lastDirective == dir_else ) skipBlock( dir_endif );
+	    					lastDirective = parseBlock( in, out, dir_endif );
+	    					if ( lastDirective == dir_else ) {
+	    						skipBlock( in, dir_endif );
+	    					}
 	    				}
 						else {
-							lastDirective = skipBlock( dir_endif );
-	    					if ( lastDirective == dir_else ) parseBlock( dir_endif );
+							lastDirective = skipBlock( in, dir_endif );
+	    					if ( lastDirective == dir_else ) {
+	    						parseBlock( in, out, dir_endif );
+	    					}
 						}
+
+                        if (lastDirective == error) {
+                        	return error;
+                        }
 					}
-					// WARNING! Make sure the next case-section starts with "break" or uncomment
-					//break;
+					break;
 
 				case comment:
 					break;
 
 				case eof:
-					IO::Log( IO::error, "%s: Unexpected end of file", fileName );
-					return eof;
+					IO::Log( IO::error, "%s: Unexpected end of file", in->fileName );
+					return error;
 
 				default:
-					IO::Log( IO::error, "%s:%d: Unexpected directive", fileName, lineNumber );
+					IO::Log( IO::error, "%s:%d: Unexpected or unsupported directive", in->fileName, in->lineNumber );
+					return error;
 			}
 
 		}
@@ -256,24 +306,24 @@ namespace Parser {
 	/**
 	 * Function to parse a file
 	 */
-	void parseFile(const char* path) {
+	bool parseFile(const char* path, parseData * out = nullptr) {
 
-    	// Initialize input stream
-		void *prev_input = input;
-		int prev_lineNumber = lineNumber;
-		input = new IO::FileInput( path, IO::text );
+		parseData in = (parseData){
+			.file = new IO::FileInput( path, IO::text ),
+			.fileName = path,
+			.lineNumber = 0
+		};
 
-		// Setup variables
-		fileName = path;
-		lineNumber = 0;
+		if (!in.file->good()) {
+			IO::Log( IO::error, "Failed to open \"%s\" for input.", path );
+
+			return false;
+		}
 
 		// Parsing loop
-		parseBlock();
+		lineType lastDirective = parseBlock( &in, out, eof );
 
-		// Terminate input stream
-		delete input;
-		input = (IO::FileInput*)prev_input;
-		lineNumber = prev_lineNumber;
+		return lastDirective != error;
 	}
 
 }
