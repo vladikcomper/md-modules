@@ -57,7 +57,10 @@ namespace IO {
 		}
 		
 		virtual ~File() {	// Destructor
-			fclose( file );
+			if (file) {
+				fclose( file );
+				file = nullptr;
+			}
 		}
 
 		/**
