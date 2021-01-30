@@ -1,8 +1,10 @@
-CBundle utility version 1.2
+CBundle utility version 1.5
 2017-2018, 2020, vladikcomper
 
 Command line arguments:
-  cbundle [script_file_path]
+  cbundle [script_file_path|-]
+
+NOTICE: Using "-" as a script file path redirects input to stdin.
 
 List of supported directives:
 

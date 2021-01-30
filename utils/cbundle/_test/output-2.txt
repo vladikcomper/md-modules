@@ -1,7 +1,0 @@
-This is contents included from common-include.txt file:
-	 TestSymbol was defined in global scope!
-End of contents from common-include.txt file
-	TestSymbol2 wasn't defined (reported by #ifdef > #else)
-	TestSymbol2 wasn't defined (reported by #ifndef)
-	Test was defined!
-	Test wasn't defined

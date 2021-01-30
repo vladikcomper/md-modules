@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * Bundle Compilation utility v.1.5								*
+ * Bundle Compilation utility v.1.6								*
  * Script parser module											*
- * (c) 2017-2018, 2020, Vladikcomper							*
+ * (c) 2017-2018, 2020-2021, Vladikcomper						*
  * ------------------------------------------------------------	*/
 
 #define LINE_BUFFER_SIZE 4096

@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * Bundle Compilation utility v.1.5								*
+ * Bundle Compilation utility v.1.6								*
  * Main definitions file										*
- * (c) 2017-2018, 2020, Vladikcomper							*
+ * (c) 2017-2018, 2020-2021, Vladikcomper						*
  * ------------------------------------------------------------	*/
 
 // Standard C-libraries
@@ -30,11 +30,13 @@ int main (int argc, const char ** argv) {
 	/* Provide help if called without enough options */
 	if (argc<2) {
 		printf(
-			"CBundle utility version 1.5\n"
-			"2017-2018, 2020, vladikcomper\n"
+			"CBundle utility version 1.6\n"
+			"2017-2018, 2020-2021, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
-			"  cbundle [script_file_path]\n"
+			"  cbundle [script_file_path|-]\n"
+			"\n"
+			"NOTICE: Using \"-\" as a script file path redirects input to stdin.\n"
 			"\n"
 			"List of supported directives:\n"
 			"\n"
