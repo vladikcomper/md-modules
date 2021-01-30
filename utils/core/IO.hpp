@@ -17,12 +17,12 @@ namespace IO {
 
 	void Log(eLogLevel level, const char * format, ...) {
 		if ( level >= LogLevel ) {
-			fputs( (const char*[]){ "", "WARNING: ", "ERROR: ", "FATAL: " }[level], stdout );
+			fputs( (const char*[]){ "", "WARNING: ", "ERROR: ", "FATAL: " }[level], stderr );
 			va_list args;
 			va_start (args, format);
-			vprintf (format, args);
+			vfprintf (stderr, format, args);
 			va_end (args);
-			puts("");	// add a newline
+			fputs("\n", stderr);	// add a newline
 		}
 	};
 
@@ -49,7 +49,18 @@ namespace IO {
 
     	File( const char * path, int mode ): baseOffset(0) {	// Constructor
 			const char* modeToCode[] = { "rb", "wb", "r", "w", "r+b", "r+b", "r+", "r+" };
-			file = fopen( path, modeToCode[ mode ] );
+
+			if ((strncmp(path, "-", 2) == 0) && ((mode & 1) == read || (mode & 1) == write)) {
+				if ((mode & 1) == read) {
+					file = stdin;
+				}
+				else {
+					file = stdout;
+				}
+			}
+			else {
+				file = fopen( path, modeToCode[ mode ] );
+			}
 		}
 		
 		File(): file(nullptr), baseOffset(0) {
@@ -57,7 +68,7 @@ namespace IO {
 		}
 		
 		virtual ~File() {	// Destructor
-			if (file) {
+			if (file && (file != stdin) && (file != stdout) && (file != stderr)) {
 				fclose( file );
 				file = nullptr;
 			}
