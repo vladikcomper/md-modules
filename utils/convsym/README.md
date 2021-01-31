@@ -8,16 +8,17 @@ The utility supports various input and output processing and transformation opti
 ## Table of contents
 
 * [Usage](#usage)
-	* [Supported options](#supported-options)
+  * [Supported options](#supported-options)
 * [Input formats parsers](#input-formats-parsers)
-	* [`asm68k_sym` parser](#asm68k_sym-parser)
-	* [`asm68k_lst` parser](#asm68k_lst-parser)
-	* [`log` parser](#log-input-parser)
+  * [`asm68k_sym` parser](#asm68k_sym-parser)
+  * [`asm68k_lst` parser](#asm68k_lst-parser)
+  * [`as_lst` parser](#input-formats-parsers)
+  * [`log` parser](#log-input-parser)
 * [Output formats parsers](#output-formats-parsers)
-	* [`deb2` parser](#output-formats-parsers)
-	* [`deb1` parser](#output-formats-parsers)
-	* [`asm` parser](#asm-output-parser)
-	* [`log` parser](#log-output-parser)
+  * [`deb2` parser](#output-formats-parsers)
+  * [`deb1` parser](#output-formats-parsers)
+  * [`asm` parser](#asm-output-parser)
+  * [`log` parser](#log-output-parser)
 * [Version history](#version-history)
 
 ## Usage
@@ -132,7 +133,7 @@ Default parser options can be expressed as follows:
 
 	-inopt "/localSign=@ /localJoin=. /processLocals+"
 
-### `asm68k_lst` parser options
+### `asm68k_lst` parser
 
 This parser expects a listing file produced by the **ASM68K** assembler for input.
 
