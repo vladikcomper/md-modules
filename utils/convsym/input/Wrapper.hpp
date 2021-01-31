@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.5.2								*
+ * ConvSym utility version 2.6									*
  * Input formats base controller								*
  * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
@@ -18,6 +18,7 @@ struct InputWrapper {
 			uint32_t baseOffset, 
 			uint32_t offsetLeftBoundary, 
 			uint32_t offsetRightBoundary, 
+			uint32_t offsetMask, 
 			const char * opts 
 		) = 0;
 

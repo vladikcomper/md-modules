@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.5.2								*
+ * ConvSym utility version 2.6									*
  * Output wrapper for the Debug Information format version 1.0	*
  * ------------------------------------------------------------	*/
 
@@ -27,7 +27,7 @@ public:
 			uint32_t pointerOffset = 0,
 			const char * opts = "" ) {
 
-    	IO::FileOutput output = *OutputWrapper::setupOutput( fileName, appendOffset, pointerOffset );;
+    	IO::FileOutput output = *OutputWrapper::setupOutput( fileName, appendOffset, pointerOffset );
 
 		/* Write format version token */
 		output.writeBEWord( 0xDEB1 );
@@ -35,8 +35,14 @@ public:
 		/* Allocate space for blocks offsets table */
 		auto lastSymbolPtr = SymbolList.rbegin();
 		uint16_t lastBlock = (lastSymbolPtr->first) >> 16;
-		uint16_t blockOffsets [ 64 ] = { 0 };
-		uint16_t dataOffsets [ 64 ] = { 0 };
+
+		if (lastBlock > 63) {		// blocks index table is limited to $100 entries (which is enough to cover all the 24-bit addressable space)
+			IO::Log( IO::error, "Too many memory blocks to allocate (%02X), truncating to $40 blocks. Some symbols will be lost.", lastBlock+1 );
+			lastBlock = 0x3F;
+		}
+
+		uint16_t blockOffsets [ 0x40 ] = { 0 };
+		uint16_t dataOffsets [ 0x40 ] = { 0 };
 
 		const uint32_t loc_BlockOffsets = output.getCurrentOffset();	// remember the offset where blocks offset table should start
 		output.setOffset( sizeof(blockOffsets) + sizeof(dataOffsets), IO::current );	// reserve space to write down offsets tables later

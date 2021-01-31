@@ -3,6 +3,6 @@
 14: Offset_14
 1C: GlobalsTable
 1E: _redef_mainroutine
-26: _redef_branchdata
+26: ExpandData
 2E: _redef_sys
 34: EndOffset

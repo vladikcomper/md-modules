@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.5.2								*
+ * ConvSym utility version 2.6									*
  * Input wrapper for log files									*
  * ------------------------------------------------------------	*/
 
@@ -18,10 +18,13 @@ struct Input__Log : public InputWrapper {
 
 	/**
 	 * Interface for input file parsing
+	 *
 	 * @param path Input file path
 	 * @param baseOffset Base offset for the parsed records (subtracted from the fetched offsets to produce internal offsets)
 	 * @param offsetLeftBoundary Left boundary for the calculated offsets
 	 * @param offsetRightBoundary Right boundary for the calculated offsets
+	 * @param offsetMask Mask applied to offset after base offset subtraction
+	 *
 	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
 	 */
 	std::map<uint32_t, std::string>
@@ -29,6 +32,7 @@ struct Input__Log : public InputWrapper {
 			uint32_t baseOffset = 0x000000,
 			uint32_t offsetLeftBoundary = 0x000000,
 			uint32_t offsetRightBoundary = 0x3FFFFF,
+			uint32_t offsetMask = 0xFFFFFF,
 			const char * opts = "" ) {
 
 		// Supported options:
@@ -96,9 +100,9 @@ struct Input__Log : public InputWrapper {
 			*ptr = 0x00;
 			
 			// Add label to the symbols table
-			offset -= baseOffset;
+			offset = (offset - baseOffset) & offsetMask;
 			if ( offset >= offsetLeftBoundary && offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
-				IO::Log( IO::debug, "Adding %s as label...", sLabel );
+				IO::Log( IO::debug, "Adding symbol: %s", sLabel );
 				SymbolMap.insert( { offset, std::string(sLabel) } );    
 			}
 			

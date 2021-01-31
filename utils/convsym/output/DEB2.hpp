@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.5.2								*
+ * ConvSym utility version 2.6									*
  * Output wrapper for the Debug Information format version 2.0	*
  * ------------------------------------------------------------	*/
 
@@ -35,6 +35,12 @@ public:
 		/* Allocate space for blocks offsets table */
 		auto lastSymbolPtr = SymbolList.rbegin();
 		uint16_t lastBlock = (lastSymbolPtr->first) >> 16;
+
+		if (lastBlock > 0xFF) {		// blocks index table is limited to $100 entries (which is enough to cover all the 24-bit addressable space)
+			IO::Log( IO::error, "Too many memory blocks to allocate (%02X), truncating to $100 blocks. Some symbols will be lost.", lastBlock+1 );
+			lastBlock = 0xFF;
+		}
+
 		uint32_t blockOffsets [ lastBlock+1 ] = { 0 };
 
 		output.writeBEWord( sizeof(blockOffsets) + 2 );			// write relative pointer to the Huffman table
@@ -81,8 +87,7 @@ public:
 			struct SymbolRecord { uint16_t offset; uint16_t symbolDataPtr; };
 
 			/* For 64kb block within symbols range */
-			for ( uint16_t block = 0x00; block <= lastBlock; block++ ) {
-
+			for ( uint16_t block = 0x00; block <= lastBlock; block++ ) { 
             	/* Align block on even address */
             	if ( output.getCurrentOffset() & 1 ) {
                 	output.writeByte( 0x00 );
@@ -94,7 +99,7 @@ public:
 				std::vector<SymbolRecord> offsetsData;
 
             	/* For every symbol within the block ... */
-            	for ( ; block == (SymbolPtr->first>>16) && (SymbolPtr != SymbolList.cend()); ++SymbolPtr ) {
+            	for ( ; (SymbolPtr->first>>16) == block && (SymbolPtr != SymbolList.cend()); ++SymbolPtr ) {
 
 					if ( SymbolsHeap.getCurrentPos() > 0xFFFF ) {
 						IO::Log( IO::error,"Symbols heap for block %02X exceeded 64kb limit, no more symbols can be stored in this block.", block );

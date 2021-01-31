@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.5.2								*
+ * ConvSym utility version 2.6									*
  * Main definitions file										*
  * (c) 2017-2018, 2020, Vladikcomper							*
  * ------------------------------------------------------------	*/
@@ -39,53 +39,60 @@ int main (int argc, const char ** argv) {
 	/* Provide help if no sufficient arguments were passed */
 	if (argc<2) {
 		printf(
-			"ConvSym utility version 2.5.2\n"
+			"ConvSym utility version 2.6\n"
 			"2016-2018, 2020, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
-			"  convsym [input_file] [output_file] <options>\n"
+			"  convsym [input_file|-] [output_file|-] <options>\n"
+			"\n"
+			"NOTICE: Using \"-\" as a file name redirects I/O to stdin or stdout respectively.\n"
 			"\n"
 			"Available options:\n"
-			"  -input\n"
+			"  -in [format]\n"
+			"  -input [format]\n"
 			"    Selects input file format. Currently supported format specifiers: asm68k_sym, asm68k_lst, as_lst\n"
 			"    Default value is: asm68k_sym\n"
 			"\n"
-			"  -output\n"
+			"  -out [format]\n"
+			"  -output [format]\n"
 			"    Selects output file format. Currently supported format specifiers: asm, deb1, deb2, log\n"
 			"    Default value is: deb2\n"
 			"\n"
 			"  -base [offset]\n"
 			"    Sets the base offset for the input data: it is subtracted from every symbol's offset found in [input_file] to form the final offset. Default value is: 0\n"
 			"\n"
+			"  -mask [offset]\n"
+			"    Sets the mask for the offsets in the input data: it's applied to every offset found in [input_file] after the base offset subtraction (if occurs). Default value is: FFFFFF\n"
+			"\n"
 			"  -range [bottom] [upper]\n"
 			"    Determines the range for offsets allowed in a final symbol file (after subtraction of the base offset), default is: 0 3FFFFF\n"                          
 			"\n"
 			"  -a\n"
-			"    Appending mode: symbol data is appended to the end of the [output_file], not overwritten\n"
+			"    Enables \"Append mode\": symbol data is appended to the end of the [output_file]. Data overwrites file contents by default. This is usually used to append symbols to ROMs.\n"
 			"\n"
 			"  -org [offset]\n"
-			"    Specifies offset in the output file to place generated debug information at. It is not set by default.\n"
+			"    If set, symbol data will placed at the specified [offset] in the output file. This option cannot be used in \"append mode\".\n"
 			"\n"
 			"  -ref [offset]\n"
-			"    Specifies offset in the output file where 32-bit Big Endian offset pointing to the debug information data will be written. It is not set by default.\n"
+			"    If set, a 32-bit Big Endian offset pointing to the beginning of symbol data will be written at specified offset. This is can be used, if symbol data pointer must be written somewhere in the ROM header.\n"
 			"\n"
 			"  -inopt [options]\n"
-			"    Additional options for the input parser. There parameters are specific to the selected -input format.\n"
+			"    Additional options for the input parser. There parameters are specific to the selected input format.\n"
 			"\n"
 			"  -outopt [options]\n"
-			"    Additional options for the output parser. There parameters are specific to the selected -output format.\n"
+			"    Additional options for the output parser. There parameters are specific to the selected output format.\n"
 			"\n"   
 			"  -toupper\n"
-			"    Convert all symbols names to uppercase.\n"    
+			"    Converts all symbol names to uppercase.\n"    
 			"\n"   
 			"  -tolower\n"
-			"    Convert all symbols names to lowercase.\n"
+			"    Converts all symbol names to lowercase.\n"
 			"\n"
 			"  -filter [regex]\n"
 			"    Enables filtering of the symbol list fetched from the [input_file] based on a regular expression.\n"
 			"\n"
 			"  -exclude\n"
-			"    If set, filter works in \"exclude mode\": all labels that DO match the -filter regex are removed from the list, everything that DO NOT match the regex is removed if this flag is not set .\n"
+			"    If set, filter works in \"exclude mode\": all labels that DO match the -filter regex are removed from the list, everything else stays.\n"
 		);
 		return -1;
 	}
@@ -100,6 +107,7 @@ int main (int argc, const char ** argv) {
 	uint32_t baseOffset = 0;
 	uint32_t offsetLeftBoundary = 0;
 	uint32_t offsetRightBoundary = 0x3FFFFF;
+	uint32_t offsetMask = 0xFFFFFF;
 
 	uint32_t appendOffset = 0;
 	uint32_t pointerOffset = 0;
@@ -117,11 +125,14 @@ int main (int argc, const char ** argv) {
 		const std::map <std::string, ArgvParser::record>
 			ParametersList {
 				{ "-base",		{ type: ArgvParser::record::hexNumber,	target: &baseOffset												} },
+				{ "-mask",		{ type: ArgvParser::record::hexNumber,	target: &offsetMask												} },
 				{ "-range",		{ type: ArgvParser::record::hexRange,	target: &offsetLeftBoundary,	target2: &offsetRightBoundary	} },
 				{ "-a",			{ type: ArgvParser::record::flag,		target: &optAppend												} },
 				{ "-debug",		{ type: ArgvParser::record::flag,		target: &optDebug												} },
+				{ "-in",		{ type: ArgvParser::record::string,		target: &inputWrapperName										} },
 				{ "-input",		{ type: ArgvParser::record::string,		target: &inputWrapperName										} },
 				{ "-inopt",		{ type: ArgvParser::record::string,		target: &inputOpts												} },
+				{ "-out",		{ type: ArgvParser::record::string,		target: &outputWrapperName										} },
 				{ "-output",	{ type: ArgvParser::record::string,		target: &outputWrapperName										} },
 				{ "-outopt",	{ type: ArgvParser::record::string,		target: &outputOpts												} },
 				{ "-org",		{ type: ArgvParser::record::hexNumber,	target: &appendOffset											} },
@@ -164,7 +175,7 @@ int main (int argc, const char ** argv) {
 	std::map<uint32_t, std::string> Symbols;
 	try {
 		InputWrapper * input = getInputWrapper( inputWrapperName );
-		Symbols = input->parse( inputFileName, baseOffset, offsetLeftBoundary, offsetRightBoundary, inputOpts.c_str() ); 
+		Symbols = input->parse( inputFileName, baseOffset, offsetLeftBoundary, offsetRightBoundary, offsetMask, inputOpts.c_str() ); 
 		delete input;
 	}
 	catch (const char* err) {
@@ -189,7 +200,7 @@ int main (int argc, const char ** argv) {
 	/* Pre-filter symbols based on regular expression */
 	if ( filterRegexStr.length() > 0 ) {
 		const auto regexExpression = std::regex( filterRegexStr );
-		for ( auto it = Symbols.cbegin(); it != Symbols.cend(); /*it++*/ ) {	// NOTICE: Do not increment iterator here (see below)
+		for ( auto it = Symbols.cbegin(); it != Symbols.cend(); /*it++*/ ) {	// NOTICE: Do not increment iterator here (but see below)
 			bool matched = std::regex_match( it->second, regexExpression );
 			if ( matched == optFilterExclude ) {	// will erase element: if mode=exclude and matched, if mode=include and !matched
 				it = Symbols.erase( it );

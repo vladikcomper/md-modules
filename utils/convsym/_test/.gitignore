@@ -1,0 +1,5 @@
+*.deb1
+*.deb2
+*.log
+*.asm
+!logtest.in.log

@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.5.2								*
+ * ConvSym utility version 2.6									*
  * Input wrapper for the ASM68K listing format					*
  * ------------------------------------------------------------	*/
 
@@ -18,10 +18,13 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 	/**
 	 * Interface for input file parsing
+	 *
 	 * @param path Input file path
 	 * @param baseOffset Base offset for the parsed records (subtracted from the fetched offsets to produce internal offsets)
 	 * @param offsetLeftBoundary Left boundary for the calculated offsets
 	 * @param offsetRightBoundary Right boundary for the calculated offsets
+	 * @param offsetMask Mask applied to offset after base offset subtraction
+	 *
 	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
 	 */
 	std::map<uint32_t, std::string>
@@ -29,6 +32,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 			uint32_t baseOffset = 0x000000,
 			uint32_t offsetLeftBoundary = 0x000000,
 			uint32_t offsetRightBoundary = 0x3FFFFF,
+			uint32_t offsetMask = 0xFFFFFF,
 			const char * opts = "" ) {
 
 		// Known issues:
@@ -52,7 +56,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		std::string strLastGlobalLabel("");	// default global label name
 		char localLabelSymbol = '@';		// default symbol for local labels
 		char localLabelRef = '.';			// default symbol to reference local labels within global ones
-		int32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
+		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
 
 		// Fetch options from "-inopt" agrument's value
 		const std::map<std::string, OptsParser::record>
@@ -197,19 +201,14 @@ struct Input__ASM68K_Listing : public InputWrapper {
 			if ( sLabel != nullptr ) {
 
 				// Construct full label's name as std::string object
-				bool labelIsLocal;
 				std::string strLabel;
 				if ( *sLabel == localLabelSymbol ) {
-					labelIsLocal = true;
 					strLabel  = strLastGlobalLabel;
 					strLabel += localLabelRef;
 					strLabel += (char*)sLabel+1;	// +1 to skip local label symbol itself
 				}
 				else {
-					labelIsLocal = false;
-					strLabel = (char*)sLabel;
-					//strLastGlobalLabel = strLabel;	// NOTICE: This logic has moved down to insert label sequence,
-														//	as we do not know yet if this label fits ...
+					strLabel = strLastGlobalLabel = (char*)sLabel;
 				}
 
 				// Fetch label's opcode into std::string object
@@ -259,7 +258,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 								if ( macroLineCounter >= 1000 ) {
 									IO::Log( IO::warning,
 										// TODOh: Advise to enable ignore macro definitions option?
-										"Too many lines found in definition of \"%s\" macro. This could be missing \"endm\" statemtnt or a parsing error.",
+										"Too many lines (>=1000) found in definition of \"%s\" macro. This could be missing \"endm\" statement or a parsing error.",
 										strLabel.c_str()
 									);
 									break;
@@ -324,17 +323,21 @@ struct Input__ASM68K_Listing : public InputWrapper {
 					offset = offset*0x10 + (((unsigned)(*c-'0')<10) ? (*c-'0') : (*c-('A'-10)));
 				}
 
-				if ( (signed)offset > lastSymbolOffset ) {
-					lastSymbolOffset = offset;
+				// Add label to the symbols table, if:
+				//	1) Its absolute offset is higher than the previous offset successfully added
+				//	2) When base offset is subtracted and the mask is applied, the resulting offset is within allowed boundaries
+				if ( (lastSymbolOffset == (uint32_t)-1) || (offset >= lastSymbolOffset) ) {
 
-					// Add label to the symbols table
-					offset -= baseOffset;
-					if ( offset >= offsetLeftBoundary && offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
-						IO::Log( IO::debug, "Adding %s as label...", strLabel.c_str() );
-			            SymbolMap.insert( { offset, strLabel } );             
-						if (!labelIsLocal) {
-							strLastGlobalLabel = strLabel;
-						}
+					// Convert offset according to parameters
+					uint32_t converted_offset = (offset - baseOffset) & offsetMask;
+
+					if ( converted_offset >= offsetLeftBoundary && converted_offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
+						IO::Log( IO::debug, "Adding symbol: %s", strLabel.c_str() );
+
+						// Insert label to symbol map or replace if it already existed ...
+			            SymbolMap[converted_offset] = strLabel;
+						
+						lastSymbolOffset = offset;	// stores an absolute offset, not the converted one ...
 					}
 				}
 				else {

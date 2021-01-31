@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.5.2								*
+ * ConvSym utility version 2.6									*
  * Input wrapper for the ASM68K compiler's symbol format		*
  * ------------------------------------------------------------	*/
 
@@ -20,6 +20,8 @@ struct Input__ASM68K_Sym : public InputWrapper {
 	 * @param baseOffset Base offset for the parsed records (subtracted from the fetched offsets to produce internal offsets)
 	 * @param offsetLeftBoundary Left boundary for the calculated offsets
 	 * @param offsetRightBoundary Right boundary for the calculated offsets
+	 * @param offsetMask Mask applied to offset after base offset subtraction
+	 *
 	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
 	 */
 	std::map<uint32_t, std::string>
@@ -27,15 +29,39 @@ struct Input__ASM68K_Sym : public InputWrapper {
 			uint32_t baseOffset = 0x000000,
 			uint32_t offsetLeftBoundary = 0x000000,
 			uint32_t offsetRightBoundary = 0x3FFFFF,
+			uint32_t offsetMask = 0xFFFFFF,
 			const char * opts = "" ) {
 
 		IO::FileInput input = IO::FileInput( fileName );
 		if ( !input.good() ) { throw "Couldn't open input file"; }
 
-		std::map<uint32_t, std::string> SymbolMap;
+		// Supported options:
+		//	/localSign=x			- determines character used to specify local labels
+		//	/localJoin=x			- character used to join local label and its global "parent"
+		//	/processLocals?			- specify whether local labels will processed
+
+		// Default processing options
+		bool optProcessLocalLabels = true;
+
+		// Variables and options
+		std::string strLastGlobalLabel("");	// default global label name
+		char localLabelSymbol = '@';		// default symbol for local labels
+		char localLabelRef = '.';			// default symbol to reference local labels within global ones
+		
+		const std::map<std::string, OptsParser::record>
+			OptsList {
+				{ "localSign",			{ type: OptsParser::record::p_char,		target:	&localLabelSymbol			} },
+				{ "localJoin",			{ type: OptsParser::record::p_char,		target:	&localLabelRef				} },
+				{ "processLocals",		{ type: OptsParser::record::p_bool,		target:	&optProcessLocalLabels		} }
+			};
+			
+		OptsParser::parse( opts, OptsList );	
+
+		// NOTICE: Symbols are usually written OUT OF ORDER in the symbols file,
+		//	so we have to map them first before filtering
+		std::map<uint32_t, std::string> UnfilteredSymbolsMap;
         input.setOffset( 0x0008 );
 
-		// Process data records
         for(;;) {
 
 	        uint32_t offset;
@@ -45,20 +71,41 @@ struct Input__ASM68K_Sym : public InputWrapper {
 				break;
 			}
 
-			input.setOffset( 1, IO::current );			// skip 1 byte
+			input.setOffset( 1, IO::current );					// skip 1 byte
 			uint8_t	labelLength = input.readByte();
 
-			offset -= baseOffset;
-			if ( offset >= offsetLeftBoundary && offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
-				uint8_t label[ labelLength ];
-				input.readData( (uint8_t*)&label, labelLength );
-	            SymbolMap.insert( { offset, std::string( (const char*)&label, (size_t)labelLength ) } );
+			char sLabel[ labelLength ];
+			input.readData( (uint8_t*)&sLabel, labelLength );	// read label
+
+			UnfilteredSymbolsMap.insert({ offset, std::string( (const char*)&sLabel, (size_t)labelLength )});
+		}
+
+		// Now we can properly process symbols list IN ORDER
+		std::map<uint32_t, std::string> SymbolMap;
+
+		for (auto it = UnfilteredSymbolsMap.cbegin(); it != UnfilteredSymbolsMap.cend(); it++) {
+
+			// Construct full label's name as std::string object
+			std::string strLabel;
+
+			if ( optProcessLocalLabels && (it->second[0] == localLabelSymbol) ) {
+				strLabel  = strLastGlobalLabel;
+				strLabel += localLabelRef;
+				strLabel += it->second.substr(1);	// ignore first character of local label
 			}
 			else {
-				input.setOffset( labelLength, IO::current );
+				strLabel = strLastGlobalLabel = it->second;
 			}
 
-		};
+			// Finally, add label to the symbols table if it matches the boundaries ...
+			uint32_t offset = (it->first - baseOffset) & offsetMask;
+
+			if ( offset >= offsetLeftBoundary && offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
+				IO::Log( IO::debug, "Adding symbol: %s", strLabel.c_str() );
+
+				SymbolMap.insert( { offset, strLabel } );
+			}
+		}
 
 		return SymbolMap;
 	}

@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.5.2								*
+ * ConvSym utility version 2.6									*
  * Input wrapper for the AS listing format						*
  * ------------------------------------------------------------	*/
 
@@ -19,10 +19,13 @@ struct Input__AS_Listing : public InputWrapper {
 
 	/**
 	 * Interface for input file parsing
+	 *
 	 * @param path Input file path
 	 * @param baseOffset Base offset for the parsed records (subtracted from the fetched offsets to produce internal offsets)
 	 * @param offsetLeftBoundary Left boundary for the calculated offsets
 	 * @param offsetRightBoundary Right boundary for the calculated offsets
+	 * @param offsetMask Mask applied to offset after base offset subtraction
+	 *
 	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
 	 */
 	std::map<uint32_t, std::string>
@@ -30,6 +33,7 @@ struct Input__AS_Listing : public InputWrapper {
 			uint32_t baseOffset = 0x000000,
 			uint32_t offsetLeftBoundary = 0x000000,
 			uint32_t offsetRightBoundary = 0x3FFFFF,
+			uint32_t offsetMask = 0xFFFFFF,
 			const char * opts = "" ) {
 
 		const int sBufferSize = 1024;
@@ -39,7 +43,7 @@ struct Input__AS_Listing : public InputWrapper {
 		std::map<uint32_t, std::string> SymbolMap;
 		IO::FileInput input = IO::FileInput( fileName, IO::text );
 		if ( !input.good() ) { throw "Couldn't open input file"; }
-		int32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
+		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
 
 		// For every string in a listing file ...
 		while ( input.readLine( sBuffer, sBufferSize ) >= 0 ) {
@@ -118,19 +122,24 @@ struct Input__AS_Listing : public InputWrapper {
 						offset = offset*0x10 + (((unsigned)(*c-'0')<10) ? (*c-'0') : (*c-('A'-10)));
 					}
 
-					if ( (signed)offset > lastSymbolOffset ) {
+					// Add label to the symbols table, if:
+					//	1) Its absolute offset is higher than the previous offset successfully added
+					//	2) When base offset is subtracted and the mask is applied, the resulting offset is within allowed boundaries
+					if ( (lastSymbolOffset == (uint32_t)-1) || (offset >= lastSymbolOffset) ) {
 						
 						// Check if this is a label after ds or rs macro ...
 						while ( *ptr==' ' || *ptr=='\t' ) { ptr++; }			// skip spaces or tabs, if present      
 						if ( *ptr == 'd' && *(ptr+1) == 's' && *(ptr+2)=='.' ) continue;
 						if ( *ptr == 'r' && *(ptr+1) == 's' && *(ptr+2)=='.' ) continue;  
-						
-						lastSymbolOffset = offset;
 
 						// Add label to the symbols table
-						offset -= baseOffset;
-						if ( offset >= offsetLeftBoundary && offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
-				            SymbolMap.insert( { offset, std::string( (const char*)label ) } );
+						uint32_t converted_offset = (offset - baseOffset) & offsetMask;
+						if ( converted_offset >= offsetLeftBoundary && converted_offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
+				            
+							// Insert label to symbol map or replace if it already existed ...
+				            SymbolMap[converted_offset] = std::string((const char*)label);
+
+							lastSymbolOffset = offset;	// stores an absolute offset, not the converted one ...
 						}
 					}
 					else {
