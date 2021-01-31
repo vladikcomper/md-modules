@@ -2,7 +2,7 @@
 /* ------------------------------------------------------------ *
  * ConvSym utility version 2.6									*
  * Main definitions file										*
- * (c) 2017-2018, 2020, Vladikcomper							*
+ * (c) 2017-2018, 2020-2021, Vladikcomper						*
  * ------------------------------------------------------------	*/
 
 // Standard C-libraries
@@ -40,7 +40,7 @@ int main (int argc, const char ** argv) {
 	if (argc<2) {
 		printf(
 			"ConvSym utility version 2.6\n"
-			"2016-2018, 2020, vladikcomper\n"
+			"2016-2018, 2020-2021, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
 			"  convsym [input_file|-] [output_file|-] <options>\n"

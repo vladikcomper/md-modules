@@ -2,7 +2,7 @@
 /* ------------------------------------------------------------ *
  * ConvSym utility version 2.6									*
  * Input formats base controller								*
- * (c) 2017-2018, Vladikcomper									*
+ * (c) 2017-2018, 2020-2021, Vladikcomper						*
  * ------------------------------------------------------------	*/
 
 /* Base class for the input formats handlers */
