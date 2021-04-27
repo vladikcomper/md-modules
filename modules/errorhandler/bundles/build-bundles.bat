@@ -1,6 +1,6 @@
 @echo off
 
-copy /Y /B ..\errorhandler.bin _test\ErrorHandler.bin
+copy /Y /B ..\errorhandler.debug.bin _test\ErrorHandler.bin
 
 echo --- BUILDING BUNDLE-ASM68K ---
 md bundle-asm68k

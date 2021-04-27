@@ -1,4 +1,4 @@
-cp ../ErrorHandler.bin _test/ErrorHandler.bin
+cp ../ErrorHandler.Debug.bin _test/ErrorHandler.bin
 
 echo --- BUILDING BUNDLE-ASM68K ---
 mkdir -p bundle-asm68k
