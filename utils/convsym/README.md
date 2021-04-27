@@ -285,7 +285,7 @@ Default parser options can be expressed as follows:
 * Added support for multiple lables sharing the same offset for all input and output wrappers;
 
 * `deb1` and `deb2` output parsers:
-	- Add "favorLastLabels" parameter, which toggles choosing last labels when there are multiple labels at the same offset (first labels are preferred otherwise).
+	- Add "/favorLastLabels" option, which toggles choosing last labels when there are multiple labels at the same offset (first labels are preferred otherwise).
 
 ### Version 2.6 (2021-02-01)
 
