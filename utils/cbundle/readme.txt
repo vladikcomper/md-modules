@@ -1,5 +1,5 @@
-CBundle utility version 1.5
-2017-2018, 2020, vladikcomper
+CBundle utility version 1.6
+2017-2018, 2020-2021, vladikcomper
 
 Command line arguments:
   cbundle [script_file_path|-]
@@ -13,6 +13,9 @@ List of supported directives:
 
   #undef <Symbol>
     Removes a symbol from defined symbols list.
+
+  #include <FilePath>
+    Opens the specified file and executes its directives.
 
   #file <FilePath>
     Creates or rewrites a file, directs all the output to this file.
