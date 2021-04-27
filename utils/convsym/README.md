@@ -99,17 +99,17 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
 
 ## Input formats parsers
 
-Summary of formats currently supported input formats and their respective parsers (input data format can be specified via `-input` option):
+Summary of currently supported input formats and their respective parsers (input data format can be specified via `-input` option, or its shorthand: `-in`):
 
 * `asm68k_sym`, `asm68k_lst` - **ASM68K** assembler symbol and listing files;
-* `as_lst` - **The AS Macro Assembler** listing files *(experimental)*
-* `log` - Plain-text symbol tables *(since **version 2.1**)*
+* `as_lst` - **The AS Macro Assembler** listing files *(experimental)*;
+* `log` - Plain-text symbol tables *(since **version 2.1**)*.
 
 Some parsers support additional options, which can be specified via `-inopt` option. These options are described below.
 
 ### `asm68k_sym` parser
 
-This parser expects a symbol file produced by **ASM68K** assembler for input.
+This parser expects a symbol file produced by the **ASM68K** assembler for input.
 
 **NOTICE**: In order to output local labels in the symbol file, `/v+` assembly option should be used.
 
@@ -149,10 +149,10 @@ This parser expects a listing file produced by the **ASM68K** assembler for inpu
 
 ```
   /localSign=[x]
-    determines character used to specify local labels
+    determines character used to specify local labels; default: @
 
   /localJoin=[x]
-    character used to join local label and its global "parent"
+    character used to join local label and its global "parent"; default: .
 
   /ignoreMacroDefs[+|-]
     specify whether macro definitions listings should be ignored (lines between
@@ -166,8 +166,13 @@ This parser expects a listing file produced by the **ASM68K** assembler for inpu
     be recognized when used; default: +
 
   /processLocals[+|-]
-    specify whether local labels will processed
+    specify whether local labels will processed; default: +
 ```
+
+Default parser options can be expressed as follows:
+
+	-inopt "/localSign=@ /localJoin=. /ignoreMacroDefs+ /ignoreMacroExp- /addMacrosAsOpcodes+ /processLocals+"
+
 
 ### `log` input parser
 
@@ -200,7 +205,7 @@ Default parser options can be expressed as follows:
 
 ## Output formats parsers
 
-Summary of formats currently supported output formats and their respective parsers (output data format can be specified via `-output` option):
+Summary of currently supported output formats and their respective parsers (output data format can be specified via `-output` option, or its shorthand: `-out`):
 
 * `deb2` - Debug symbols database format for "The Advanced Error Handler and Debugger 2.x";
 * `deb1` - Debug symbols database format for "The Advanced Error Handler and Debugger 1.x";
