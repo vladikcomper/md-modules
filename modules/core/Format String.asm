@@ -165,17 +165,21 @@ FormatString_CodeHandlers:
 	move.l	(a2)+, d1						; $18		; code C : ## invalid ##: displays signed word, but loads longword
 ; --------------------------------------------------------------
 @CheckValueSign:
-	bpl.s	@positive						; $1A		; code D : ## invalid ##: displays garbage signed word
+	bpl.s	@SignPositive					; $1A		; code D : ## invalid ##: displays garbage signed word
 	neg.l	d1								; $1C		; code E : ## invalid ##: displays gargage pseudo-negative word
 	move.b	#'-', (a0)+						; $1E		; code F : ## invalid ##: displays gargage pseudo-non-negative word
-	subq.w	#1, d7							; are there characters left in the buffer?
-	bcs.s	@return2						; if not, stop output
-	jmp		(a3)							; draw the actual value using an appropriate handler
+	bra.s	@AfterSendSign
 
-@positive:
+; --------------------------------------------------------------
+@SignPositive:
 	move.b	#'+', (a0)+
-	subq.w	#1, d7							; are there characters left in the buffer?
-	bcs.s	@return2						; if not, stop output
+
+@AfterSendSign:
+	dbf		d7, @sign_ok					; if there are characters left in the buffer, branch
+	jsr		(a4)							; call buffer flush function
+	bcs.s	@return2						; if there's no space left in buffer, quit
+
+@sign_ok:
 	jmp		(a3)							; draw the actual value using an appropriate handler
 
 ; --------------------------------------------------------------
