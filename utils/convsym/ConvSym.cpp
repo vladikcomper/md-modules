@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.6									*
+ * ConvSym utility version 2.7									*
  * Main definitions file										*
  * (c) 2017-2018, 2020-2021, Vladikcomper						*
  * ------------------------------------------------------------	*/
@@ -39,7 +39,7 @@ int main (int argc, const char ** argv) {
 	/* Provide help if no sufficient arguments were passed */
 	if (argc<2) {
 		printf(
-			"ConvSym utility version 2.6\n"
+			"ConvSym utility version 2.7\n"
 			"2016-2018, 2020-2021, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
@@ -172,7 +172,7 @@ int main (int argc, const char ** argv) {
 	}
 
 	/* Retrieve symbols from the input file */
-	std::map<uint32_t, std::string> Symbols;
+	std::multimap<uint32_t, std::string> Symbols;
 	try {
 		InputWrapper * input = getInputWrapper( inputWrapperName );
 		Symbols = input->parse( inputFileName, baseOffset, offsetLeftBoundary, offsetRightBoundary, offsetMask, inputOpts.c_str() ); 

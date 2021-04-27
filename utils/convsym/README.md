@@ -15,8 +15,8 @@ The utility supports various input and output processing and transformation opti
   * [`as_lst` parser](#input-formats-parsers)
   * [`log` parser](#log-input-parser)
 * [Output formats parsers](#output-formats-parsers)
-  * [`deb2` parser](#output-formats-parsers)
-  * [`deb1` parser](#output-formats-parsers)
+  * [`deb2` parser](#deb2-output-parser)
+  * [`deb1` parser](#deb1-output-parser)
   * [`asm` parser](#asm-output-parser)
   * [`log` parser](#log-output-parser)
 * [Version history](#version-history)
@@ -208,6 +208,41 @@ Summary of formats currently supported output formats and their respective parse
 
 Some parsers support additional options, which can be specified via `-outopt` option. These options are described below.
 
+### `deb2` output parser
+
+This parser outputs debug symbols database in DEB2 format, which is the format supported by the "The Advanced Error Handler and Debugger". This is the default output parser.
+
+**Options:**
+
+Since **version 2.7**, this parser supports the following options:
+
+```
+  /favorLastLabels[+|-]
+    sets whether to prefer the last processed label when multiple labels share the same offset (the first processed label is chosen otherwise); default: -
+```
+
+Default parser options can be expressed as follows:
+
+	-outopt "/favorLastLabels-"
+
+### `deb1` output parser
+
+This parser outputs debug symbols database in old DEB1 format. This is an outdated and limited formatm which is not supported by the current version of "The Advanced Error Handler and Debugger". This parser only aims to retain compatibility with the Error Handler 1.0.
+
+**Options:**
+
+Since **version 2.7**, this parser supports the following options:
+
+```
+  /favorLastLabels[+|-]
+    sets whether to prefer the last processed label when multiple labels share the same offset (the first processed label is chosen otherwise); default: -
+```
+
+Default parser options can be expressed as follows:
+
+	-outopt "/favorLastLabels-"
+
+
 ### `asm` output parser
 
 By default, this parser produces symbol list in assembly format, recognizable by both **ASM68K** and **AS** assemblers.
@@ -243,11 +278,18 @@ Default parser options can be expressed as follows:
 
 ## Version history
 
+### Version 2.7 (2021-04-27)
+
+* Added support for multiple lables sharing the same offset for all input and output wrappers;
+
+* `deb1` and `deb2` output parsers:
+	- Add "favorLastLabels" parameter, which toggles choosing last labels when there are multiple labels at the same offset (first labels are preferred otherwise).
+
 ### Version 2.6 (2021-02-01)
 
 * Implemented offset masks support for all the input wrappers; leave only lower 24-bits of offsets by default;
 * Added `-mask` option to configure offset masking;
-* Added `-in` and `-out` options as shortcuts for `-input` and `-output`respectively;
+* Added `-in` and `-out` options as shortcuts for `-input` and `-output` respectively;
 * Added STDIN and STDOUT support when processing input and output respectively.
 
 * `asm68k_sym` input parser:

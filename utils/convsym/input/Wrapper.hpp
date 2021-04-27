@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.6									*
+ * ConvSym utility version 2.7									*
  * Input formats base controller								*
  * (c) 2017-2018, 2020-2021, Vladikcomper						*
  * ------------------------------------------------------------	*/
@@ -12,7 +12,7 @@ struct InputWrapper {
 	virtual ~InputWrapper() { }
 
 	// Virtual function interface that handles input file parsing
-	virtual std::map<uint32_t, std::string>
+	virtual std::multimap<uint32_t, std::string>
 		parse( 
 			const char *fileName, 
 			uint32_t baseOffset, 

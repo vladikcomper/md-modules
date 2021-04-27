@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.6									*
+ * ConvSym utility version 2.7									*
  * Output wrapper for simple symbol logging						*
  * ------------------------------------------------------------	*/
 
@@ -21,7 +21,7 @@ public:
 	 * Main function that generates the output
 	 */
 	void
-	parse(	std::map<uint32_t, std::string>& SymbolList,
+	parse(	std::multimap<uint32_t, std::string>& SymbolList,
 			const char * fileName,
 			uint32_t appendOffset = 0,
 			uint32_t pointerOffset = 0,

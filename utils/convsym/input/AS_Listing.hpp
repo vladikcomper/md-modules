@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.6									*
+ * ConvSym utility version 2.7									*
  * Input wrapper for the AS listing format						*
  * ------------------------------------------------------------	*/
 
@@ -28,7 +28,7 @@ struct Input__AS_Listing : public InputWrapper {
 	 *
 	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
 	 */
-	std::map<uint32_t, std::string>
+	std::multimap<uint32_t, std::string>
 	parse(	const char *fileName,
 			uint32_t baseOffset = 0x000000,
 			uint32_t offsetLeftBoundary = 0x000000,
@@ -40,7 +40,7 @@ struct Input__AS_Listing : public InputWrapper {
 
 		// Variables
 		uint8_t sBuffer[ sBufferSize ];
-		std::map<uint32_t, std::string> SymbolMap;
+		std::multimap<uint32_t, std::string> SymbolMap;
 		IO::FileInput input = IO::FileInput( fileName, IO::text );
 		if ( !input.good() ) { throw "Couldn't open input file"; }
 		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
@@ -136,8 +136,8 @@ struct Input__AS_Listing : public InputWrapper {
 						uint32_t converted_offset = (offset - baseOffset) & offsetMask;
 						if ( converted_offset >= offsetLeftBoundary && converted_offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
 				            
-							// Insert label to symbol map or replace if it already existed ...
-				            SymbolMap[converted_offset] = std::string((const char*)label);
+							// Add label to the symbols map
+				            SymbolMap.insert({converted_offset, std::string((const char*)label)});
 
 							lastSymbolOffset = offset;	// stores an absolute offset, not the converted one ...
 						}

@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.6									*
+ * ConvSym utility version 2.7									*
  * Output formats base controller								*
  * (c) 2017-2018, 2020-2021, Vladikcomper						*
  * ------------------------------------------------------------	*/
@@ -59,7 +59,7 @@ struct OutputWrapper {
 	// Virtual function interface that handles generating output data
 	virtual void
 		parse( 
-			std::map<uint32_t, std::string>& SymbolMap, 
+			std::multimap<uint32_t, std::string>& SymbolMap, 
 			const char * fileName, 
 			uint32_t appendOffset = 0, 
 			uint32_t pointerOffset = 0,

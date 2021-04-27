@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.6									*
+ * ConvSym utility version 2.7									*
  * Output wrapper for the Debug Information format version 1.0	*
  * ------------------------------------------------------------	*/
 
@@ -21,13 +21,23 @@ public:
 	 * Main function that generates the output
 	 */
 	void
-	parse(	std::map<uint32_t, std::string>& SymbolList,
+	parse(	std::multimap<uint32_t, std::string>& SymbolList,
 			const char * fileName,
 			uint32_t appendOffset = 0,
 			uint32_t pointerOffset = 0,
 			const char * opts = "" ) {
 
     	IO::FileOutput output = *OutputWrapper::setupOutput( fileName, appendOffset, pointerOffset );
+
+		/* Parse options from "-inopt" agrument's value */
+		bool optFavorLastLabels = false;
+
+		const std::map<std::string, OptsParser::record>
+			OptsList {
+				{ "favorLastLabels",	{ type: OptsParser::record::p_bool,	target:	&optFavorLastLabels	} }
+			};
+			
+		OptsParser::parse( opts, OptsList );
 
 		/* Write format version token */
 		output.writeBEWord( 0xDEB1 );
@@ -102,6 +112,15 @@ public:
             	for ( ; block == (SymbolPtr->first>>16) && (SymbolPtr != SymbolList.cend()); ++SymbolPtr ) {
 
 					IO::Log( IO::debug, "\t%08X\t%s", SymbolPtr->first, SymbolPtr->second.c_str() );
+
+            		/* 
+            		 * For records with the same offsets, fetch only the last or the first processed symbol,
+            		 * depending "favor last labels" option ...
+            		 */
+            		if ( (optFavorLastLabels && std::next(SymbolPtr)->first == SymbolPtr->first) ||
+            			 (!optFavorLastLabels && std::prev(SymbolPtr)->first == SymbolPtr->first) ) {
+            			continue;
+            		}
 
 					BitStream SymbolsHeap;
 
