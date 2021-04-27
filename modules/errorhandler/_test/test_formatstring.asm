@@ -322,6 +322,11 @@ addTest macro args,source_str,compare_str
 			<'Overflow>>> ',$B3,$00>, &
 			<'Overflow>>> long_data_chunk+0001'>
 
+	; #28: Signed hex numbers test
+	addTest { <.w $1234>, <.l -$01234567>, <.w $FFFF> }, &
+			<$89,' ',$8B,' ',$89,$00>, &
+			<'+1234 -01234567 -0001'>
+
 	dc.w	-1
 	 
 ; --------------------------------------------------------------
