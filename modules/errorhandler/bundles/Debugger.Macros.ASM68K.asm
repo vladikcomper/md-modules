@@ -162,9 +162,18 @@ __FSTRING_GenerateDecodedString &
 		; Expression is an effective address (e.g. %<.w d0 hex> )
 		if "\__type">>8="."    
 			__param:	substr	__midpos+1,__endpos-1,\string			; param
+			
+			; Validate format setting ("param")
 			if strlen("\__param")<1
 				__param: substr ,,"hex"			; if param is ommited, set it to "hex"
+			elseif strcmp("\__param","signed")
+				__param: substr ,,"hex+signed"	; if param is "signed", correct it to "hex+signed"
 			endc
+
+			if (\__param < $80)
+				inform	2,"Illegal operand format setting: ""\__param\"". Expected ""hex"", ""dec"", ""bin"", ""sym"", ""str"" or their derivatives."
+			endc
+
 			if "\__type"=".b"
 				dc.b	\__param
 			elseif "\__type"=".w"

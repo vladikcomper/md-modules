@@ -220,7 +220,7 @@ __FSTRING_GenerateArgumentsCode macro string
 				__sp:	set		__sp+4
 
 			else
-				error 'Unrecognized type in string operand: \{__type}'
+				error "Unrecognized type in string operand: \{__type}"
 			endif
 
 		endif
@@ -264,9 +264,18 @@ __FSTRING_GenerateDecodedString macro string
 		; Expression is an effective address (e.g. %<.w d0 hex> )
 		if ((strlen(__type)==2)&&(substr(__type,0,1)=="."))
 			__param:	set		substr(string,__midpos+1,__endpos-__midpos-1)	; param
+
+			; Validate format setting ("param")
 			if (strlen(__param)<1)
 				__param: 	set		"hex"			; if param is ommited, set it to "hex"
+			elseif (__param=="signed")
+				__param:	set		"hex+signed"	; if param is "signed", correct it to "hex+signed"
 			endif
+
+			if (val(__param) < $80)
+				!error "Illegal operand format setting: \{__param}. Expected hex, dec, bin, sym, str or their derivatives."
+			endif
+
 			if (__type==".b")
 				dc.b	val(__param)
 			elseif (__type==".w")
