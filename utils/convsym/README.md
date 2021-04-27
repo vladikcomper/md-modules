@@ -218,7 +218,8 @@ Since **version 2.7**, this parser supports the following options:
 
 ```
   /favorLastLabels[+|-]
-    sets whether to prefer the last processed label when multiple labels share the same offset (the first processed label is chosen otherwise); default: -
+    sets whether to prefer the last processed label when multiple labels share 
+    the same offset (the first processed label is chosen otherwise); default: -
 ```
 
 Default parser options can be expressed as follows:
@@ -235,7 +236,8 @@ Since **version 2.7**, this parser supports the following options:
 
 ```
   /favorLastLabels[+|-]
-    sets whether to prefer the last processed label when multiple labels share the same offset (the first processed label is chosen otherwise); default: -
+    sets whether to prefer the last processed label when multiple labels share 
+    the same offset (the first processed label is chosen otherwise); default: -
 ```
 
 Default parser options can be expressed as follows:
