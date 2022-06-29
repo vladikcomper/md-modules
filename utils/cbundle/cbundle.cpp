@@ -17,7 +17,6 @@
 #include <set>				// ''
 #include <map>				// ''
 
-
 // Helper classes
 #include "../core/IO.hpp"
 #include "../core/ArgvParser.hpp"
