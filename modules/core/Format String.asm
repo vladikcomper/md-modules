@@ -42,7 +42,7 @@ forced	equ		4				; display <unknown> if symbol was not found
 weak	equ		8				; don't draw offset after <unknown> symbol
 
 ; ---------------------------------------------------------------
-FormatString:
+FormatString:	__global
 	movem.l	FormatString_reglist, -(sp)
 
 	; NOTICE: This loop shouldn't use registers D0/D1, as control codes B0..BF, C0..CF
