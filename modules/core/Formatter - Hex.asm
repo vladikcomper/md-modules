@@ -40,18 +40,13 @@ FormatHex_Byte:
 	moveq	#$F,d3
 	move.w	d1,d2
 	lsr.w	#4,d2
-	and.w	d3,d2
+	and.w	d3,d2						; get nibble
 	move.b	HexDigitToChar(pc,d2), (a0)+
 	
-	dbf		d7, @buffer_ok
+	dbf		d7, FormatHex_Word_WriteLastNibble
 	jsr		(a4)
-	bcs.s	FormatHex_Return
-@buffer_ok
-
-	and.w	d3,d1
-	move.b	HexDigitToChar(pc,d1), (a0)+
-	dbf		d7, FormatHex_Return
-	jmp		(a4)						; call buffer flush function and return buffer status
+	bcc.s	FormatHex_Word_WriteLastNibble
+	rts		; return Carry=1
 
 ; ---------------------------------------------------------------
 FormatHex_LongWord:
@@ -63,6 +58,7 @@ FormatHex_LongWord_Swapped:
 
 FormatHex_Word_Swapped:
 	swap	d1
+	;fallthrough
 
 ; ---------------------------------------------------------------
 FormatHex_Word:
@@ -72,7 +68,7 @@ FormatHex_Word:
 	rept 4-1
 		rol.w	d2,d1
 		move.b	d1,d4
-		and.w	d3,d4						; get digit
+		and.w	d3,d4						; get nibble
 		move.b	HexDigitToChar(pc,d4), (a0)+
 		dbf		d7, *+6						; if buffer is not exhausted, branch
 		jsr		(a4)						; otherwise, call buffer flush function
@@ -80,9 +76,10 @@ FormatHex_Word:
 	endr
 
 	rol.w	d2,d1
-	move.b	d1,d4
-	and.w	d3,d4						; get digit
-	move.b	HexDigitToChar(pc,d4), (a0)+
+
+FormatHex_Word_WriteLastNibble:
+	and.w	d3,d1						; get nibble
+	move.b	HexDigitToChar(pc,d1), (a0)+
 	dbf		d7, FormatHex_Return
 	jmp		(a4)						; call buffer flush function and return buffer status
 
