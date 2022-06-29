@@ -566,9 +566,10 @@ Str_HInt:
 ; Error Handler 1bpp font graphics
 ; ---------------------------------------------------------------
 
-Art1bpp_Font:
-	dc.w	Art1bpp_Font_End-Art1bpp_Font-1			; font size - 1
+Art1bpp_Font:	__global
+	dc.w	Art1bpp_Font_End-Art1bpp_Font_Start-1			; font size - 1
 
+Art1bpp_Font_Start:
 	dc.l	$00000000, $00000000, $183C3C18, $18001800, $6C6C6C00, $00000000, $6C6CFE6C, $FE6C6C00
 	dc.l	$187EC07C, $06FC1800, $00C60C18, $3060C600, $386C3876, $CCCC7600, $18183000, $00000000
 	dc.l	$18306060, $60301800, $60301818, $18306000, $00EE7CFE, $7CEE0000, $0018187E, $18180000
