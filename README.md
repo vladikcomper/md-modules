@@ -26,7 +26,7 @@ Source codes are not tied to any particular IDE, hence there are no pre-configur
 
 ### Supported platforms
 
-Utilities code is cross-platform and can be compiled on Windows, Linux and MacOS platforms. However, only Windows versions are "officially" released now (see notes below).
+Utilities code is cross-platform and can be compiled on Windows, Linux and MacOS platforms. However, only Linux versions are fully supported as of right now (see notes below).
 
 For your convinience, repository comes with pre-compiled binaries of all the utilities for 64-bit Windows and Linux.
 
