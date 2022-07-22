@@ -82,12 +82,12 @@ struct Input__ASM68K_Sym : public InputWrapper {
 			}
 
 			input.setOffset( 1, IO::current );					// skip 1 byte
-			uint8_t	labelLength = input.readByte();
 
-			char sLabel[ labelLength ];
+			const size_t labelLength = (size_t)input.readByte();
+			char sLabel[255];
 			input.readData( (uint8_t*)&sLabel, labelLength );	// read label
 
-			UnfilteredSymbolsMap.insert({ offset, std::string( (const char*)&sLabel, (size_t)labelLength )});
+			UnfilteredSymbolsMap.insert({ offset, std::string( (const char*)&sLabel, labelLength )});
 		}
 
 		// Now we can properly process symbols list IN ORDER

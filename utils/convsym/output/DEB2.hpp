@@ -7,6 +7,7 @@
 #include <map>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include "../../core/OptsParser.hpp"
 #include "../../core/Huffman.hpp"
@@ -48,7 +49,7 @@ public:
 			OptsList {
 				{ "favorLastLabels",	{ .type = OptsParser::record::p_bool,	.target = &optFavorLastLabels	} }
 			};
-			
+		
 		OptsParser::parse( opts, OptsList );
 
 		/* Write format version token */
@@ -63,14 +64,12 @@ public:
 			lastBlock = 0xFF;
 		}
 
-		uint32_t blockOffsets [ lastBlock+1 ];
-		for (int i = 0; i < lastBlock+1; ++i) {
-			blockOffsets[i] = 0;
-		}
+		std::vector<uint32_t> blockOffsets(lastBlock+1);
+		const size_t blockOffsetsSize = blockOffsets.size() * sizeof(uint32_t);
 
-		output.writeBEWord( sizeof(blockOffsets) + 2 );			// write relative pointer to the Huffman table
+		output.writeBEWord( blockOffsetsSize + 2 );				// write relative pointer to the Huffman table
 		uint32_t loc_BlockOffsets = output.getCurrentOffset();	// remember the offset where blocks offset table should start
-		output.setOffset( sizeof(blockOffsets), IO::current );	// reserve space to write down offsets table later
+		output.setOffset( blockOffsetsSize, IO::current );		// reserve space to write down offsets table later
 
 		/* ------------------------------------------------ */
 		/* Generate Huffman-codes and create decoding table */
@@ -148,12 +147,10 @@ public:
 					else {
 
 						/* Generate symbol structure, that includes offset and encoded symbol text pointer */
-						offsetsData.push_back(
-							(SymbolRecord) {
-								.offset = (uint16_t) (SymbolPtr->first & 0xFFFF),
-								.symbolDataPtr = (uint16_t) SymbolsHeap.getCurrentPos()
-							}
-						);
+						offsetsData.push_back({
+							.offset = (uint16_t) (SymbolPtr->first & 0xFFFF),
+							.symbolDataPtr = (uint16_t) SymbolsHeap.getCurrentPos()
+						});
 	
 						/* Encode each symbol character with the generated Huffman-codes and store it in the bitsteam */
 						for ( auto& Character : SymbolPtr->second ) {
@@ -197,7 +194,7 @@ public:
 		
 		/* Finally, write down block offsets table in the header */
 		output.setOffset( loc_BlockOffsets, IO::start );
-		output.writeData( blockOffsets, sizeof(blockOffsets) );
+		output.writeData( blockOffsets.data(), blockOffsetsSize );
 
 	};
 

@@ -25,14 +25,17 @@ namespace IO {
 
 	void Log(eLogLevel level, const char * format, ...) {
 		if ( level >= LogLevel ) {
-			fputs( (const char*[]){ "", "WARNING: ", "ERROR: ", "FATAL: " }[level], stderr );
+			const char* levelText[] = {
+				"", "WARNING: ", "ERROR: ", "FATAL: "
+			};
+			fputs( levelText[level], stderr );
 			va_list args;
 			va_start (args, format);
 			vfprintf (stderr, format, args);
 			va_end (args);
 			fputs("\n", stderr);	// add a newline
 		}
-	};
+	}
 
 	/* -------------------------- */
 	/* Base class for Binary file */

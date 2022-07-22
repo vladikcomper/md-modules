@@ -44,14 +44,14 @@ namespace ArgvParser {
 
 					case record::hexNumber:
 						_GET_NEXT_ARGUMENT
-						sscanf( argv[i], "%x", (int*)parameter->second.target );
+						sscanf( argv[i], "%x", (unsigned int*)parameter->second.target );
 						break;
 
 					case record::hexRange:
 						_GET_NEXT_ARGUMENT
-						sscanf( argv[i], "%x", (int*)parameter->second.target );
+						sscanf( argv[i], "%x", (unsigned int*)parameter->second.target );
 						_GET_NEXT_ARGUMENT
-						sscanf( argv[i], "%x", (int*)parameter->second.target2 );
+						sscanf( argv[i], "%x", (unsigned int*)parameter->second.target2 );
 						break;
 
 					case record::string:
