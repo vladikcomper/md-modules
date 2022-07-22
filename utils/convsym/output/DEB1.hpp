@@ -4,6 +4,18 @@
  * Output wrapper for the Debug Information format version 1.0	*
  * ------------------------------------------------------------	*/
 
+#include <map>
+#include <cstdint>
+#include <string>
+
+#include "../../core/OptsParser.hpp"
+#include "../../core/Huffman.hpp"
+#include "../../core/BitStream.hpp"
+#include "../../core/IO.hpp"
+#include "../../core/utils.hpp"
+
+#include "OutputWrapper.hpp"
+
 
 struct Output__Deb1 : public OutputWrapper {
 
@@ -34,7 +46,7 @@ public:
 
 		const std::map<std::string, OptsParser::record>
 			OptsList {
-				{ "favorLastLabels",	{ type: OptsParser::record::p_bool,	target:	&optFavorLastLabels	} }
+				{ "favorLastLabels",	{ .type = OptsParser::record::p_bool,	.target =&optFavorLastLabels } }
 			};
 			
 		OptsParser::parse( opts, OptsList );

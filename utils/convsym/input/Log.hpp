@@ -4,6 +4,16 @@
  * Input wrapper for log files									*
  * ------------------------------------------------------------	*/
 
+#include <cstdint>
+#include <string>
+#include <map>
+#include <set>
+
+#include "../../core/IO.hpp"
+#include "../../core/OptsParser.hpp"
+
+#include "InputWrapper.hpp"
+
 
 struct Input__Log : public InputWrapper {
 
@@ -45,8 +55,8 @@ struct Input__Log : public InputWrapper {
 		
 		const std::map<std::string, OptsParser::record>
 			OptsList {
-				{ "separator",	{ type: OptsParser::record::p_char, target: &labelSeparator	} },
-				{ "useDecimal",	{ type: OptsParser::record::p_bool, target: &optUseDecimal	} }
+				{ "separator",	{ .type = OptsParser::record::p_char, .target = &labelSeparator	} },
+				{ "useDecimal",	{ .type = OptsParser::record::p_bool, .target = &optUseDecimal	} }
 			};
 			
 		OptsParser::parse( opts, OptsList );		

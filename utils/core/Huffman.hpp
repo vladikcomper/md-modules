@@ -5,6 +5,13 @@
  * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
+#pragma once
+
+#include <cstdint>
+#include <set>
+#include <map>
+
+
 struct Huffman {
 
 	/* ----------------------- *
@@ -79,7 +86,7 @@ struct Huffman {
 			throw "Error while building codes tree";
 		}
 
-    	if ( (root->leaf[0] == nullptr ) && (root->leaf[1] == nullptr) ) {	// if this node ends the branch
+		if ( (root->leaf[0] == nullptr ) && (root->leaf[1] == nullptr) ) {	// if this node ends the branch
 			recordTable.insert( Record( code, codeLength, root->data ) );
 		}
 		else {

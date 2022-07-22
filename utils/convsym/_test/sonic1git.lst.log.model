@@ -1,3 +1,18 @@
+0: waitz80.wait
+0: jhi.nojump
+0: jcc.nojump
+0: jls.nojump
+0: jcs.nojump
+0: jeq.nojump
+0: jne.nojump
+0: jgt.nojump
+0: jge.nojump
+0: jle.nojump
+0: jlt.nojump
+0: jpl.nojump
+0: jmi.nojump
+0: zonewarning.end
+0: startofrom
 0: vectors
 100: console
 110: date
@@ -10,6 +25,7 @@
 1AC: ramendloc
 1BC: notes
 1F0: region
+200: endofheader
 200: errortrap
 206: entrypoint
 214: porta_ok
@@ -31,6 +47,7 @@
 364: gameinit
 370: gameinit.clearram
 388: maingameloop
+396: gamemodearray
 396: ptr_gm_sega
 39A: ptr_gm_title
 39E: ptr_gm_demo
@@ -203,7 +220,9 @@ FAE: vbla_16.wait
 1716: enidec
 1736: eni_loop
 1750: eni_loop.sevenbitentry
+1760: enidec_00
 1760: enidec_00.loop
+176A: enidec_01
 176A: enidec_01.loop
 1772: enidec_100
 1776: enidec_100.loop
@@ -280,7 +299,9 @@ FAE: vbla_16.wait
 1C6E: pal_syzcyc1
 1C8E: pal_syzcyc2
 1C9E: pal_sbzcyclist1
+1CD6: end_sbzcyclist1
 1CD6: pal_sbzcyclist2
+1D02: end_sbzcyclist2
 1D02: pal_sbzcyc1
 1D12: pal_sbzcyc2
 1D22: pal_sbzcyc3
@@ -299,6 +320,7 @@ FAE: vbla_16.wait
 1DF2: fadein_fromblack.addcolour
 1E16: fadein_fromblack.addcolour2
 1E1C: fadein_fromblack.exit
+1E1E: fadein_addcolour
 1E1E: fadein_addcolour.addblue
 1E34: fadein_addcolour.addgreen
 1E42: fadein_addcolour.addred
@@ -308,6 +330,7 @@ FAE: vbla_16.wait
 1E6A: fadeout_toblack
 1E7A: fadeout_toblack.decolour
 1E90: fadeout_toblack.decolour2
+1E98: fadeout_deccolour
 1E98: fadeout_deccolour.dered
 1EA8: fadeout_deccolour.degreen
 1EB6: fadeout_deccolour.deblue
@@ -319,6 +342,7 @@ FAE: vbla_16.wait
 1F18: whitein_fromwhite.decolour
 1F3C: whitein_fromwhite.decolour2
 1F42: whitein_fromwhite.exit
+1F44: whitein_deccolour
 1F44: whitein_deccolour.deblue
 1F5C: whitein_deccolour.degreen
 1F6C: whitein_deccolour.dered
@@ -328,6 +352,7 @@ FAE: vbla_16.wait
 1F94: whiteout_towhite
 1FA4: whiteout_towhite.addcolour
 1FBA: whiteout_towhite.addcolour2
+1FC2: whiteout_addcolour
 1FC2: whiteout_addcolour.addred
 1FDA: whiteout_addcolour.addgreen
 1FEC: whiteout_addcolour.addblue
@@ -354,16 +379,19 @@ FAE: vbla_16.wait
 213C: palload3_water.loop
 2144: palload4_water
 2158: palload4_water.loop
+2160: palpointers
 2160: ptr_pal_segabg
 2168: ptr_pal_title
 2170: ptr_pal_levelsel
 2178: ptr_pal_sonic
+2180: pal_levels
 2180: ptr_pal_ghz
 2188: ptr_pal_lz
 2190: ptr_pal_mz
 2198: ptr_pal_slz
 21A0: ptr_pal_syz
 21A8: ptr_pal_sbz1
+21B0: ptr_pal_sbz1.end
 21B0: ptr_pal_special
 21B8: ptr_pal_lzwater
 21C0: ptr_pal_sbz3
@@ -565,6 +593,7 @@ FAE: vbla_16.wait
 40A2: demoenddataptr
 40F2: colindexload
 4102: colpointers
+411A: colpointers.end
 411A: oscillatenuminit
 4126: oscillatenuminit.loop
 412E: oscillatenuminit.baselines
@@ -575,6 +604,7 @@ FAE: vbla_16.wait
 41BC: oscillatenumdo.next
 41C6: oscillatenumdo.end
 41C8: oscillatenumdo.settings
+4208: synchroanimate
 4208: sync1
 421E: sync2
 4234: sync3
@@ -664,6 +694,7 @@ FAE: vbla_16.wait
 5042: cson_showrun
 5054: aniscript_cson
 5056: a_cson_1
+5062: map_contscr
 5062: map_contscr_internal
 5072: m_cont_text
 50AA: m_cont_sonic1
@@ -724,6 +755,7 @@ FAE: vbla_16.wait
 5676: esth_delay
 5680: esth_gotocredits
 568C: esth_wait
+568E: map_eson
 568E: map_eson_internal
 569E: m_eson_hold1
 56A9: m_eson_hold2
@@ -733,6 +765,7 @@ FAE: vbla_16.wait
 56DA: m_eson_leap1
 56EA: m_eson_leap2
 570E: m_eson_leap3
+5788: map_echa
 5788: map_echa_internal
 5796: m_echa_1
 579C: m_echa_2
@@ -741,6 +774,7 @@ FAE: vbla_16.wait
 57AE: m_echa_5
 57B4: m_echa_6
 57BA: m_echa_7
+57C0: map_esth
 57C0: map_esth_internal
 57C2: m_esth_1
 57D2: gm_credits
@@ -785,6 +819,7 @@ FAE: vbla_16.wait
 5B9A: loc_5b8c
 5BA4: loc_5b96
 5BC8: locret_5bba
+5BCA: map_eegg
 5BCA: map_eegg_internal
 5BDA: m_eegg_try1
 5C03: m_eegg_try2
@@ -809,6 +844,7 @@ FAE: vbla_16.wait
 609A: levsz_chklamp
 60B0: levsz_startloc
 60CE: levsz_sonicpos
+60DE: setscreen
 60DE: levsz_skipstartpos
 60E6: setscr_withinleft
 60F0: setscr_withinright
@@ -1149,6 +1185,7 @@ FAE: vbla_16.wait
 7FA0: bri_chkdel.delparent
 7FA6: bri_delete
 7FAC: bri_display
+7FB2: map_bri
 7FB2: map_bri_internal
 7FB8: m_bri_log
 7FBE: m_bri_stump
@@ -1181,10 +1218,12 @@ FAE: vbla_16.wait
 82A4: swing_delloop
 82BC: swing_delete
 82C2: swing_display
+82C6: map_swing_ghz
 82C6: map_swing_ghz_internal
 82CC: map_swing_ghz_internal.block
 82D7: map_swing_ghz_internal.chain
 82DD: map_swing_ghz_internal.anchor
+82E4: map_swing_slz
 82E4: map_swing_slz_internal
 82EA: map_swing_slz_internal.block
 8313: map_swing_slz_internal.chain
@@ -1202,6 +1241,7 @@ FAE: vbla_16.wait
 8452: hel_delloop
 8468: hel_delete
 846E: hel_display
+8476: map_hel
 8476: map_hel_internal
 8486: byte_7e08
 848C: byte_7e0e
@@ -1250,17 +1290,22 @@ FAE: vbla_16.wait
 874E: plat_move.chgmotion
 8756: plat_chkdel
 8774: plat_delete
+8778: map_plat_unused
 8778: map_plat_unused_internal
 877C: map_plat_unused_internal.small
 8787: map_plat_unused_internal.large
+87BA: map_plat_ghz
 87BA: map_plat_ghz_internal
 87BE: map_plat_ghz_internal.small
 87D3: map_plat_ghz_internal.large
+8806: map_plat_syz
 8806: map_plat_syz_internal
 8808: map_plat_syz_internal.platform
+8818: map_plat_slz
 8818: map_plat_slz_internal
 881A: map_plat_slz_internal.platform
 8826: obj19
+8828: map_gball
 8828: map_gball_internal
 8830: map_gball_internal.shiny
 884F: map_gball_internal.check1
@@ -1312,11 +1357,13 @@ FAE: vbla_16.wait
 8BCC: loc_854e
 8BEC: locret_856e
 8BEE: ledge_slopedata
+8C1E: map_ledge
 8C1E: map_ledge_internal
 8C26: map_ledge_internal.left
 8C77: map_ledge_internal.right
 8CC8: map_ledge_internal.leftsmash
 8D46: map_ledge_internal.rightsmash
+8DC4: map_cflo
 8DC4: map_cflo_internal
 8DCC: byte_874e
 8DE1: byte_8763
@@ -1327,6 +1374,7 @@ FAE: vbla_16.wait
 8E5A: scen_main
 8E8A: scen_chkdel
 8EAC: scen_values
+8ED4: map_scen
 8ED4: map_scen_internal
 8ED6: byte_8858
 8EDC: magicswitch
@@ -1337,6 +1385,7 @@ FAE: vbla_16.wait
 8F58: swi_delete
 8F5E: swi_chktouch
 8F96: swi_notouch
+8F9A: map_swi
 8F9A: map_swi_internal
 8F9C: byte_891e
 8FB2: autodoor
@@ -1350,6 +1399,7 @@ FAE: vbla_16.wait
 904E: ani_adoor
 9052: ani_adoor.close
 905E: ani_adoor.open
+906A: map_adoor
 906A: map_adoor_internal
 907C: map_adoor_internal.closed
 9087: map_adoor_internal.01
@@ -1409,6 +1459,7 @@ FAE: vbla_16.wait
 9486: exbom_main
 94C6: ani_hog
 94C8: ani_hog.hog
+94E0: map_hog
 94E0: map_hog_internal
 94EC: m_hog_stand
 94F7: m_hog_open
@@ -1416,6 +1467,7 @@ FAE: vbla_16.wait
 950D: m_hog_leap
 9518: m_hog_ball1
 951E: m_hog_ball2
+9524: map_misdissolve
 9524: map_misdissolve_internal
 952C: byte_8eae
 9532: byte_8eb4
@@ -1478,18 +1530,22 @@ FAE: vbla_16.wait
 9AA2: poi_index
 9AA6: poi_main
 9AD0: poi_slower
+9AE4: map_animal1
 9AE4: map_animal1_internal
 9AEA: byte_946c
 9AF0: byte_9472
 9AF6: byte_9478
+9AFC: map_animal2
 9AFC: map_animal2_internal
 9B02: byte_9484
 9B08: byte_948a
 9B0E: byte_9490
+9B14: map_animal3
 9B14: map_animal3_internal
 9B1A: byte_949c
 9B20: byte_94a2
 9B26: byte_94a8
+9B2C: map_poi
 9B2C: map_poi_internal
 9B3A: byte_94bc
 9B40: byte_94c2
@@ -1499,6 +1555,7 @@ FAE: vbla_16.wait
 9B58: byte_94da
 9B63: byte_94e5
 9B6E: crabmeat
+9B7C: crab_index
 9B7C: ptr_crab_main
 9B7E: ptr_crab_action
 9B80: ptr_crab_delete
@@ -1510,6 +1567,7 @@ FAE: vbla_16.wait
 9BF6: crab_action.index
 9BFA: crab_action.waittofire
 9C0E: crab_action.movecrab
+9C34: crab_action.dontmove
 9C34: crab_action.noflip
 9C36: crab_action.fire
 9C6C: crab_action.failleft
@@ -1535,6 +1593,7 @@ FAE: vbla_16.wait
 9DC0: ani_crab.walksloperev
 9DC6: ani_crab.firing
 9DCA: ani_crab.ball
+9DCE: map_crab
 9DCE: map_crab_internal
 9DDC: map_crab_internal.stand
 9DF1: map_crab_internal.walk
@@ -1576,6 +1635,7 @@ A0A4: ani_buzz.fires
 A0A8: ani_missile
 A0AC: ani_missile.flare
 A0B0: ani_missile.missile
+A0B4: map_buzz
 A0B4: map_buzz_internal
 A0C0: map_buzz_internal.fly1
 A0DF: map_buzz_internal.fly2
@@ -1583,12 +1643,14 @@ A0FE: map_buzz_internal.fly3
 A122: map_buzz_internal.fly4
 A146: map_buzz_internal.fire1
 A165: map_buzz_internal.fire2
+A184: map_missile
 A184: map_missile_internal
 A18C: map_missile_internal.flare1
 A192: map_missile_internal.flare2
 A198: map_missile_internal.ball1
 A19E: map_missile_internal.ball2
 A1A4: rings
+A1B2: ring_index
 A1B2: ptr_ring_main
 A1B4: ptr_ring_animate
 A1B6: ptr_ring_collect
@@ -1639,6 +1701,7 @@ A5F6: flash_end
 A604: flash_delete
 A608: ani_ring
 A60A: ani_ring.ring
+A610: map_ring
 A610: map_ring_internal
 A622: map_ring_internal.front
 A628: map_ring_internal.angle1
@@ -1649,11 +1712,13 @@ A640: map_ring_internal.sparkle2
 A646: map_ring_internal.sparkle3
 A64C: map_ring_internal.sparkle4
 A652: map_ring_internal.blank
+A654: map_gring
 A654: map_gring_internal
 A65C: byte_9fda
 A68F: byte_a00d
 A6B8: byte_a036
 A6CD: byte_a04b
+A6F6: map_flash
 A6F6: map_flash_internal
 A706: byte_a084
 A711: byte_a08f
@@ -1716,6 +1781,7 @@ ABE8: ani_monitor.rings
 ABF4: ani_monitor.s
 AC00: ani_monitor.goggles
 AC0C: ani_monitor.breaking
+AC14: map_monitor
 AC14: map_monitor_internal
 AC2C: map_monitor_internal.static0
 AC32: map_monitor_internal.static1
@@ -1757,11 +1823,13 @@ AE2E: anim_end_fc
 AE36: anim_end_fb
 AE44: anim_end_fa
 AE4C: anim_end
+AE4E: map_psb
 AE4E: map_psb_internal
 AE56: m_psb_psb
 AE57: byte_a7cd
 AE75: m_psb_limiter
 AF0C: m_psb_tm
+AF12: map_tson
 AF12: map_tson_internal
 AF22: byte_a898
 AF55: byte_a8cb
@@ -1781,6 +1849,7 @@ B242: ani_chop
 B248: ani_chop.slow
 B24C: ani_chop.fast
 B250: ani_chop.still
+B254: map_chop
 B254: map_chop_internal
 B258: map_chop_internal.mouthshut
 B25E: map_chop_internal.mouthopen
@@ -1791,6 +1860,7 @@ B2C4: jaws_turn
 B2E0: jaws_turn.animate
 B2F2: ani_jaws
 B2F4: ani_jaws.swim
+B2FA: map_jaws
 B2FA: map_jaws_internal
 B302: map_jaws_internal.open1
 B30D: map_jaws_internal.shut1
@@ -1819,6 +1889,7 @@ B4D6: ani_burro.walk1
 B4DA: ani_burro.walk2
 B4DE: ani_burro.digging
 B4E2: ani_burro.fall
+B4E6: map_burro
 B4E6: map_burro_internal
 B4F4: map_burro_internal.walk1
 B4FF: map_burro_internal.walk2
@@ -1870,10 +1941,12 @@ B93C: gfire_move
 B948: gfire_animate
 B956: ani_gfire
 B958: ani_gfire.burn
+B95E: map_lgrass
 B95E: map_lgrass_internal
 B964: map_lgrass_internal.wide
 B9A6: map_lgrass_internal.sloped
 B9D9: map_lgrass_internal.narrow
+B9F8: map_fire
 B9F8: map_fire_internal
 BA04: map_fire_internal.vertical1
 BA0A: map_fire_internal.vertical2
@@ -1914,6 +1987,7 @@ BC4C: glass_chkswitch
 BC6A: loc_b5e0
 BC74: loc_b5ea
 BC78: loc_b5ee
+BC84: map_glass
 BC84: map_glass_internal
 BC8A: map_glass_internal.tall
 BCC7: map_glass_internal.shine
@@ -1973,6 +2047,7 @@ C164: loc_bada
 C176: loc_baec
 C192: loc_bb08
 C1C6: loc_bb3c
+C1D8: map_cstom
 C1D8: map_cstom_internal
 C1EE: map_cstom_internal.wideblock
 C208: map_cstom_internal.spikes
@@ -1984,6 +2059,7 @@ C267: map_cstom_internal.chain4
 C290: map_cstom_internal.chain5
 C2C3: map_cstom_internal.mediumblock
 C2DD: map_cstom_internal.smallblock
+C2E4: map_sstom
 C2E4: map_sstom_internal
 C2F6: map_sstom_internal.block
 C306: map_sstom_internal.spikes
@@ -2015,6 +2091,7 @@ C50A: loc_be80
 C50E: loc_be84
 C524: loc_be9a
 C528: loc_be9e
+C52E: map_but
 C52E: map_but_internal
 C536: byte_beac
 C541: byte_beb7
@@ -2058,6 +2135,7 @@ C91E: loc_c294
 C962: loc_c2d8
 C96A: loc_c2e0
 C96E: locret_c2e4
+C970: map_push
 C970: map_push_internal
 C974: map_push_internal.single
 C97A: map_push_internal.four
@@ -2118,6 +2196,7 @@ CD66: got_chkss
 CD78: vbla_08a
 CD7E: got_display2
 CD82: levelorder
+CDB2: levelorder.end
 CDB2: got_move2
 CDC2: got_chgpos2
 CDD6: locret_c748
@@ -2165,6 +2244,7 @@ D1BF: m_card_act2
 D1CA: m_card_act3
 D1D5: m_card_oval
 D218: m_card_fz
+D232: map_over
 D232: map_over_internal
 D23A: byte_cbac
 D245: byte_cbb7
@@ -2185,6 +2265,7 @@ D3D4: byte_cd46
 D3E9: byte_cd5b
 D3F9: byte_cd6b
 D436: byte_cda8
+D482: map_ssrc
 D482: map_ssrc_internal
 D490: byte_ce02
 D496: byte_ce08
@@ -2212,6 +2293,7 @@ D614: spik_wait
 D632: loc_cfa4
 D654: loc_cfc6
 D674: locret_cfe6
+D676: map_spike
 D676: map_spike_internal
 D682: byte_cff4
 D692: byte_d004
@@ -2228,6 +2310,7 @@ D75A: wsnd_index
 D75E: wsnd_main
 D768: wsnd_playsnd
 D77C: wsnd_chkdel
+D79C: map_prock
 D79C: map_prock_internal
 D79E: byte_d110
 D7AA: smashwall
@@ -2246,6 +2329,7 @@ D8F6: smashobject.loc_d268
 D8FA: smashobject.playsnd
 D904: smash_fragspd1
 D924: smash_fragspd2
+D944: map_smash
 D944: map_smash_internal
 D94A: map_smash_internal.left
 D973: map_smash_internal.middle
@@ -2257,6 +2341,7 @@ D9F0: loc_d362
 D9F6: loc_d368
 DA06: loc_d378
 DA0A: loc_d37c
+DA10: obj_index
 DA10: ptr_sonicplayer
 DA14: ptr_obj02
 DA18: ptr_obj03
@@ -2397,6 +2482,7 @@ DC30: ptr_endsth
 DC34: ptr_creditstext
 DC38: ptr_endeggman
 DC3C: ptr_trychaos
+DC40: nullobject
 DC40: objectfall
 DC6C: speedtopos
 DC92: displaysprite
@@ -2501,6 +2587,7 @@ E380: spring_resetdwn
 E38C: ani_spring
 E390: byte_dd02
 E39C: byte_dd0e
+E3A8: map_spring
 E3A8: map_spring_internal
 E3B4: m_spg_up
 E3BF: m_spg_upflat
@@ -2515,6 +2602,7 @@ E43A: newt_action
 E456: newt_action.index
 E460: newt_action.chkdistance
 E478: newt_action.sonicisright
+E4A0: newt_action.outofrange
 E4A0: newt_action.istype00
 E4A2: newt_action.type00
 E4C0: newt_action.sonicisright2
@@ -2536,6 +2624,7 @@ E5B6: a_newt_drop
 E5BE: a_newt_fly1
 E5C2: a_newt_fly2
 E5C6: a_newt_fires
+E5D0: map_newt
 E5D0: map_newt_internal
 E5E6: m_newt_trans
 E5F6: m_newt_norm
@@ -2572,6 +2661,7 @@ E818: ani_roll
 E81E: a_roll_unfold
 E824: a_roll_fold
 E82A: a_roll_roll
+E830: map_roll
 E830: map_roll_internal
 E83A: m_roll_stand
 E845: m_roll_fold
@@ -2583,6 +2673,7 @@ E870: edge_index
 E876: edge_main
 E8AE: edge_solid
 E8BA: edge_display
+E8DE: map_edge
 E8DE: map_edge_internal
 E8E4: m_edge_shadow
 E8F9: m_edge_light
@@ -2632,6 +2723,7 @@ EC52: ani_flame.pipe1
 EC60: ani_flame.pipe2
 EC6A: ani_flame.valve1
 EC78: ani_flame.valve2
+EC82: map_flame
 EC82: map_flame_internal
 ECAE: map_flame_internal.pipe1
 ECB4: map_flame_internal.pipe2
@@ -2669,6 +2761,7 @@ EF34: loc_e8a8
 EF40: brick_type03
 EF7A: locret_e8ee
 EF7C: brick_type04
+EF90: map_brick
 EF90: map_brick_internal
 EF92: map_brick_internal.brick
 EF98: spinninglight
@@ -2676,6 +2769,7 @@ EFA6: light_index
 EFAA: light_main
 EFCE: light_animate
 EFEC: light_animate.chkdel
+F00E: map_light
 F00E: map_light_internal
 F01A: map_light_internal.0
 F025: map_light_internal.1
@@ -2694,6 +2788,7 @@ F178: bump_hit.delete
 F17C: ani_bump
 F180: byte_eaf4
 F184: byte_eaf8
+F18C: map_bump
 F18C: map_bump_internal
 F192: map_bump_internal.normal
 F19D: map_bump_internal.bumped1
@@ -2720,6 +2815,7 @@ F3B0: ani_sign.eggman
 F3B4: ani_sign.spin1
 F3BA: ani_sign.spin2
 F3C0: ani_sign.sonic
+F3C4: map_sign
 F3C4: map_sign_internal
 F3CE: map_sign_internal.eggman
 F3DE: map_sign_internal.spin1
@@ -2781,6 +2877,7 @@ F852: ltag_index
 F856: ltag_coltypes
 F85A: ltag_main
 F878: ltag_chkdel
+F89C: map_ltag
 F89C: map_ltag_internal
 F89E: map_ltag_internal.0
 F8A0: ani_geyser
@@ -2792,6 +2889,7 @@ F8C6: ani_geyser.blank
 F8CA: ani_geyser.bubble4
 F8CE: ani_lwall
 F8D0: ani_lwall.wall
+F8D6: map_geyser
 F8D6: map_geyser_internal
 F8FE: map_geyser_internal.bubble1
 F909: map_geyser_internal.bubble2
@@ -2813,6 +2911,7 @@ FB2A: map_geyser_internal.longcolumn3
 FB7B: map_geyser_internal.bubble7
 FB9A: map_geyser_internal.bubble8
 FBB9: map_geyser_internal.blank
+FBBA: map_lwall
 FBBA: map_lwall_internal
 FBC4: byte_f538
 FBF2: byte_f566
@@ -2840,6 +2939,7 @@ FE0E: ani_moto
 FE14: ani_moto.stand
 FE18: ani_moto.walk
 FE1E: ani_moto.smoke
+FE2C: map_moto
 FE2C: map_moto_internal
 FE3A: map_moto_internal.moto1
 FE4F: map_moto_internal.moto2
@@ -2866,6 +2966,7 @@ FF90: yad_pause
 FFA8: ani_yad
 FFAC: ani_yad.stand
 FFB0: ani_yad.walk
+FFBA: map_yad
 FFBA: map_yad_internal
 FFC6: map_yad_internal.walk0
 FFE0: map_yad_internal.walk1
@@ -2913,6 +3014,7 @@ FFFA: map_yad_internal.walk2
 10430: smab_points
 10448: smab_speeds
 10458: smab_scores
+10460: map_smab
 10460: map_smab_internal
 10464: map_smab_internal.two
 1046F: map_smab_internal.four
@@ -2948,12 +3050,14 @@ FFFA: map_yad_internal.walk2
 106BA: locret_1002e
 106BC: mblock_0a_back
 106CC: mblock_0a_reset
+106D6: map_mblock
 106D6: map_mblock_internal
 106E0: map_mblock_internal.mz1
 106E6: map_mblock_internal.mz2
 106F1: map_mblock_internal.sbz
 10706: map_mblock_internal.sbzwide
 1071B: map_mblock_internal.mz3
+1072C: map_mblocklz
 1072C: map_mblocklz_internal
 1072E: map_mblocklz_internal.0
 10734: basaran
@@ -2978,6 +3082,7 @@ FFFA: map_yad_internal.walk2
 108BC: ani_bas.still
 108C0: ani_bas.fall
 108C4: ani_bas.fly
+108CA: map_bas
 108CA: map_bas_internal
 108D2: map_bas_internal.still
 108D8: map_bas_internal.fly1
@@ -3041,6 +3146,7 @@ FFFA: map_yad_internal.walk2
 10D82: fblock_action.loc_106ae
 10DA0: fblock_action.loc_106cc
 10DBE: fblock_action.loc_106ea
+10DD4: map_fblock
 10DD4: map_fblock_internal
 10DE4: map_fblock_internal.syz1x1
 10DEA: map_fblock_internal.syz2x2
@@ -3064,8 +3170,10 @@ FFFA: map_yad_internal.walk2
 11006: sball_move.delete
 1100E: sball_move.deleteloop
 11026: sball_display
+1102A: map_sball
 1102A: map_sball_internal
 1102C: map_sball_internal.0
+11032: map_sball2
 11032: map_sball2_internal
 11038: map_sball2_internal.chain
 1103E: map_sball2_internal.spikeball
@@ -3081,6 +3189,7 @@ FFFA: map_yad_internal.walk2
 11118: bball_move.type02
 11130: bball_move.noflip2
 1113C: bball_move.type03
+11174: map_bball
 11174: map_bball_internal
 1117A: map_bball_internal.ball
 11194: map_bball_internal.chain
@@ -3113,6 +3222,7 @@ FFFA: map_yad_internal.walk2
 113CE: locret_10cfa
 113D0: elev_makemulti
 113FA: elev_makemulti.chkdel
+1141C: map_elev
 1141C: map_elev_internal
 1141E: map_elev_internal.elevator
 1142E: circlingplatform
@@ -3128,6 +3238,7 @@ FFFA: map_yad_internal.walk2
 11516: circ_types.type04
 11536: circ_types.noshift04a
 11542: circ_types.noshift04b
+11556: map_circ
 11556: map_circ_internal
 11558: map_circ_internal.platform
 11564: staircase
@@ -3136,6 +3247,7 @@ FFFA: map_yad_internal.walk2
 115AE: stair_main.notflipped
 115B8: stair_main.loop
 115C6: stair_main.makeblocks
+1161A: stair_main.fail
 1161A: stair_move
 1162E: stair_solid
 11666: loc_10f92
@@ -3150,12 +3262,14 @@ FFFA: map_yad_internal.walk2
 116C0: loc_10fec
 116E4: stair_type01
 1170C: locret_11038
+11710: map_stair
 11710: map_stair_internal
 11712: map_stair_internal.block
 11718: pylon
 11726: pyl_index
 1172A: pyl_main
 11742: pyl_display
+1176A: map_pylon
 1176A: map_pylon_internal
 1176C: map_pylon_internal.pylon
 1179A: watersurface
@@ -3166,6 +3280,7 @@ FFFA: map_yad_internal.walk2
 1180E: surf_action.stopped
 1181E: surf_action.animate
 1183C: surf_action.display
+11840: map_surf
 11840: map_surf_internal
 1184C: map_surf_internal.normal1
 1185C: map_surf_internal.normal2
@@ -3183,6 +3298,7 @@ FFFA: map_yad_internal.walk2
 11986: pole_action.release
 1199C: pole_action.grab
 119F2: pole_display
+119F6: map_pole
 119F6: map_pole_internal
 119FA: map_pole_internal.normal
 11A05: map_pole_internal.broken
@@ -3190,11 +3306,13 @@ FFFA: map_yad_internal.walk2
 11A28: flap_index
 11A2C: flap_main
 11A58: flap_openclose
+11A7A: flap_openclose.wait
 11A7A: flap_openclose.nosound
 11AB2: flap_openclose.display
 11AB6: ani_flap
 11ABA: ani_flap.opening
 11AC0: ani_flap.closing
+11AC6: map_flap
 11AC6: map_flap_internal
 11ACC: map_flap_internal.closed
 11AD7: map_flap_internal.halfway
@@ -3206,6 +3324,7 @@ FFFA: map_yad_internal.walk2
 11B5A: invis_solid.chkdel
 11B82: invis_solid.nodisplay
 11B84: invis_solid.delete
+11B8A: map_invis
 11B8A: map_invis_internal
 11B90: map_invis_internal.solid
 11BA5: map_invis_internal.unused1
@@ -3223,6 +3342,7 @@ FFFA: map_yad_internal.walk2
 11CAC: fan_delay.noreset
 11CB8: fan_delay.noflip
 11CC0: fan_delay.chkdel
+11CE4: map_fan
 11CE4: map_fan_internal
 11CEE: map_fan_internal.fan1
 11CF9: map_fan_internal.fan2
@@ -3258,9 +3378,11 @@ FFFA: map_yad_internal.walk2
 1200E: see_speeds
 12018: see_dataslope
 12048: see_dataflat
+12078: map_seesaw
 12078: map_seesaw_internal
 12080: map_seesaw_internal.sloping
 120A4: map_seesaw_internal.flat
+120BA: map_ssawball
 120BA: map_ssawball_internal
 120BE: map_ssawball_internal.red
 120C4: map_ssawball_internal.silver
@@ -3295,6 +3417,7 @@ FFFA: map_yad_internal.walk2
 122F0: ani_bomb.activated
 122F4: ani_bomb.fuse
 122F8: ani_bomb.shrapnel
+122FC: map_bomb
 122FC: map_bomb_internal
 12314: map_bomb_internal.stand1
 12324: map_bomb_internal.stand2
@@ -3335,6 +3458,7 @@ FFFA: map_yad_internal.walk2
 125AA: ani_orb
 125AE: ani_orb.normal
 125B2: ani_orb.angers
+125B8: map_orb
 125B8: map_orb_internal
 125C0: map_orb_internal.normal
 125C6: map_orb_internal.medium
@@ -3352,6 +3476,7 @@ FFFA: map_yad_internal.walk2
 12662: ani_harp.h_retracting
 12666: ani_harp.v_extending
 1266A: ani_harp.v_retracting
+1266E: map_harp
 1266E: map_harp_internal
 1267A: map_harp_internal.h_retracted
 12680: map_harp_internal.h_middle
@@ -3367,9 +3492,11 @@ FFFA: map_yad_internal.walk2
 12760: lblk_action.chkdel
 12782: lblk_action.index
 12792: lblk_action.type00
+12794: lblk_action.type01
 12794: lblk_action.type03
 127A8: lblk_action.donothing01
 127AA: lblk_action.wait01
+127BA: lblk_action.type02
 127BA: lblk_action.type06
 127DA: lblk_action.nofloor02
 127DC: lblk_action.type04
@@ -3386,6 +3513,7 @@ FFFA: map_yad_internal.walk2
 1286E: loc_1219a
 1287A: loc_121a6
 12894: locret_121c0
+12896: map_lblock
 12896: map_lblock_internal
 1289E: map_lblock_internal.sinkblock
 128A4: map_lblock_internal.riseplatform
@@ -3402,6 +3530,7 @@ FFFA: map_yad_internal.walk2
 129B4: gar_anifire
 129C4: gar_anifire.nochg
 129DE: gar_anifire.isright
+129EC: map_gar
 129EC: map_gar_internal
 129F4: map_gar_internal.head
 12A04: map_gar_internal.fireball1
@@ -3442,6 +3571,7 @@ FFFA: map_yad_internal.walk2
 12D10: word_1263c
 12D24: word_12650
 12D3C: word_12668
+12D50: map_lconv
 12D50: map_lconv_internal
 12D5A: map_lconv_internal.wheel1
 12D60: map_lconv_internal.wheel2
@@ -3480,6 +3610,7 @@ FFFA: map_yad_internal.walk2
 13092: ani_bub.incroutine
 13094: ani_bub.burst
 1309A: ani_bub.bubmaker
+130A0: map_bub
 130A0: map_bub_internal
 130CE: map_bub_internal.bubble1
 130D4: map_bub_internal.bubble2
@@ -3516,6 +3647,7 @@ FFFA: map_yad_internal.walk2
 1321E: loc_12b36.animate
 13220: ani_wfall
 13222: ani_wfall.splash
+13228: map_wfall
 13228: map_wfall_internal
 13240: map_wfall_internal.vertnarrow
 13246: map_wfall_internal.cornerwide
@@ -3541,6 +3673,7 @@ FFFA: map_yad_internal.walk2
 1338A: loc_12cb6
 13394: sonic_modes
 1339C: musiclist2
+133A2: musiclist2.end
 133A2: sonic_display
 133B0: sonic_display.display
 133B6: sonic_display.chkinvincible
@@ -3706,6 +3839,7 @@ FFFA: map_yad_internal.walk2
 1405C: sonic_loops.chkifright
 1406A: sonic_loops.chkangle1
 14086: sonic_loops.chkangle2
+14096: sonic_loops.noloops
 14096: sonic_loops.done
 14098: sonic_animate
 140BA: sonic_animate.do
@@ -3729,6 +3863,7 @@ FFFA: map_yad_internal.walk2
 141EA: sonic_animate.push
 141F2: sonic_animate.negspeed
 141FA: sonic_animate.belowmax3
+1421C: ani_sonic
 1421C: ptr_walk
 1421E: ptr_run
 14220: ptr_roll
@@ -3796,6 +3931,7 @@ FFFA: map_yad_internal.walk2
 14356: sonic_loadgfx.loadtile
 1436A: sonic_loadgfx.nochange
 1436C: drowncount
+1437A: drown_index
 1437A: ptr_drown_main
 1437C: ptr_drown_animate
 1437E: ptr_drown_chkwater
@@ -3853,6 +3989,7 @@ FFFA: map_yad_internal.walk2
 148A8: ani_drown.fiveflash
 148B0: ani_drown.blank
 148B2: ani_drown.mediumbubble
+148B8: map_drown
 148B8: map_drown_internal
 148BA: map_drown_internal.num
 148C0: shielditem
@@ -3886,6 +4023,7 @@ FFFA: map_yad_internal.walk2
 14ACC: ani_shield.stars2
 14AE6: ani_shield.stars3
 14B00: ani_shield.stars4
+14B1A: map_shield
 14B1A: map_shield_internal
 14B2A: map_shield_internal.shield2
 14B35: map_shield_internal.shield1
@@ -3897,6 +4035,7 @@ FFFA: map_yad_internal.walk2
 14BA8: map_shield_internal.stars4
 14BBE: ani_vanish
 14BC0: ani_vanish.vanish
+14BD4: map_vanish
 14BD4: map_vanish_internal
 14BE4: map_vanish_internal.flash1
 14BF4: map_vanish_internal.flash2
@@ -3908,6 +4047,7 @@ FFFA: map_yad_internal.walk2
 14D27: map_vanish_internal.blank
 14D2C: ani_splash
 14D2E: ani_splash.splash
+14D34: map_splash
 14D34: map_splash_internal
 14D3A: map_splash_internal.splash1
 14D45: map_splash_internal.splash2
@@ -4040,6 +4180,7 @@ FFFA: map_yad_internal.walk2
 159AE: jun_chkswitch.nochange
 159B0: jun_chgpos
 159DA: jun_chgpos.data
+159FA: map_jun
 159FA: map_jun_internal
 15A1C: map_jun_internal.gap0
 15A3B: map_jun_internal.gap1
@@ -4077,6 +4218,7 @@ FFFA: map_yad_internal.walk2
 15D8C: disc_movespot
 15DC6: disc_chkdel
 15DE8: disc_chkdel.delete
+15DEE: map_disc
 15DEE: map_disc_internal
 15DF0: map_disc_internal.spot
 15DF6: conveyor
@@ -4104,10 +4246,12 @@ FFFA: map_yad_internal.walk2
 1601A: ani_spin.trapclose
 16020: ani_spin.spin1
 16034: ani_spin.spin2
+16048: map_trap
 16048: map_trap_internal
 1604E: map_trap_internal.closed
 16063: map_trap_internal.half
 1608C: map_trap_internal.open
+160A2: map_spin
 160A2: map_spin_internal
 160AC: map_spin_internal.flat
 160B7: map_spin_internal.spin1
@@ -4139,6 +4283,7 @@ FFFA: map_yad_internal.walk2
 162DE: saw_action.nosaw04y
 162E0: saw_action.here04
 162FE: saw_action.sameframe04
+16300: map_saw
 16300: map_saw_internal
 16308: map_saw_internal.pizzacutter1
 1632C: map_saw_internal.pizzacutter2
@@ -4184,6 +4329,7 @@ FFFA: map_yad_internal.walk2
 166A6: sto_action.loc_15f3e
 166C4: sto_action.locret_15f5c
 166C6: sto_action.loc_15f5e
+166D0: map_stomp
 166D0: map_stomp_internal
 166DA: map_stomp_internal.door
 166EF: map_stomp_internal.stomper
@@ -4193,6 +4339,7 @@ FFFA: map_yad_internal.walk2
 16776: vanp_main
 167D0: loc_16068
 167E4: loc_16068.animate
+167F4: vanp_vanish
 167F4: vanp_appear
 1680C: vanp_appear.isvanishing
 16812: vanp_appear.wait
@@ -4202,6 +4349,7 @@ FFFA: map_yad_internal.walk2
 1687E: ani_van
 16882: ani_van.vanish
 1688A: ani_van.appear
+16892: map_vanp
 16892: map_vanp_internal
 1689A: map_vanp_internal.whole
 168A0: map_vanp_internal.half
@@ -4216,6 +4364,7 @@ FFFA: map_yad_internal.walk2
 16930: ani_elec
 16934: byte_161cc
 16938: byte_161d0
+16948: map_elec
 16948: map_elec_internal
 16954: map_elec_internal.normal
 1695F: map_elec_internal.zap1
@@ -4267,6 +4416,7 @@ FFFA: map_yad_internal.walk2
 16D40: gird_action.delete
 16D46: gird_chgmove
 16D70: gird_chgmove.settings
+16D90: map_gird
 16D90: map_gird_internal
 16D92: map_gird_internal.girder
 16DD0: teleport
@@ -4340,6 +4490,7 @@ FFFA: map_yad_internal.walk2
 1746C: loc_16cc0
 1748C: loc_16ce0
 1749A: ani_cat
+1751A: map_cat
 1751A: map_cat_internal
 1754A: byte_16d9e
 17550: byte_16da4
@@ -4380,6 +4531,7 @@ FFFA: map_yad_internal.walk2
 177F8: lamp_loadinfo
 17890: lamp_loadinfo.notlabyrinth
 178A2: locret_170f6
+178A4: map_lamp
 178A4: map_lamp_internal
 178AC: map_lamp_internal.blue
 178CB: map_lamp_internal.poleonly
@@ -4393,6 +4545,7 @@ FFFA: map_yad_internal.walk2
 179BE: bonus_main.points
 179C6: bonus_display
 179EE: bonus_display_delete
+179F4: map_bonus
 179F4: map_bonus_internal
 179FC: map_bonus_internal.blank
 179FD: map_bonus_internal.10000
@@ -4402,6 +4555,7 @@ FFFA: map_yad_internal.walk2
 17A1E: cred_index
 17A22: cred_main
 17A88: cred_display
+17A8E: map_cred
 17A8E: map_cred_internal
 17AA4: map_cred_internal.staff
 17AEB: map_cred_internal.gameplan
@@ -4500,6 +4654,7 @@ FFFA: map_yad_internal.walk2
 184A4: ani_eggman.flame2
 184A8: ani_eggman.facedefeat
 184AC: ani_eggman.escapeflame
+184B8: map_eggman
 184B8: map_eggman_internal
 184D2: map_eggman_internal.ship
 184F1: map_eggman_internal.facenormal1
@@ -4514,6 +4669,7 @@ FFFA: map_yad_internal.walk2
 18568: map_eggman_internal.blank
 18569: map_eggman_internal.escapeflame1
 18574: map_eggman_internal.escapeflame2
+18580: map_bossitems
 18580: map_bossitems_internal
 18590: map_bossitems_internal.chainanchor1
 18596: map_bossitems_internal.chainanchor2
@@ -4755,6 +4911,7 @@ FFFA: map_yad_internal.walk2
 1984A: loc_1909a
 19850: obj7b_fragspeed
 19860: obj7b_movefrag
+1988E: map_bsball
 1988E: map_bsball_internal
 19892: map_bsball_internal.fireball1
 19898: map_bsball_internal.fireball2
@@ -4865,6 +5022,7 @@ FFFA: map_yad_internal.walk2
 19F84: loc_197d4
 19F8E: obj76_fragspeed
 19F9E: obj76_fragpos
+19FAE: map_bossblock
 19FAE: map_bossblock_internal
 19FB8: map_bossblock_internal.wholeblock
 19FC4: map_bossblock_internal.topleft
@@ -4900,6 +5058,7 @@ FFFA: map_yad_internal.walk2
 1A1D4: ani_segg.running
 1A1DA: ani_segg.jump2
 1A1E0: ani_segg.starjump
+1A1E4: map_segg
 1A1E4: map_segg_internal
 1A1FA: map_segg_internal.stand
 1A20A: map_segg_internal.laugh1
@@ -4931,6 +5090,7 @@ FFFA: map_yad_internal.walk2
 1A49A: ffloor_breaksnd
 1A4AA: ffloor_fragspeed
 1A4B2: ffloor_fragpos
+1A4C2: map_ffloor
 1A4C2: map_ffloor_internal
 1A4CC: map_ffloor_internal.wholeblock
 1A4D2: map_ffloor_internal.topleft
@@ -5011,9 +5171,11 @@ FFFA: map_yad_internal.walk2
 1AB86: loc_1a3d0
 1AB8A: ani_fzegg
 1AB8C: byte_1a3d6
+1AB90: map_fzdamaged
 1AB90: map_fzdamaged_internal
 1AB94: map_fzdamaged_internal.damage1
 1ABB3: map_fzdamaged_internal.damage2
+1ABD2: map_fzlegs
 1ABD2: map_fzlegs_internal
 1ABD8: map_fzlegs_internal.extended
 1ABE3: map_fzlegs_internal.halfway
@@ -5043,6 +5205,7 @@ FFFA: map_yad_internal.walk2
 1ADFC: loc_1a646
 1AE0C: loc_1a656
 1AE2A: locret_1a674
+1AE2C: map_eggcyl
 1AE2C: map_eggcyl_internal
 1AE44: map_eggcyl_internal.flat
 1AE63: map_eggcyl_internal.extending1
@@ -5076,6 +5239,7 @@ FFFA: map_yad_internal.walk2
 1B1FC: ani_plaunch.red
 1B200: ani_plaunch.redsparking
 1B206: ani_plaunch.whitesparking
+1B20C: map_plaunch
 1B20C: map_plaunch_internal
 1B214: map_plaunch_internal.red
 1B21A: map_plaunch_internal.white
@@ -5084,6 +5248,7 @@ FFFA: map_yad_internal.walk2
 1B22C: ani_plasma
 1B230: ani_plasma.full
 1B252: ani_plasma.short
+1B25C: map_plasma
 1B25C: map_plasma_internal
 1B272: map_plasma_internal.fuzzy1
 1B27D: map_plasma_internal.fuzzy2
@@ -5121,6 +5286,7 @@ FFFA: map_yad_internal.walk2
 1B520: pri_endact.found
 1B522: ani_pri
 1B526: ani_pri.switchflash
+1B52A: map_pri
 1B52A: map_pri_internal
 1B538: map_pri_internal.capsule
 1B55C: map_pri_internal.switch1
@@ -5138,6 +5304,7 @@ FFFA: map_yad_internal.walk2
 1B64E: reacttoitem.outsidex
 1B654: reacttoitem.withinx
 1B66C: reacttoitem.outsidey
+1B672: reacttoitem.withiny
 1B672: reacttoitem.chktype
 1B6A8: reacttoitem.invincible
 1B6AA: react_monitor
@@ -5228,18 +5395,22 @@ FFFA: map_yad_internal.walk2
 1BECA: loc_1b714
 1BEE6: loc_1b730
 1BEEE: ss_mapindex
+1C0C2: map_ss_r
 1C0C2: map_ss_r_internal
 1C0C8: byte_1b912
 1C0CE: byte_1b918
 1C0D4: byte_1b91e
+1C0D6: map_ss_glass
 1C0D6: map_ss_glass_internal
 1C0DE: byte_1b928
 1C0E4: byte_1b92e
 1C0EA: byte_1b934
 1C0F0: byte_1b93a
+1C0F6: map_ss_up
 1C0F6: map_ss_up_internal
 1C0FA: byte_1b944
 1C100: byte_1b94a
+1C106: map_ss_down
 1C106: map_ss_down_internal
 1C10A: byte_1b954
 1C110: byte_1b95a
@@ -5337,6 +5508,7 @@ FFFA: map_yad_internal.walk2
 1C7FA: animatelevelgfx.ispaused
 1C7FC: aniart_index
 1C808: aniart_index.end
+1C80A: aniart_ghz
 1C80A: aniart_ghz_waterfall
 1C82E: aniart_ghz_waterfall.isframe0
 1C840: aniart_ghz_bigflower
@@ -5345,6 +5517,7 @@ FFFA: map_yad_internal.walk2
 1C89E: aniart_ghz_smallflower.isframe1
 1C8C2: aniart_ghz_smallflower.end
 1C8C4: aniart_ghz_smallflower.sequence
+1C8C8: aniart_mz
 1C8C8: aniart_mz_lava
 1C8EA: aniart_mz_lava.frame01or2
 1C906: aniart_mz_magma
@@ -5359,6 +5532,7 @@ FFFA: map_yad_internal.walk2
 1CA12: aniart_sbz.smokepuff2
 1CA4E: aniart_sbz.untilnextpuff2
 1CA56: aniart_sbz.end
+1CA58: aniart_ending
 1CA58: aniart_ending_bigflower
 1CA84: aniart_ending_bigflower.isframe0
 1CAAA: aniart_ending_smallflower
@@ -5394,6 +5568,7 @@ FFFA: map_yad_internal.walk2
 1CD3A: hud_flash
 1CD4A: hud_flash.norings
 1CD60: hud_flash.display
+1CD6A: map_hud
 1CD6A: map_hud_internal
 1CD72: map_hud_internal.allyellow
 1CDA6: map_hud_internal.ringred
@@ -5401,6 +5576,7 @@ FFFA: map_yad_internal.walk2
 1CE0E: map_hud_internal.allred
 1CE42: addpoints
 1CE5A: addpoints.belowmax
+1CE82: addpoints.locret_1c6b6
 1CE82: addpoints.noextralife
 1CE84: hud_update
 1CEA4: hud_update.chkrings
@@ -5499,18 +5675,27 @@ FFFA: map_yad_internal.walk2
 1D93A: debuglist
 1D946: debuglist.end
 1D948: dbug.ghz
+1D9CA: dbug.ghzend
 1D9CA: dbug.lz
+1DA94: dbug.lzend
 1DA94: dbug.mz
+1DB26: dbug.mzend
 1DB26: dbug.slz
+1DBA0: dbug.slzend
 1DBA0: dbug.syz
+1DC1A: dbug.syzend
 1DC1A: dbug.sbz
+1DD04: dbug.sbzend
 1DD04: dbug.ending
+1DD16: dbug.endingend
 1DD16: levelheaders
 1DD76: lhead.end
+1DD86: artloadcues
 1DD86: ptr_plc_main
 1DD88: ptr_plc_main2
 1DD8A: ptr_plc_explode
 1DD8C: ptr_plc_gameover
+1DD8E: plc_levels
 1DD8E: ptr_plc_ghz
 1DD90: ptr_plc_ghz2
 1DD92: ptr_plc_lz
@@ -5523,53 +5708,81 @@ FFFA: map_yad_internal.walk2
 1DDA0: ptr_plc_syz2
 1DDA2: ptr_plc_sbz
 1DDA4: ptr_plc_sbz2
+1DDA6: ptr_plc_sbz2.end
 1DDA6: ptr_plc_titlecard
 1DDA8: ptr_plc_boss
 1DDAA: ptr_plc_signpost
 1DDAC: ptr_plc_warp
 1DDAE: ptr_plc_specialstage
+1DDB0: plc_animals
 1DDB0: ptr_plc_ghzanimals
 1DDB2: ptr_plc_lzanimals
 1DDB4: ptr_plc_mzanimals
 1DDB6: ptr_plc_slzanimals
 1DDB8: ptr_plc_syzanimals
 1DDBA: ptr_plc_sbzanimals
+1DDBC: ptr_plc_sbzanimals.end
 1DDBC: ptr_plc_ssresult
 1DDBE: ptr_plc_ending
 1DDC0: ptr_plc_tryagain
 1DDC2: ptr_plc_eggmansbz2
 1DDC4: ptr_plc_fzboss
 1DDC6: plc_main
+1DDE6: plc_mainend
 1DDE6: plc_main2
+1DDFA: plc_main2end
 1DDFA: plc_explode
+1DE02: plc_explodeend
 1DE02: plc_gameover
+1DE0A: plc_gameoverend
 1DE0A: plc_ghz
 1DE54: plc_ghz2
+1DE7A: plc_ghz2end
 1DE7A: plc_lz
 1DEC4: plc_lz2
+1DF0E: plc_lz2end
 1DF0E: plc_mz
 1DF4C: plc_mz2
+1DF6C: plc_mz2end
 1DF6C: plc_slz
 1DFA4: plc_slz2
+1DFCA: plc_slz2end
 1DFCA: plc_syz
 1DFEA: plc_syz2
+1E01C: plc_syz2end
 1E01C: plc_sbz
 1E066: plc_sbz2
+1E0B6: plc_sbz2end
 1E0B6: plc_titlecard
+1E0BE: plc_titlecardend
 1E0BE: plc_boss
+1E0E4: plc_bossend
 1E0E4: plc_signpost
+1E0F8: plc_signpostend
+1E0F8: plc_warp
+1E0F8: plc_warpend
 1E0F8: plc_specialstage
 1E160: plc_spestageend
 1E172: plc_ghzanimals
+1E180: plc_ghzanimalsend
 1E180: plc_lzanimals
+1E18E: plc_lzanimalsend
 1E18E: plc_mzanimals
+1E19C: plc_mzanimalsend
 1E19C: plc_slzanimals
+1E1AA: plc_slzanimalsend
 1E1AA: plc_syzanimals
+1E1B8: plc_syzanimalsend
 1E1B8: plc_sbzanimals
+1E1C6: plc_sbzanimalsend
 1E1C6: plc_ssresult
+1E1D4: plc_spestresultend
 1E1D4: plc_ending
+1E22A: plc_endingend
 1E22A: plc_tryagain
+1E23E: plc_tryagainend
 1E23E: plc_eggmansbz2
+1E252: plc_eggmansbz2end
 1E252: plc_fzboss
 1E272: plc_fzbossend
 1E700: nem_segalogo
@@ -5580,6 +5793,8 @@ FFFA: map_yad_internal.walk2
 2175A: nem_titletm
 2178E: eni_japnames
 2184C: nem_japnames
+21CF4: map_sonic
+21CF4: map_sonic_internal
 21CF4: ptr_ms_null
 21CF6: ptr_ms_stand
 21CF8: ptr_ms_wait1
@@ -5756,6 +5971,7 @@ FFFA: map_yad_internal.walk2
 222E5: ms_injury
 222F5: ms_getair
 22305: ms_waterslide
+22310: sonicdynplc
 22310: sonicdynplc_internal
 223C0: sonplc_null
 223C1: sonplc_stand
@@ -5846,6 +6062,7 @@ FFFA: map_yad_internal.walk2
 22610: art_sonic
 2C730: nem_shield
 2C8C6: nem_stars
+2CA0E: map_sswalls
 2CA0E: map_sswalls_internal
 2CA2E: byte_2c584
 2CA34: byte_2c58a
@@ -6118,6 +6335,7 @@ FFFA: map_yad_internal.walk2
 711BA: objpos_sbz1pf6
 711F2: objpos_end
 7134E: objpos_null
+71990: sounddriver
 71990: go_soundpriorities
 71994: go_specsoundindex
 71998: go_musicindex
@@ -6135,6 +6353,7 @@ FFFA: map_yad_internal.walk2
 71A5B: psg8
 71A83: psg9
 71A94: speedupindex
+71A9C: musicindex
 71A9C: ptr_mus81
 71AA0: ptr_mus82
 71AA4: ptr_mus83
@@ -6154,6 +6373,7 @@ FFFA: map_yad_internal.walk2
 71ADC: ptr_mus91
 71AE0: ptr_mus92
 71AE4: ptr_mus93
+71AE8: ptr_musend
 71AE8: soundpriorities
 71B4C: updatemusic
 71B5A: updatemusic.updateloop
@@ -6224,11 +6444,13 @@ FFFA: map_yad_internal.walk2
 71F4C: playsoundid
 71F8C: playsoundid.locret
 71F8E: sound_e0toe4
+71F98: sound_exindex
 71F98: ptr_flge0
 71F9C: ptr_flge1
 71FA0: ptr_flge2
 71FA4: ptr_flge3
 71FA8: ptr_flge4
+71FAC: ptr_flgend
 71FAC: playsegasound
 71FC0: playsegasound.busyloop_outer
 71FC4: playsegasound.busyloop
@@ -6400,7 +6622,9 @@ FFFA: map_yad_internal.walk2
 72D12: sendvoicetl.senttl
 72D16: sendvoicetl.locret
 72D18: fminstrumentoperatortable
+72D2C: fminstrumentoperatortable_end
 72D2C: fminstrumenttltable
+72D30: fminstrumenttltable_end
 72D30: cfmodulation
 72D52: cfenablemodulation
 72D58: cfstoptrack
@@ -6442,6 +6666,7 @@ FFFA: map_yad_internal.walk2
 7767E: music91
 7894C: music92
 78A76: music93
+78B44: soundindex
 78B44: ptr_snda0
 78B48: ptr_snda1
 78B4C: ptr_snda2
@@ -6490,7 +6715,10 @@ FFFA: map_yad_internal.walk2
 78BF8: ptr_sndcd
 78BFC: ptr_sndce
 78C00: ptr_sndcf
+78C04: ptr_sndend
+78C04: specsoundindex
 78C04: ptr_sndd0
+78C08: ptr_specend
 78C08: sounda0
 78C1E: sounda1
 78C48: sounda2
@@ -6541,4 +6769,5 @@ FFFA: map_yad_internal.walk2
 79616: soundcf
 7964E: soundd0
 79688: segapcm
+80000: segapcm_end
 80000: endofrom

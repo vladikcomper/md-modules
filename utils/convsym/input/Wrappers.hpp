@@ -5,30 +5,19 @@
  * (c) 2017-2018, 2020-2021, Vladikcomper						*
  * ------------------------------------------------------------	*/
 
-/* Base class for the input formats handlers */
-struct InputWrapper {
+#include <map>
+#include <string>
+#include <functional>
 
-	InputWrapper() { }
-	virtual ~InputWrapper() { }
+#include "../../core/IO.hpp"
 
-	// Virtual function interface that handles input file parsing
-	virtual std::multimap<uint32_t, std::string>
-		parse( 
-			const char *fileName, 
-			uint32_t baseOffset, 
-			uint32_t offsetLeftBoundary, 
-			uint32_t offsetRightBoundary, 
-			uint32_t offsetMask, 
-			const char * opts 
-		) = 0;
+#include "InputWrapper.hpp"
 
-};
-
-/* Standard input wrappers */
 #include "ASM68K_Listing.hpp"
 #include "ASM68K_Sym.hpp"
 #include "AS_Listing.hpp" 
 #include "Log.hpp"
+
 
 /* Input wrappers map */
 InputWrapper* getInputWrapper( const std::string& name ) {

@@ -5,33 +5,18 @@
  * (c) 2017-2018, 2020-2021, Vladikcomper						*
  * ------------------------------------------------------------	*/
 
-// Standard C-libraries
-#include <cstdio>			// for I/O operations and file accesses
-#include <cstdint>			// for uint8_t, uint16_t, etc.
-#include <cstdarg>			// for va_start, va_end, etc.
+#include <cstdio>
+#include <cstdint>
+#include <string>
+#include <functional>
+#include <regex>
 
-// Standard C++ libraries
-#include <string>			// for strings processing
-#include <vector>			// standard containers
-#include <set>				// ''
-#include <map>				// ''
-#include <functional>		// for generic function template
-#include <regex>			// for "regex_match" et al ...
-
-// Helper functions
-inline uint16_t swap16( uint16_t x ) { return (x>>8)|(x<<8); };
-inline uint32_t swap32( uint32_t x ) { return (x>>24)|((x>>8)&0xFF00)|((x<<8)&0xFF0000)|(x<<24); };
-
-// Helper classes
-#include "../core/Huffman.hpp"
-#include "../core/BitStream.hpp"
 #include "../core/IO.hpp"
 #include "../core/ArgvParser.hpp"
-#include "../core/OptsParser.hpp"
 
-// I/O wrappers
-#include "input/Wrapper.hpp"	// for GetInputWrapper[..]() and their linkage
-#include "output/Wrapper.hpp"	// for GetOutputWrapper[..]() and their linkage
+#include "input/Wrappers.hpp"	// for GetInputWrapper[..]() and their linkage
+#include "output/Wrappers.hpp"	// for GetOutputWrapper[..]() and their linkage
+
 
 /* Main function */
 int main (int argc, const char ** argv) {
@@ -124,23 +109,23 @@ int main (int argc, const char ** argv) {
 	{
 		const std::map <std::string, ArgvParser::record>
 			ParametersList {
-				{ "-base",		{ type: ArgvParser::record::hexNumber,	target: &baseOffset												} },
-				{ "-mask",		{ type: ArgvParser::record::hexNumber,	target: &offsetMask												} },
-				{ "-range",		{ type: ArgvParser::record::hexRange,	target: &offsetLeftBoundary,	target2: &offsetRightBoundary	} },
-				{ "-a",			{ type: ArgvParser::record::flag,		target: &optAppend												} },
-				{ "-debug",		{ type: ArgvParser::record::flag,		target: &optDebug												} },
-				{ "-in",		{ type: ArgvParser::record::string,		target: &inputWrapperName										} },
-				{ "-input",		{ type: ArgvParser::record::string,		target: &inputWrapperName										} },
-				{ "-inopt",		{ type: ArgvParser::record::string,		target: &inputOpts												} },
-				{ "-out",		{ type: ArgvParser::record::string,		target: &outputWrapperName										} },
-				{ "-output",	{ type: ArgvParser::record::string,		target: &outputWrapperName										} },
-				{ "-outopt",	{ type: ArgvParser::record::string,		target: &outputOpts												} },
-				{ "-org",		{ type: ArgvParser::record::hexNumber,	target: &appendOffset											} },
-				{ "-ref",		{ type: ArgvParser::record::hexNumber,	target: &pointerOffset											} },
-				{ "-filter",	{ type: ArgvParser::record::string,		target: &filterRegexStr											} },
-				{ "-exclude",	{ type: ArgvParser::record::flag,		target: &optFilterExclude										} },
-				{ "-toupper",	{ type: ArgvParser::record::flag,		target: &optToUpper												} },
-				{ "-tolower",	{ type: ArgvParser::record::flag,		target: &optToLower												} }
+				{ "-base",		{ .type = ArgvParser::record::hexNumber,	.target = &baseOffset											} },
+				{ "-mask",		{ .type = ArgvParser::record::hexNumber,	.target = &offsetMask											} },
+				{ "-range",		{ .type = ArgvParser::record::hexRange,		.target = &offsetLeftBoundary,	.target2 = &offsetRightBoundary	} },
+				{ "-a",			{ .type = ArgvParser::record::flag,			.target = &optAppend											} },
+				{ "-debug",		{ .type = ArgvParser::record::flag,			.target = &optDebug												} },
+				{ "-in",		{ .type = ArgvParser::record::string,		.target = &inputWrapperName										} },
+				{ "-input",		{ .type = ArgvParser::record::string,		.target = &inputWrapperName										} },
+				{ "-inopt",		{ .type = ArgvParser::record::string,		.target = &inputOpts											} },
+				{ "-out",		{ .type = ArgvParser::record::string,		.target = &outputWrapperName									} },
+				{ "-output",	{ .type = ArgvParser::record::string,		.target = &outputWrapperName									} },
+				{ "-outopt",	{ .type = ArgvParser::record::string,		.target = &outputOpts											} },
+				{ "-org",		{ .type = ArgvParser::record::hexNumber,	.target = &appendOffset											} },
+				{ "-ref",		{ .type = ArgvParser::record::hexNumber,	.target = &pointerOffset										} },
+				{ "-filter",	{ .type = ArgvParser::record::string,		.target = &filterRegexStr										} },
+				{ "-exclude",	{ .type = ArgvParser::record::flag,			.target = &optFilterExclude										} },
+				{ "-toupper",	{ .type = ArgvParser::record::flag,			.target = &optToUpper											} },
+				{ "-tolower",	{ .type = ArgvParser::record::flag,			.target = &optToLower											} }
 			};
 
 		/* Decode parameters acording to list defined by "ParametersList" variable */

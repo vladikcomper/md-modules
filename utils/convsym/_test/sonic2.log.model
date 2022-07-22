@@ -1,7 +1,32 @@
+0: start
+0: end
+0: button_up
+0: button_down
+0: button_left
+0: button_right
+0: button_B
+0: button_C
+0: button_A
+0: button_start
+0: button_up_mask
+0: button_down_mask
+0: button_left_mask
+0: button_right_mask
+0: button_B_mask
+0: button_C_mask
+0: button_A_mask
+0: button_start_mask
+0: loop
+0: loop
+0: skip
+0: skip
+0: skip
+0: start
 0: StartOfRom
 100: Header
 18E: Checksum
 1A4: ROMEndLoc
+200: EndOfHeader
 200: ErrorTrap
 206: EntryPoint
 214: PortA_Ok
@@ -20,6 +45,7 @@
 2CA: Z80StartupCodeBegin
 2F0: Z80StartupCodeEnd
 2FC: PSGInitValues
+300: PSGInitValues_End
 300: GameProgram
 306: CheckSumCheck
 328: ChecksumTest
@@ -27,6 +53,7 @@
 370: GameInit
 37C: GameClrRAM
 394: MainGameLoop
+3A2: GameModesArray
 3A2: GameMode_SegaScreen
 3A6: GameMode_TitleScreen
 3AA: GameMode_Demo
@@ -122,6 +149,7 @@ FAA: loop
 11A0: VDP_ClrCRAM
 11D2: loop
 11E2: VDPSetupArray
+1208: VDPSetupArray_End
 1208: ClearScreen
 1210: loop
 123C: loop
@@ -301,6 +329,7 @@ FAA: loop
 3D20: TitleScreen_ChoseOptions
 3D2E: TitleScreen_Demo
 3DAC: DemoLevels
+3DB4: DemoLevels_End
 3DB4: TailsNameCheat
 3DEE: TailsNameCheat_Buttons
 3DF4: ArtNem_Player1VS2
@@ -334,11 +363,13 @@ FAA: loop
 46A2: WindTunnel_LeaveHurt
 46A6: WindTunnel_End
 46A8: WindTunnelsCoordinates
+46B8: WindTunnelsCoordinates_End
 46B8: OilSlides
 4712: loc_4712
 476E: loc_476E
 47DE: OilSlides_Speeds
 47FE: OilSlides_Chunks
+481E: OilSlides_Chunks_End
 481E: MoveSonicInDemo
 486A: MoveDemo_Record_P2
 48AA: MoveDemo_On
@@ -350,9 +381,11 @@ FAA: loop
 4A70: OscillateNumInit
 4A7C: Osc_Loop
 4A84: Osc_Data
+4AC6: Osc_Data_End
 4AC6: OscillateNumDo
 4B22: OscillateNumDo_Return
 4B24: Osc_Data2
+4B64: Osc_Data2_End
 4B64: ChangeRingFrame
 4BD2: SetLevelEndType
 4C40: LevelEnd_SetSignpost
@@ -456,9 +489,13 @@ FAA: loop
 6396: SSTrackDrawFlipRLE_Read6_Got6
 63B8: SSTrackDrawFlipRLE_Read6_Got7
 63E6: SSTrackAni_TurnThenRise
+63FE: SSTrackAni_TurnThenRise_End
 63FE: SSTrackAni_TurnThenDrop
+6416: SSTrackAni_TurnThenDrop_End
 6416: SSTrackAni_TurnThenStraight
+6422: SSTrackAni_TurnThenStraight_End
 6422: SSTrackAni_Straight
+6432: SSTrackAni_Straight_End
 6432: SSTrackAni_StraightThenTurn
 643D: SSTrackAni_StraightThenTurn_End
 643E: Map_SpecialStageTrack
@@ -581,6 +618,7 @@ FAA: loop
 86F6: sub_86F6
 8732: dword_8732
 87C8: start
+87DC: TwoPlayerResultsPointers
 87DC: VsResultsScreen_Act
 87E4: VsResultsScreen_Zone
 87EC: VsResultsScreen_Game
@@ -747,9 +785,13 @@ BD26: ArtNem_CreditText
 BFBC: LevelSizeLoad
 C258: InitCameraValues
 C2B8: InitCam_EHZ
+C2E4: InitCam_Null0
+C2E4: InitCam_WZ
 C2E4: InitCam_Std
 C2F2: InitCam_Null1
 C2F4: InitCam_HTZ
+C320: InitCam_HPZ
+C320: InitCam_CCZ
 C320: InitCam_Null2
 C322: InitCam_OOZ
 C332: InitCam_MCZ
@@ -1111,6 +1153,8 @@ FF6E: loc_FF6E
 11820: return_11820
 11822: Obj2D_MapUnc_11822
 1188C: Obj28
+118F0: Obj28_Properties
+118F0: Obj28_Properties___LABEL__
 118F0: Obj28_Properties_Rabbit
 118F8: Obj28_Properties_Chicken
 11900: Obj28_Properties_Penguin
@@ -1215,6 +1259,7 @@ FF6E: loc_FF6E
 12AC2: process_swap_table
 12B52: swap_loop_objects
 12C52: teleport_swap_table
+12CBE: teleport_swap_table_end
 12CBE: qmark_monitor
 12CC2: Obj2E_Wait
 12CE4: byte_12CE4
@@ -1300,6 +1345,7 @@ FF6E: loc_FF6E
 13C48: Obj34
 13C6E: Obj34_Init
 13CD4: Obj34_TitleCardData
+13D10: Obj34_TitleCardData_End
 13D10: Obj34_Wait
 13D22: Obj34_BackgroundIn
 13D58: Obj34_BottomPartIn
@@ -1441,6 +1487,7 @@ FF6E: loc_FF6E
 15812: loc_15812
 1581A: loc_1581A
 15820: Off_TitleCardLetters
+15832: TitleCardLetters
 15832: TitleCardLetters_EHZ
 15842: TitleCardLetters_MTZ
 15852: TitleCardLetters_HTZ
@@ -1493,6 +1540,7 @@ FF6E: loc_FF6E
 15FE4: RunObjects_End
 15FE6: RunObjectsWhenPlayerIsDead
 15FF2: RunObjectDisplayOnly
+1600C: Obj_Index
 1600C: ObjPtr_Sonic
 16010: ObjPtr_Tails
 16014: ObjPtr_PlaneSwitcher
@@ -1500,6 +1548,7 @@ FF6E: loc_FF6E
 1601C: ObjPtr_TailsTails
 16020: ObjPtr_Spiral
 16024: ObjPtr_Oil
+16028: ObjPtr_SpindashDust
 16028: ObjPtr_Splash
 1602C: ObjPtr_SonicSS
 16030: ObjPtr_SmallBubbles
@@ -1514,10 +1563,15 @@ FF6E: loc_FF6E
 16058: ObjPtr_Seesaw
 1605C: ObjPtr_SwingingPlatform
 16060: ObjPtr_HTZLift
+16068: ObjPtr_ARZPlatform
 16068: ObjPtr_EHZPlatform
+1606C: ObjPtr_CPZPlatform
+1606C: ObjPtr_OOZMovingPform
 1606C: ObjPtr_WFZPlatform
 16070: ObjPtr_HPZCollapsPform
 16074: ObjPtr_SpeedBooster
+16078: ObjPtr_Scenery
+16078: ObjPtr_BridgeStake
 16078: ObjPtr_FallingOil
 1607C: ObjPtr_BlueBalls
 16080: ObjPtr_CPZSpinTube
@@ -1540,6 +1594,7 @@ FF6E: loc_FF6E
 160C4: ObjPtr_SmashableGround
 160C8: ObjPtr_RisingLava
 160CC: ObjPtr_LavaMarker
+160D0: ObjPtr_BreakableBlock
 160D0: ObjPtr_BreakableRock
 160D4: ObjPtr_OOZPoppingPform
 160D8: ObjPtr_TitleCard
@@ -1547,6 +1602,7 @@ FF6E: loc_FF6E
 160E0: ObjPtr_Spikes
 160E4: ObjPtr_LostRings
 160E8: ObjPtr_Shield
+160EC: ObjPtr_GameOver
 160EC: ObjPtr_TimeOver
 160F0: ObjPtr_Results
 160FC: ObjPtr_OOZLauncher
@@ -1579,6 +1635,7 @@ FF6E: loc_FF6E
 16178: ObjPtr_Masher
 1617C: ObjPtr_CPZBoss
 16180: ObjPtr_SSHUD
+16184: ObjPtr_StartBanner
 16184: ObjPtr_EndingController
 16188: ObjPtr_SSRing
 1618C: ObjPtr_SSBomb
@@ -1589,13 +1646,17 @@ FF6E: loc_FF6E
 161A4: ObjPtr_MTZSpinTube
 161A8: ObjPtr_SpikyBlock
 161AC: ObjPtr_Nut
+161B0: ObjPtr_MCZRotPforms
 161B0: ObjPtr_MTZMovingPforms
+161B4: ObjPtr_MTZPlatform
 161B4: ObjPtr_CPZSquarePform
 161B8: ObjPtr_Conveyor
 161BC: ObjPtr_FloorSpike
 161C0: ObjPtr_LargeRotPform
 161C4: ObjPtr_SSResults
 161C8: ObjPtr_Cog
+161CC: ObjPtr_MTZLavaBubble
+161CC: ObjPtr_HPZBridgeStake
 161CC: ObjPtr_PulsingOrb
 161D0: ObjPtr_CNZConveyorBelt
 161D4: ObjPtr_RotatingRings
@@ -1614,6 +1675,7 @@ FF6E: loc_FF6E
 1620C: ObjPtr_MCZDrawbridge
 16210: ObjPtr_SwingingPform
 16214: ObjPtr_ARZRotPforms
+16218: ObjPtr_ForcedSpin
 16218: ObjPtr_PinballMode
 1621C: ObjPtr_LauncherSpring
 16220: ObjPtr_Flipper
@@ -1685,6 +1747,7 @@ FF6E: loc_FF6E
 16334: ObjPtr_EndingSeqClouds
 16338: ObjPtr_EndingSeqTrigger
 1633C: ObjPtr_EndingSeqBird
+16340: ObjPtr_EndingSeqSonic
 16340: ObjPtr_EndingSeqTails
 16344: ObjPtr_TornadoHelixes
 16350: ObjPtr_CNZRectBlocks
@@ -1695,6 +1758,7 @@ FF6E: loc_FF6E
 16364: ObjPtr_Bumper
 16368: ObjPtr_BonusBlock
 1636C: ObjPtr_Grab
+16370: ObjPtr_ContinueText
 16370: ObjPtr_ContinueIcons
 16374: ObjPtr_ContinueChars
 16378: ObjPtr_RingPrize
@@ -1909,6 +1973,7 @@ FF6E: loc_FF6E
 18908: Obj41_Init_Down
 1891C: Obj41_Init_DiagonallyUp
 18936: Obj41_Init_DiagonallyDown
+18954: Obj41_Init_Up
 18954: Obj41_Init_Common
 1897C: Obj41_Strengths
 18980: Obj41_Up
@@ -4961,6 +5026,7 @@ FF6E: loc_FF6E
 36BE6: Obj90_Init
 36C0C: Obj90_Frames
 36C12: Obj90_Directions
+36C1C: Obj8F_Move
 36C1C: Obj90_Move
 36C2C: loc_36C2C
 36C40: loc_36C40
@@ -5038,6 +5104,7 @@ FF6E: loc_FF6E
 372D6: byte_372D6
 372DA: byte_372DA
 372E6: Obj95_MapUnc_372E6
+37322: Invalid_SubObjData
 37322: Obj94
 37338: Obj94_Init
 37350: Obj94_WaitForPlayer
@@ -5591,7 +5658,9 @@ FF6E: loc_FF6E
 3AF34: ObjB2_Main_WFZ_Start_load_smoke
 3AF58: ObjB2_Animate_Pilot
 3AF9C: Sonic_pilot_frames
+3AFA0: Sonic_pilot_frames_end
 3AFA0: Tails_pilot_frames
+3AFB8: Tails_pilot_frames_end
 3AFB8: word_3AFB8
 3AFBC: word_3AFBC
 3AFC0: word_3AFC0
@@ -5770,6 +5839,7 @@ FF6E: loc_FF6E
 3C366: ObjC2_Bust
 3C3B8: ObjC2_SubObjData
 3C3C2: ObjC2_MapUnc_3C3C2
+3C3D6: Invalid_SubObjData2
 3C3D6: ObjC3
 3C3E8: ObjC3_Init
 3C416: ObjC3_Main
@@ -6252,6 +6322,7 @@ FF6E: loc_FF6E
 40772: APM_DEZ_Blocks
 4077A: APM_DEZ_End
 4077E: APM_ARZ_Blocks
+407BE: APM_ARZ_End
 407BE: APM_Null
 407C0: PatchHTZTiles
 407DA: loc_407DA
@@ -6385,7 +6456,9 @@ FF6E: loc_FF6E
 41CB8: sub_41CB8
 41CEC: sub_41CEC
 42594: LevelArtPointers
+426C8: PLCptr_HtzAnimals
 426C8: PLCptr_MtzAnimals
+42C2A: PlrList_HtzAnimals
 42C2A: PlrList_MtzAnimals
 42D50: ColCurveMap
 42E50: ColArray
@@ -6800,6 +6873,7 @@ EC0CC: loc_EC0CC
 EC0DE: sub_EC0DE
 EC0E8: Snd_Driver
 ED04C: Snd_Driver_End
+ED100: SndDAC_Start
 ED100: SndDAC_Sample1
 ED394: SndDAC_Sample2
 EDAB7: SndDAC_Sample5
@@ -6868,6 +6942,7 @@ FD4DA: Mus_EL_FM2
 FD4F2: Mus_EL_FM5
 FD4F9: Mus_EL_FM3
 FD50E: Mus_EL_PSG1
+FD51F: Mus_EL_PSG2
 FD51F: Mus_EL_PSG3
 FD520: Mus_EL_DAC
 FD52F: Mus_EL_Voices
@@ -6889,6 +6964,7 @@ FD725: MusEmeraldFM5
 FD733: MusEmeraldFM6
 FD741: MusEmeraldPSG2
 FD750: MusEmeraldPSG1
+FD762: MusEmeraldPSG3
 FD762: MusEmeraldDAC
 FD765: MusEmrldVoices
 FD797: Mus_Credits
@@ -6952,6 +7028,7 @@ FEEAD: SndPtr_ArrowFiring
 FEEBB: SndPtr_Ring
 FEF0D: SndPtr_Helicopter
 FEF27: SndPtr_Scatter
+FEF33: SndPtr__End
 FEF33: Sound20
 FEF49: Sound21
 FEF53: ssamp21
@@ -7076,9 +7153,11 @@ FFD43: ssamp63
 FFD5C: Sound64
 FFD6B: ssamp64
 FFD84: Sound65
+FFDA5: ssamp65
 FFDA5: Sound66
 FFDC6: ssamp66
 FFDDF: Sound67
+FFE00: ssamp67
 FFE00: Sound68
 FFE11: ssamp68
 FFE2A: Sound69

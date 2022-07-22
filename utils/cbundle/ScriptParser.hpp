@@ -7,6 +7,12 @@
 
 #define LINE_BUFFER_SIZE 4096
 
+#include <string>
+#include <map>
+#include <set>
+
+#include "../core/IO.hpp"
+
 namespace Parser {
 
 	/* Structures and enumerations */
@@ -41,8 +47,6 @@ namespace Parser {
 		const char * fileName;
 		long lineNumber;
 
-		parseData(IO::File * _file, const char * _fileName, long _lineNumber):
-			file(_file), fileName(_fileName), lineNumber(_lineNumber) { ; };
 		~parseData() { delete this->file; }
 	};
 
@@ -102,15 +106,15 @@ namespace Parser {
 					auto directiveData = directives.find( strDirective );
 					if ( directiveData != directives.end() ) {
 						return {
-							type: directiveData->second,
-							content: strArgument
+							.type = directiveData->second,
+							.content = strArgument
 						};
 					}
 					else {
 						IO::Log( IO::error, "%s:%d: Unknown directive \"#%s\"", in->fileName, in->lineNumber, strDirective.c_str() );
 						return {
-							type: error,
-							content: std::string()
+							.type = error,
+							.content = std::string()
 						};
 					}
 
@@ -119,8 +123,8 @@ namespace Parser {
 				// Otherwise, line is comment ...
 				else {
 					return {
-						type: comment,
-						content: std::string()
+						.type = comment,
+						.content = std::string()
 					};
 				}
 	
@@ -129,8 +133,8 @@ namespace Parser {
 			// Otherwise, return raw line ...
 			else {
 				return {
-					type: raw,
-					content: std::string( (char*)sBuffer )
+					.type = raw,
+					.content = std::string( (char*)sBuffer )
 				};
 			}
 		}
@@ -138,8 +142,8 @@ namespace Parser {
 		// Otherwise, return eof indicator ...
 		else {
 			return {
-				type: eof,
-				content: std::string()
+				.type = eof,
+				.content = std::string()
 			};
 		}
 	}
@@ -212,7 +216,7 @@ namespace Parser {
 
 				case dir_file:
 					{
-						parseData out_inner = (parseData){
+						parseData out_inner = {
 							.file = new IO::FileOutput( data.content.c_str(), IO::text ),
 							.fileName = data.content.c_str(),
 							.lineNumber = 0
@@ -308,7 +312,7 @@ namespace Parser {
 	 */
 	bool parseFile(const char* path, parseData * out = nullptr) {
 
-		parseData in = (parseData){
+		parseData in = {
 			.file = new IO::FileInput( path, IO::text ),
 			.fileName = path,
 			.lineNumber = 0

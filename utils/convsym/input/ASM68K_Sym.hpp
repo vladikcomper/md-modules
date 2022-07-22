@@ -4,6 +4,16 @@
  * Input wrapper for the ASM68K compiler's symbol format		*
  * ------------------------------------------------------------	*/
 
+#include <cstdint>
+#include <string>
+#include <map>
+
+#include "../../core/IO.hpp"
+#include "../../core/OptsParser.hpp"
+
+#include "InputWrapper.hpp"
+
+
 struct Input__ASM68K_Sym : public InputWrapper {
 
 	Input__ASM68K_Sym() : InputWrapper() { // Constructor
@@ -50,9 +60,9 @@ struct Input__ASM68K_Sym : public InputWrapper {
 		
 		const std::map<std::string, OptsParser::record>
 			OptsList {
-				{ "localSign",			{ type: OptsParser::record::p_char,		target:	&localLabelSymbol			} },
-				{ "localJoin",			{ type: OptsParser::record::p_char,		target:	&localLabelRef				} },
-				{ "processLocals",		{ type: OptsParser::record::p_bool,		target:	&optProcessLocalLabels		} }
+				{ "localSign",			{ .type = OptsParser::record::p_char,	.target = &localLabelSymbol			} },
+				{ "localJoin",			{ .type = OptsParser::record::p_char,	.target = &localLabelRef			} },
+				{ "processLocals",		{ .type = OptsParser::record::p_bool,	.target = &optProcessLocalLabels	} }
 			};
 			
 		OptsParser::parse( opts, OptsList );	

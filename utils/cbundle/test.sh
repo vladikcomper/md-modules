@@ -1,5 +1,7 @@
-#!/bin/bash
-cbundle=./../cbundle
+#!/bin/sh
+set -e
+
+cbundle=../cbundle
 
 cd _test
 

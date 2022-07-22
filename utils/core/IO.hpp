@@ -5,6 +5,14 @@
  * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
+#pragma once
+
+#include <cstdio>
+#include <cstdarg>
+#include <cstring>
+#include <cstdint>
+
+
 namespace IO {
 
 	/* -------------------- */

@@ -4,6 +4,18 @@
  * Output wrapper for the Debug Information format version 2.0	*
  * ------------------------------------------------------------	*/
 
+#include <map>
+#include <cstdint>
+#include <string>
+
+#include "../../core/OptsParser.hpp"
+#include "../../core/Huffman.hpp"
+#include "../../core/BitStream.hpp"
+#include "../../core/IO.hpp"
+#include "../../core/utils.hpp"
+
+#include "OutputWrapper.hpp"
+
 
 struct Output__Deb2 : public OutputWrapper {
 
@@ -34,7 +46,7 @@ public:
 
 		const std::map<std::string, OptsParser::record>
 			OptsList {
-				{ "favorLastLabels",	{ type: OptsParser::record::p_bool,	target:	&optFavorLastLabels	} }
+				{ "favorLastLabels",	{ .type = OptsParser::record::p_bool,	.target = &optFavorLastLabels	} }
 			};
 			
 		OptsParser::parse( opts, OptsList );
@@ -51,7 +63,10 @@ public:
 			lastBlock = 0xFF;
 		}
 
-		uint32_t blockOffsets [ lastBlock+1 ] = { 0 };
+		uint32_t blockOffsets [ lastBlock+1 ];
+		for (int i = 0; i < lastBlock+1; ++i) {
+			blockOffsets[i] = 0;
+		}
 
 		output.writeBEWord( sizeof(blockOffsets) + 2 );			// write relative pointer to the Huffman table
 		uint32_t loc_BlockOffsets = output.getCurrentOffset();	// remember the offset where blocks offset table should start

@@ -5,7 +5,12 @@
  * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
+#pragma once
+
+#include <cstdint>
+
 #include <algorithm>
+#include <vector>
 
 class BitStream {
 

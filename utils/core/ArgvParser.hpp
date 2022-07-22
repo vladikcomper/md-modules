@@ -5,6 +5,13 @@
  * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
+#pragma once
+
+#include <map>
+#include <string>
+
+#include "IO.hpp"
+
 
 namespace ArgvParser {
 

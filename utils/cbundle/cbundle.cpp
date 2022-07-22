@@ -75,7 +75,7 @@ int main (int argc, const char ** argv) {
 	{
 		const std::map <std::string, ArgvParser::record>
 			ParametersList {
-				{ "-debug",	{ type: ArgvParser::record::flag, target: &optDebug } }
+				{ "-debug",	{ .type = ArgvParser::record::flag, .target = &optDebug } }
 			};
 
 		/* Decode parameters acording to list defined by "ParametersList" variable */

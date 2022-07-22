@@ -49,3 +49,5 @@ diff -q sonic1.sym.asm sonic1.sym.asm.model
 
 diff -q sonic1git.lst.log sonic1git.lst.log.model
 diff -q sonic1git.sym.log sonic1git.sym.log.model
+
+echo "ALL DONE!"

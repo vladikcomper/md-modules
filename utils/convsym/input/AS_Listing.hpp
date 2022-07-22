@@ -4,6 +4,14 @@
  * Input wrapper for the AS listing format						*
  * ------------------------------------------------------------	*/
 
+#include <cstdint>
+#include <string>
+#include <map>
+
+#include "../../core/IO.hpp"
+
+#include "InputWrapper.hpp"
+
 
 struct Input__AS_Listing : public InputWrapper {
 	

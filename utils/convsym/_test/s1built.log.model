@@ -1,3 +1,4 @@
+0: StartOfRom
 0: Vectors
 100: Console
 110: Date
@@ -26,6 +27,7 @@
 292: PortC_Ok
 294: SetupValues
 300: GameProgram
+31C: CheckSumCheck
 31C: loc_32C
 326: loc_348
 342: GameInit

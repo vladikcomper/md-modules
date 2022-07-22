@@ -4,6 +4,14 @@
  * Output wrapper for simple symbol logging						*
  * ------------------------------------------------------------	*/
 
+#include <map>
+#include <cstdint>
+#include <string>
+
+#include "../../core/IO.hpp"
+
+#include "OutputWrapper.hpp"
+
 
 struct Output__Log : public OutputWrapper {
 
