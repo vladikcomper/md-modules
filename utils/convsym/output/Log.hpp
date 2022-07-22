@@ -36,7 +36,7 @@ public:
 			const char * opts = "" ) {
 	
 		const char * lineFormat = *opts ? opts : "%X: %s";
-		IO::FileOutput output = IO::FileOutput( fileName );
+		IO::FileOutput output = IO::FileOutput( fileName, IO::text );
 
 		for ( auto symbol : SymbolList ) {
 			output.writeLine( lineFormat, symbol.first, symbol.second.c_str() );
