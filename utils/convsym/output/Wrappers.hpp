@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <map>
 #include <functional>
@@ -22,14 +23,14 @@
 
 
 /* Input wrappers map */
-OutputWrapper* getOutputWrapper( const std::string& name ) {
+std::unique_ptr<OutputWrapper> getOutputWrapper( const std::string& name ) {
 
-	std::map<std::string, std::function<OutputWrapper*()> >
+	std::map<std::string, std::function<std::unique_ptr<OutputWrapper>()> >
 	wrappersTable {
-		{ "deb1",	[]() { return new Output__Deb1();	} },
-		{ "deb2",	[]() { return new Output__Deb2();	} },
-		{ "log",	[]() { return new Output__Log();	} },
-		{ "asm",	[]() { return new Output__Asm();	} }
+		{ "deb1",	[]() { return std::unique_ptr<OutputWrapper>(new Output__Deb1());	} },
+		{ "deb2",	[]() { return std::unique_ptr<OutputWrapper>(new Output__Deb2());	} },
+		{ "log",	[]() { return std::unique_ptr<OutputWrapper>(new Output__Log());	} },
+		{ "asm",	[]() { return std::unique_ptr<OutputWrapper>(new Output__Asm());	} }
 	};
 
 	auto entry = wrappersTable.find( name );
@@ -40,5 +41,4 @@ OutputWrapper* getOutputWrapper( const std::string& name ) {
 
 	return (entry->second)();
 
-};
-
+}

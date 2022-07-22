@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <string>
+#include <memory>
 #include <functional>
 #include <regex>
 
@@ -159,13 +160,12 @@ int main (int argc, const char ** argv) {
 	/* Retrieve symbols from the input file */
 	std::multimap<uint32_t, std::string> Symbols;
 	try {
-		InputWrapper * input = getInputWrapper( inputWrapperName );
-		Symbols = input->parse( inputFileName, baseOffset, offsetLeftBoundary, offsetRightBoundary, offsetMask, inputOpts.c_str() ); 
-		delete input;
+		std::unique_ptr<InputWrapper> input = getInputWrapper( inputWrapperName );
+		Symbols = input->parse( inputFileName, baseOffset, offsetLeftBoundary, offsetRightBoundary, offsetMask, inputOpts.c_str() );
 	}
 	catch (const char* err) {
 		IO::Log( IO::fatal, "Input file parsing failed: %s", err ); 
-		return -1; 
+		return -1;
 	}
 	
 	/* Apply transformation to symbols */
@@ -199,9 +199,8 @@ int main (int argc, const char ** argv) {
 	/* Pass generated symbols list to the output wrapper */
 	if ( Symbols.size() > 0 ) {
 		try {
-			OutputWrapper * output = getOutputWrapper( outputWrapperName );
+			std::unique_ptr<OutputWrapper> output = getOutputWrapper( outputWrapperName );
 			output->parse( Symbols, outputFileName, appendOffset, pointerOffset, outputOpts.c_str() );
-			delete output;
 		}
 		catch (const char* err) {
 			IO::Log( IO::fatal, "Output generation failed: %s", err );

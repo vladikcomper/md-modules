@@ -5,8 +5,10 @@
  * (c) 2017-2018, 2020-2021, Vladikcomper						*
  * ------------------------------------------------------------	*/
 
+#include <algorithm>
 #include <map>
 #include <string>
+#include <memory>
 #include <functional>
 
 #include "../../core/IO.hpp"
@@ -20,14 +22,14 @@
 
 
 /* Input wrappers map */
-InputWrapper* getInputWrapper( const std::string& name ) {
+std::unique_ptr<InputWrapper> getInputWrapper( const std::string& name ) {
 
-	std::map<std::string, std::function<InputWrapper*()> >
+	std::map<std::string, std::function<std::unique_ptr<InputWrapper>()> >
 	wrappersTable {
-		{ "asm68k_sym", []() { return new Input__ASM68K_Sym(); } },
-		{ "asm68k_lst", []() { return new Input__ASM68K_Listing(); } },
-		{ "as_lst", []() { return new Input__AS_Listing(); } },         
-		{ "log", []() { return new Input__Log(); } }
+		{ "asm68k_sym", []() { return std::unique_ptr<InputWrapper>(new Input__ASM68K_Sym()); } },
+		{ "asm68k_lst", []() { return std::unique_ptr<InputWrapper>(new Input__ASM68K_Listing()); } },
+		{ "as_lst", 	[]() { return std::unique_ptr<InputWrapper>(new Input__AS_Listing()); } },         
+		{ "log", 		[]() { return std::unique_ptr<InputWrapper>(new Input__Log()); } }
 	};
 
 	auto entry = wrappersTable.find( name );
@@ -38,4 +40,4 @@ InputWrapper* getInputWrapper( const std::string& name ) {
 
 	return (entry->second)();
 
-};
+}
