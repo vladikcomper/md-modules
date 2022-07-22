@@ -1,8 +1,7 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.7									*
+ * ConvSym utility version 2.7.1								*
  * Input formats base controller								*
- * (c) 2017-2018, 2020-2021, Vladikcomper						*
  * ------------------------------------------------------------	*/
 
 #include <algorithm>

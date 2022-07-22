@@ -7,7 +7,7 @@ convsym=../convsym
 echo "-- Testing DEB2 symbol generation... --"
 $convsym sonic1.sym sonic1.deb2 -input asm68k_sym
 zcat sonic2.lst.gz  | $convsym - sonic2.deb2 -input as_lst
-zcat sonic3k.lst.gz | $convsym - sonic3k.deb2 -input as_lst >sonic3k.txt
+zcat sonic3k.lst.gz | $convsym - sonic3k.deb2 -input as_lst
 
 echo "-- Testing DEB1 symbol generation... --"
 echo "WARNING: Sonic 3K tests will throw a few errors, because symbol list is too large for DEB1 format to handle."

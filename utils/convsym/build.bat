@@ -1,3 +1,3 @@
-@gcc -std=c++20 -O3 -pedantic-errors -static -s -Wall ConvSym.cpp -o ConvSym.exe -lstdc++
-@COPY /Y /B ConvSym.exe ..\..\modules\exec\ConvSym.exe
+@gcc -std=c++20 -O3 -pedantic-errors -static -s -Wall convsym.cpp -o convsym.exe -lstdc++
+@COPY /Y /B convsym.exe ..\..\modules\exec\convsym.exe
 @pause
