@@ -285,6 +285,12 @@ Default parser options can be expressed as follows:
 
 ## Version history
 
+### Version 2.7.1 (2022-07-23)
+
+* Fix incorrect newlines produced by `log` and `asm` output parsers on Windows;
+* Fix minor memory leak when a parser crashes;
+* Overall stability and portability improvements.
+
 ### Version 2.7 (2021-04-27)
 
 * Added support for multiple lables sharing the same offset for all input and output wrappers;

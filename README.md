@@ -13,29 +13,49 @@ Various debugging modules and utilities for Sega Mega-Drive / Genesis ROMs.
   - **/modules/errorhandler** - source code for Error Handler and Debugger blob
     - **/modules/errorhandler/bundles** - bundles source code that define debugger macros and integrate pre-compiled Error Handler blob into your projects.
   - **/modules/core** - source code for debugger's core, which includes Console subsystem (used by Error Handler)
-    
+
+## Pre-built utilities binaries
+
+For your convenience, this repository includes pre-built utilities binaries, as those are used by modules. See `modules/exec` directory.
+
+Binaries are provided for the following platforms:
+* **Windows 64-bit** (Windows 7 and above)
+* **Linux 64-bit**
+
 ## Building utilities
+
+### Dependencies
+
+No dependencies are used rather than Standard C++ library.
+
+### Compiler and archivetures support
+
+Builds have been tested and are expected to work with the following compilers: 
+* __GCC__ versions 6 through 12
+* __Clang__ verions 15
+
+Other popular compilers are expected to work as well.
+
+Generally, only x86_64 architecture is tested, but utils are expected to build for ARM and other targers.
+
+### Building and testing
 
 Utilities come with simple build scripts for Windows (`build.bat`) and Linux (`build.sh`).
 
-> **NOTICE**: While Windows build scripts are expected to work, they have been untested after last updates to the building system.
+Go to utility directory (e.g. `utils/convsym`) and run `build.bat` or `build.sh` dependening on your system.
 
-These scripts require that you have GCC installed on your system. However, source code doesn't rely on third party libraries or compiler-specific features, so other compilers besides GCC should work as well.
-
-Source codes are not tied to any particular IDE, hence there are no pre-configured project files. If you want to use IDE of your choice, you'll have to configure project files on your own.
-
-### Supported platforms
-
-Utilities code is cross-platform and can be compiled on Windows, Linux and MacOS platforms. However, only Linux versions are fully supported as of right now (see notes below).
-
-For your convinience, repository comes with pre-compiled binaries of all the utilities for 64-bit Windows and Linux.
-
-- **Windows binaries** were fully supported until mid 2020. However, they currently aren't updated anymore. Be warned that the provided Windows binaries may not pass some of the tests correctly.
-- **Linux binaries** are fully tested and supported after 2020. You should be able to compile and test them with any version of GCC that supports C++11.
-- **MacOS binaries** are also possible, I believe, but I do not have access to this platform.
+To test executables in your environment, run `test.bat` or `test.sh`, depending on system.
 
 ## Building modules
 
+### Dependencies
+
 Debugging modules are built using ASM68K or AS assemblers (depending on their versions). Windows executables of these assemblers are included in the repository and used by build scripts.
 
-Unlike utilities which are compiled with cross-platform compiler, GCC, building tools used here mostly target Windows. For Linux users, `wine` is required to use them.
+Linux users are expected to have `wine` installed in order to invoke them.
+
+### Building modules
+
+Modules come with simple build scripts compile them under Windows (`build.bat`) and Linux (`build.sh`).
+
+Go to a module directory (e.g. `module/errorhandler`) and run `build.bat` or `build.sh` dependening on your system.
