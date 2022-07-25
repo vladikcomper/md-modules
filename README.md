@@ -28,7 +28,7 @@ Binaries are provided for the following platforms:
 
 No dependencies are used rather than Standard C++ library.
 
-### Compiler and archivetures support
+### Compiler and architectures support
 
 Builds have been tested and are expected to work with the following compilers: 
 * __GCC__ versions 6 through 12
