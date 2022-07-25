@@ -36,7 +36,7 @@ Builds have been tested and are expected to work with the following compilers:
 
 Other popular compilers are expected to work as well.
 
-Generally, only x86_64 architecture is tested, but utils are expected to build for ARM and other targers.
+Generally, only x86_64 architecture is tested, but utils are expected to build for ARM and other targets.
 
 ### Building and testing
 
