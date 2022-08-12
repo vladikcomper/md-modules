@@ -102,7 +102,8 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
 
 ## Converting SGDK symbols
 
-> **WARNING**
+> **Warning**
+> 
 > SGDK isn't officially supported by the "Advanced Error Handler and Debugger", which makes use of the converted symbols, hence no installation instructions are provided.
 > At this point, you'll have to figure out installation on your own.
 
@@ -126,7 +127,7 @@ Consider the following example:
 nm -n out/rom.out | awk '{print $1":",$3}' | ./convsym - out/rom.deb2 -in log
 ```
 
-This will extract symbols from `out/rom.out` and convert them to `out/rom.deb2` (DEB2 database for the "Advanced Error Handler and Debugger").
+This will extract symbols from `out/rom.out` and convert them to `out/rom.deb2` (DEB2 database format for the "Advanced Error Handler and Debugger").
 
 Alternatively, using the `-a` flag, you can append symbols to your ROM instead. For this to work properly, make sure ROM is rebuilt every time `convsym` is called (otherwise, after several invocations, you'll accumulate more than one symbols table at the end of ROM):
 
@@ -149,7 +150,9 @@ Some parsers support additional options, which can be specified via `-inopt` opt
 
 This parser expects a symbol file produced by the **ASM68K** assembler for input.
 
-**NOTICE**: In order to output local labels in the symbol file, `/v+` assembly option should be used.
+> **Note**
+> 
+> In order to output local labels in the symbol file, `/v+` assembly option should be used.
 
 **Options:**
 
@@ -175,7 +178,9 @@ Default parser options can be expressed as follows:
 
 This parser expects a listing file produced by the **ASM68K** assembler for input.
 
-**NOTICE**: In order for some macro-related parsing options to work correctly, `/m` argument should be used on the assembler side to properly expand macros in the listing file (please consult the assembler manual for more information).
+> **Note**
+>
+> In order for some macro-related parsing options to work correctly, `/m` argument should be used on the assembler side to properly expand macros in the listing file (please consult the assembler manual for more information).
 
 **Known issues**:
 
