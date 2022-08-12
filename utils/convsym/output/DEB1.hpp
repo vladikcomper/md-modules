@@ -129,8 +129,10 @@ public:
             		 * For records with the same offsets, fetch only the last or the first processed symbol,
             		 * depending "favor last labels" option ...
             		 */
-            		if ( (optFavorLastLabels && std::next(SymbolPtr)->first == SymbolPtr->first) ||
-            			 (!optFavorLastLabels && std::prev(SymbolPtr)->first == SymbolPtr->first) ) {
+            		if ( (optFavorLastLabels && std::next(SymbolPtr) != SymbolList.end()
+            					&& std::next(SymbolPtr)->first == SymbolPtr->first) ||
+            			 (!optFavorLastLabels && SymbolPtr != SymbolList.begin()
+            			 		&& std::prev(SymbolPtr)->first == SymbolPtr->first) ) {
             			continue;
             		}
 
