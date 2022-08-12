@@ -285,6 +285,10 @@ Default parser options can be expressed as follows:
 
 ## Version history
 
+### Version 2.7.2 (2022-08-12)
+
+* Fix SEGFAULT in `deb1` and `deb2` parsers due to out of boundary labels lookup.
+
 ### Version 2.7.1 (2022-07-23)
 
 * Fix incorrect newlines produced by `log` and `asm` output parsers on Windows;
