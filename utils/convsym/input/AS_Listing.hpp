@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.7.1								*
+ * ConvSym utility version 2.7.2								*
  * Input wrapper for the AS listing format						*
  * ------------------------------------------------------------	*/
 

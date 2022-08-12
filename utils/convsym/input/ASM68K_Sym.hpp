@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.7.1								*
+ * ConvSym utility version 2.7.2								*
  * Input wrapper for the ASM68K compiler's symbol format		*
  * ------------------------------------------------------------	*/
 
@@ -70,11 +70,11 @@ struct Input__ASM68K_Sym : public InputWrapper {
 		// NOTICE: Symbols are usually written OUT OF ORDER in the symbols file,
 		//	so we have to map them first before filtering
 		std::map<uint32_t, std::string> UnfilteredSymbolsMap;
-        input.setOffset( 0x0008 );
+		input.setOffset( 0x0008 );
 
-        for(;;) {
+		for(;;) {
 
-	        uint32_t offset;
+			uint32_t offset;
 			try {				// read 32-bit label offset
 				offset = input.readLong();
 			} catch(...) {		// if reading failed, break
