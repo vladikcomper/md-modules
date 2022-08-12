@@ -82,7 +82,7 @@ struct Huffman {
 	static void
 	buildCodes( RecordSet& recordTable, const Node* root, uint16_t code=0, uint8_t codeLength=0 ) {
 
-    	if ( root == nullptr ) {
+		if ( root == nullptr ) {
 			throw "Error while building codes tree";
 		}
 

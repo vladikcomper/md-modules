@@ -58,7 +58,7 @@ namespace IO {
 
 	struct File {
 
-    	File( const char * path, int mode ): baseOffset(0) {	// Constructor
+		File( const char * path, int mode ): baseOffset(0) {	// Constructor
 			const char* modeToCode[] = { "rb", "wb", "r", "w", "r+b", "r+b", "r+", "r+" };
 
 			if ((strncmp(path, "-", 2) == 0) && ((mode & 1) == read || (mode & 1) == write)) {

@@ -26,12 +26,12 @@ namespace OptsParser {
 	 */
 	void parse(const char* opts, std::map<std::string, record> OptsList) {
 
-    	const char * ptr = opts;
-    	bool illegalCharactersFound = false;
-    	
-    	#define IS_VALID_OPERATOR(X) (X=='='||X=='+'||X=='-')
+		const char * ptr = opts;
+		bool illegalCharactersFound = false;
+		
+		#define IS_VALID_OPERATOR(X) (X=='='||X=='+'||X=='-')
 
-    	while ( *ptr ) {
+		while ( *ptr ) {
 
 			// Fetch option start token
 			if ( *ptr == '/' ) {
@@ -65,8 +65,8 @@ namespace OptsParser {
 				}
 				std::string strOptionValue( ptr_start, ptr_end-ptr_start );
 
-            	// Decode option according to the options list
-            	auto option = OptsList.find(strOptionName);
+				// Decode option according to the options list
+				auto option = OptsList.find(strOptionName);
 				if ( option != OptsList.end() ) {
 					switch ( option->second.type ) {
 						
@@ -101,8 +101,8 @@ namespace OptsParser {
 					if ( illegalCharactersFound == false ) {
 						illegalCharactersFound = true;
 						IO::Log( IO::warning, "Illegal characters found while parsing option string" );
-	    			}
-    			}
+					}
+				}
 	
 				// Skip character
 				ptr++;

@@ -112,16 +112,16 @@ struct Input__ASM68K_Listing : public InputWrapper {
 				++lineCounter 
 			) {
 
-        	// If line is too short, do not proceed
-        	if ( lineLength <= 36 ) {
-        		IO::Log( IO::debug, "Line %d is too short, skipping", lineCounter );
-        		continue;
-        	}
+			// If line is too short, do not proceed
+			if ( lineLength <= 36 ) {
+				IO::Log( IO::debug, "Line %d is too short, skipping", lineCounter );
+				continue;
+			}
 
-        	//// Bugfix: for when string separation was forced at null-terminator
-        	//if ( lineLength < sBufferSize ) {
-        	//	sBuffer[ lineLength+1 ] = 0x00;
-        	//}
+			//// Bugfix: for when string separation was forced at null-terminator
+			//if ( lineLength < sBufferSize ) {
+			//	sBuffer[ lineLength+1 ] = 0x00;
+			//}
 
 			uint8_t* const sLineOffset = sBuffer;		// E.g.: "00000AEE 301F <..>move.w (sp)+, d0\n"
 			uint8_t* const sLineText = sBuffer+36;		// E.g.: "move.w (sp)+, d0\n"
@@ -223,7 +223,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 				// Fetch label's opcode into std::string object
 				while ( IS_INDENTION(*ptr) ) ptr++; 	// skip indention
-            	uint8_t* const ptr_start = ptr;
+				uint8_t* const ptr_start = ptr;
 				do { ptr++; } while ( !IS_INDENTION(*ptr) && !IS_ENDOFLINE(*ptr) );
 				*ptr++ = 0x00;
 				std::string strOpcode( (char*)ptr_start, ptr-ptr_start-1 );		// construct opcode string
@@ -288,7 +288,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 								
 								// Fetch opcode, if present ...
 								while ( IS_INDENTION(*ptr) ) ptr++;
-				            	uint8_t* const ptr_start = ptr;
+								uint8_t* const ptr_start = ptr;
 								do { ptr++; } while ( !IS_INDENTION(*ptr) && !IS_ENDOFLINE(*ptr) );
 								*ptr++ = 0x00;
 								
@@ -345,7 +345,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 						IO::Log( IO::debug, "Adding symbol: %s", strLabel.c_str() );
 
 						// Add label to the symbols map...
-			            SymbolMap.insert({converted_offset, strLabel});
+						SymbolMap.insert({converted_offset, strLabel});
 						
 						lastSymbolOffset = offset;	// stores an absolute offset, not the converted one ...
 					}

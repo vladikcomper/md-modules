@@ -39,7 +39,7 @@ public:
 			uint32_t pointerOffset = 0,
 			const char * opts = "" ) {
 
-    	IO::FileOutput output = *OutputWrapper::setupOutput( fileName, appendOffset, pointerOffset );
+		IO::FileOutput output = *OutputWrapper::setupOutput( fileName, appendOffset, pointerOffset );
 
 		/* Parse options from "-inopt" agrument's value */
 		bool optFavorLastLabels = false;
@@ -109,9 +109,9 @@ public:
 			/* For 64kb block within symbols range */
 			for ( uint16_t block = 0x00; block <= lastBlock; block++ ) {
 
-            	/* Align block on even address */
-            	if ( output.getCurrentOffset() & 1 ) {
-                	output.writeByte( 0x00 );
+				/* Align block on even address */
+				if ( output.getCurrentOffset() & 1 ) {
+					output.writeByte( 0x00 );
 				}
 
 				IO::Log( IO::debug, "Block %02X:", block);
@@ -120,21 +120,21 @@ public:
 				std::vector<uint16_t> offsetsData;
 				std::vector<uint8_t> symbolsData;
 
-            	/* For every symbol within the block ... */
-            	for ( ; block == (SymbolPtr->first>>16) && (SymbolPtr != SymbolList.cend()); ++SymbolPtr ) {
+				/* For every symbol within the block ... */
+				for ( ; block == (SymbolPtr->first>>16) && (SymbolPtr != SymbolList.cend()); ++SymbolPtr ) {
 
 					IO::Log( IO::debug, "\t%08X\t%s", SymbolPtr->first, SymbolPtr->second.c_str() );
 
-            		/* 
-            		 * For records with the same offsets, fetch only the last or the first processed symbol,
-            		 * depending "favor last labels" option ...
-            		 */
-            		if ( (optFavorLastLabels && std::next(SymbolPtr) != SymbolList.end()
-            					&& std::next(SymbolPtr)->first == SymbolPtr->first) ||
-            			 (!optFavorLastLabels && SymbolPtr != SymbolList.begin()
-            			 		&& std::prev(SymbolPtr)->first == SymbolPtr->first) ) {
-            			continue;
-            		}
+					/* 
+					 * For records with the same offsets, fetch only the last or the first processed symbol,
+					 * depending "favor last labels" option ...
+					 */
+					if ( (optFavorLastLabels && std::next(SymbolPtr) != SymbolList.end()
+								&& std::next(SymbolPtr)->first == SymbolPtr->first) ||
+						 (!optFavorLastLabels && SymbolPtr != SymbolList.begin()
+								&& std::prev(SymbolPtr)->first == SymbolPtr->first) ) {
+						continue;
+					}
 
 					BitStream SymbolsHeap;
 
@@ -164,11 +164,11 @@ public:
 				/* Write offsets block and their corresponding encoded symbols heap */
 				if ( offsetsData.size() > 0 ) {
 
-                	/* Add zero offset to finalize the block */
-                	offsetsData.push_back( 0x0000 );
-                	
-                	/* Check for pointer capacity limits */
-                	if ( (loc_Block - loc_BlockOffsets)>>1 > 0xFFFF
+					/* Add zero offset to finalize the block */
+					offsetsData.push_back( 0x0000 );
+					
+					/* Check for pointer capacity limits */
+					if ( (loc_Block - loc_BlockOffsets)>>1 > 0xFFFF
 						|| (loc_Block+offsetsData.size()*2 - loc_BlockOffsets)>>1 > 0xFFFF ) {
 						IO::Log( IO::error, "Block %02X is either too large, or symbol file has exceeded its size limits; unable to write the block", block );
 						continue;

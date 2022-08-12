@@ -112,9 +112,9 @@ public:
 
 			/* For 64kb block within symbols range */
 			for ( uint16_t block = 0x00; block <= lastBlock; block++ ) { 
-            	/* Align block on even address */
-            	if ( output.getCurrentOffset() & 1 ) {
-                	output.writeByte( 0x00 );
+				/* Align block on even address */
+				if ( output.getCurrentOffset() & 1 ) {
+					output.writeByte( 0x00 );
 				}
 
 				uint32_t loc_Block = output.getCurrentOffset();	// remember offset, where this block starts ...
@@ -122,19 +122,19 @@ public:
 				BitStream SymbolsHeap;
 				std::vector<SymbolRecord> offsetsData;
 
-            	/* For every symbol within the block ... */
-            	for ( ; (SymbolPtr->first>>16) == block && (SymbolPtr != SymbolList.cend()); ++SymbolPtr ) {
+				/* For every symbol within the block ... */
+				for ( ; (SymbolPtr->first>>16) == block && (SymbolPtr != SymbolList.cend()); ++SymbolPtr ) {
 
-            		/* 
-            		 * For records with the same offsets, fetch only the last or the first processed symbol,
-            		 * depending "favor last labels" option ...
-            		 */
-            		if ( (optFavorLastLabels && std::next(SymbolPtr) != SymbolList.end()
-            				&& std::next(SymbolPtr)->first == SymbolPtr->first) ||
-            			 (!optFavorLastLabels && SymbolPtr != SymbolList.begin()
-            			 	&& std::prev(SymbolPtr)->first == SymbolPtr->first) ) {
-            			continue;
-            		}
+					/* 
+					 * For records with the same offsets, fetch only the last or the first processed symbol,
+					 * depending "favor last labels" option ...
+					 */
+					if ( (optFavorLastLabels && std::next(SymbolPtr) != SymbolList.end()
+							&& std::next(SymbolPtr)->first == SymbolPtr->first) ||
+						 (!optFavorLastLabels && SymbolPtr != SymbolList.begin()
+							&& std::prev(SymbolPtr)->first == SymbolPtr->first) ) {
+						continue;
+					}
 
 					if ( SymbolsHeap.getCurrentPos() > 0xFFFF ) {
 						IO::Log( IO::error,"Symbols heap for block %02X exceeded 64kb limit, no more symbols can be stored in this block.", block );

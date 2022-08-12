@@ -68,7 +68,7 @@ struct Input__AS_Listing : public InputWrapper {
 				ptr++;
 
 				// Cycle through as long as found characters are digits
-	            while ( (unsigned)(*ptr-'0')<10 ) { foundDigits=true; ptr++; }
+				while ( (unsigned)(*ptr-'0')<10 ) { foundDigits=true; ptr++; }
 
 				// If digit pattern doesn't end with ")" as expected, or no digits were found at all, stop
 				if ( *ptr++ != ')' || !foundDigits ) continue;
@@ -80,7 +80,7 @@ struct Input__AS_Listing : public InputWrapper {
 				while ( *ptr == ' ' ) { ptr++; } // skip spaces, if present
 
 				// Cycle through as long as found characters are digits
-	            while ( (unsigned)(*ptr-'0')<10 ) { foundDigits=true; ptr++; }
+				while ( (unsigned)(*ptr-'0')<10 ) { foundDigits=true; ptr++; }
 
 				// If digit pattern doesn't end with "/" as expected, or no digits were found at all, stop
 				if ( *ptr++ != '/' || !foundDigits ) continue;
@@ -143,9 +143,9 @@ struct Input__AS_Listing : public InputWrapper {
 						// Add label to the symbols table
 						uint32_t converted_offset = (offset - baseOffset) & offsetMask;
 						if ( converted_offset >= offsetLeftBoundary && converted_offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
-				            
+							
 							// Add label to the symbols map
-				            SymbolMap.insert({converted_offset, std::string((const char*)label)});
+							SymbolMap.insert({converted_offset, std::string((const char*)label)});
 
 							lastSymbolOffset = offset;	// stores an absolute offset, not the converted one ...
 						}
