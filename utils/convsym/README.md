@@ -3,12 +3,15 @@
 
 **ConvSym** is a command-line utility aimed to extract symbols lists from various assembler-specific file formats and convert them into DEB1/DEB2 formats supported by the "Advanced Error Handler and Debugger" or human-readable plain-text files.
 
+It was originally designed to be used with **ASM68K** and **The Macroassembler AS**, however, ConvSym's high configurability makes it possible to use with other tools and environments, e.g. SGDK (although those may not be fully supported by the "Advanced Error Handler and Debugger").
+
 The utility supports various input and output processing and transformation options, allowing for a high level of flexibility.
 
 ## Table of contents
 
 * [Usage](#usage)
   * [Supported options](#supported-options)
+* [Converting SGDK symbols](#converting-sgdk-symbols)
 * [Input formats parsers](#input-formats-parsers)
   * [`asm68k_sym` parser](#asm68k_sym-parser)
   * [`asm68k_lst` parser](#asm68k_lst-parser)
@@ -96,6 +99,41 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
     If set, filter works in "exclude mode": all labels that DO match the 
     -filter regex are removed from the list, everything else stays.
 ```
+
+## Converting SGDK symbols
+
+> **WARNING**
+> SGDK isn't officially supported by the "Advanced Error Handler and Debugger", which makes use of the converted symbols, hence no installation instructions are provided.
+> At this point, you'll have to figure out installation on your own.
+
+While **ConvSym** doesn't support SGDK, it's still possible to feed it the symbols list and generate debug symbols database for the "Advanced Error Handler and Debugger".
+
+Since **version 2.1**, ConvSym supports `log` input parser, so you'll be able build symbols database from any source as long as you're able to provide symbols list in the following format:
+
+```
+SomeSymbol: 0
+AnotherSymbol: 1C0
+Symbol2000: 420C
+```
+
+In words, symbols list should be in plain text format, where each line defines a symbol and its hexadecimal offset, separated by ":" character (it's possible to use a different character, see `log` parser documentation below for more information).
+
+On Linux, it's possible to use `nm` utility to list symbols from the ELF binary that SGDK build produces, pipe it to `awk` to alter lines format and the pipe the results to `convsym`.
+
+Consider the following example:
+
+```
+nm -n out/rom.out | awk '{print $1":",$3}' | ./convsym - out/rom.deb2 -in log
+```
+
+This will extract symbols from `out/rom.out` and convert them to `out/rom.deb2` (DEB2 database for the "Advanced Error Handler and Debugger").
+
+Alternatively, using the `-a` flag, you can append symbols to your ROM instead. For this to work properly, make sure ROM is rebuilt every time `convsym` is called (otherwise, after several invocations, you'll accumulate more than one symbols table at the end of ROM):
+
+```
+nm -n out/rom.out | awk '{print $1":",$3}' | ./convsym - out/rom.bin -in log -a
+```
+
 
 ## Input formats parsers
 
