@@ -109,15 +109,13 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
 
 While **ConvSym** doesn't support SGDK, it's still possible to feed it the symbols list and generate debug symbols database for the "Advanced Error Handler and Debugger".
 
-Since **version 2.1**, ConvSym supports `log` input parser, so you'll be able build symbols database from any source as long as you're able to provide symbols list in the following format:
+Since **version 2.1**, ConvSym supports `log` input parser, so you can build symbols database from any source as long as you're able to represent symbols list in a simple plain text format: each line must contain symbol name, followed by ":" character (separator) and symbol's hexadecimal offset (you can also use a different separator, see `log` parser documentation below for more information). For example:
 
 ```
 SomeSymbol: 0
 AnotherSymbol: 1C0
 Symbol2000: 420C
 ```
-
-In words, symbols list should be in plain text format, where each line defines a symbol and its hexadecimal offset, separated by ":" character (it's possible to use a different character, see `log` parser documentation below for more information).
 
 On Linux, it's possible to use `nm` utility to list symbols from the ELF binary that SGDK build produces, pipe it to `awk` to alter lines format and the pipe the results to `convsym`.
 
