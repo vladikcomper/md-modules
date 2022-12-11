@@ -17,7 +17,6 @@
 
 struct Input__ASM68K_Listing : public InputWrapper {
 
-
 	Input__ASM68K_Listing() : InputWrapper() { // Constructor
 
 	}
@@ -101,7 +100,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		#define IS_NAME_CHAR(X)			((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(unsigned)(X-'0')<10||X=='?'||X=='.'||X=='_')
 		#define IS_START_OF_LABEL(X)	((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(optProcessLocalLabels&&X==localLabelSymbol)||X=='_')
 		#define IS_LABEL_CHAR(X)		((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(unsigned)(X-'0')<10||X=='?'||X=='_')
-		#define IS_INDENTION(X)			(X==' '||X=='\t')
+		#define IS_WHITESPACE(X)		(X==' '||X=='\t')
 		#define IS_ENDOFLINE(X)			(X=='\n'||X=='\r'||X==0x00)
 
 
@@ -173,7 +172,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 				while ( IS_NAME_CHAR(*ptr) ) ptr++;	// iterate through label characters
 
 				// Make sure label ends properly
-				if ( IS_INDENTION(*ptr) || *ptr==':' || IS_ENDOFLINE(*ptr) ) {
+				if ( IS_WHITESPACE(*ptr) || *ptr==':' || IS_ENDOFLINE(*ptr) ) {
 					*ptr++ = 0x00;			// mark labels end, so "sLabel" is a proper c-string containing label alone now
 				}
 				else {
@@ -183,9 +182,9 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 			// Scenario #2 : Line starts with idention (space or tab)
 			// NOTICE: In this case, label cannot include certain characters allowed otherwise...
-			else if ( IS_INDENTION(*ptr) ) {
+			else if ( IS_WHITESPACE(*ptr) ) {
 				IO::Log( IO::debug, "Line %d: Possible label with idention", lineCounter );
-				do { ptr++; } while ( IS_INDENTION(*ptr) ); 	// skip idention
+				do { ptr++; } while ( IS_WHITESPACE(*ptr) ); 	// skip idention
 				if ( IS_START_OF_LABEL(*ptr) ) {
 					sLabel = ptr++;						// assume this as label
 					while ( IS_LABEL_CHAR(*ptr) ) ptr++;	// iterate through label characters
@@ -222,9 +221,9 @@ struct Input__ASM68K_Listing : public InputWrapper {
 				}
 
 				// Fetch label's opcode into std::string object
-				while ( IS_INDENTION(*ptr) ) ptr++; 	// skip indention
+				while ( IS_WHITESPACE(*ptr) ) ptr++; 	// skip indention
 				uint8_t* const ptr_start = ptr;
-				do { ptr++; } while ( !IS_INDENTION(*ptr) && !IS_ENDOFLINE(*ptr) );
+				do { ptr++; } while ( !IS_WHITESPACE(*ptr) && !IS_ENDOFLINE(*ptr) );
 				*ptr++ = 0x00;
 				std::string strOpcode( (char*)ptr_start, ptr-ptr_start-1 );		// construct opcode string
 				if ( strOpcode[0] == localLabelSymbol ) {					// in case opcode is a local label reference
@@ -245,7 +244,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 						// If macro processing option is on ...
 						if ( optRegisterMacrosAsOpcodes ) {
-							while ( IS_INDENTION(*ptr) ) ptr++; 	// skip indention
+							while ( IS_WHITESPACE(*ptr) ) ptr++; 	// skip indention
 
 							// If macro uses labels as argument, add macro's name (the label) to the vocabulary
 							if ( *ptr == '*' ) {
@@ -282,14 +281,14 @@ struct Input__ASM68K_Listing : public InputWrapper {
 								ptr = sBuffer+36;
 
 								// If line starts with label, skip it ...
-								if ( !IS_INDENTION(*ptr) ) {
-									do { ptr++; } while ( !IS_INDENTION(*ptr) && !IS_ENDOFLINE(*ptr) );
+								if ( !IS_WHITESPACE(*ptr) ) {
+									do { ptr++; } while ( !IS_WHITESPACE(*ptr) && !IS_ENDOFLINE(*ptr) );
 								}
 								
 								// Fetch opcode, if present ...
-								while ( IS_INDENTION(*ptr) ) ptr++;
+								while ( IS_WHITESPACE(*ptr) ) ptr++;
 								uint8_t* const ptr_start = ptr;
-								do { ptr++; } while ( !IS_INDENTION(*ptr) && !IS_ENDOFLINE(*ptr) );
+								do { ptr++; } while ( !IS_WHITESPACE(*ptr) && !IS_ENDOFLINE(*ptr) );
 								*ptr++ = 0x00;
 								
 								// If opcode is "endm", stop processing
@@ -364,7 +363,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		#undef IS_NAME_CHAR
 		#undef IS_START_OF_LABEL
 		#undef IS_LABEL_CHAR
-		#undef IS_INDENTION
+		#undef IS_WHITESPACE
 		#undef IS_ENDOFLINE
 
 		return SymbolMap;

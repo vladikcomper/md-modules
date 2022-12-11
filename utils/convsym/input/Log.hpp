@@ -17,7 +17,6 @@
 
 struct Input__Log : public InputWrapper {
 
-
 	Input__Log() : InputWrapper() { // Constructor
 
 	}
