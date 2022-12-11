@@ -41,7 +41,7 @@ struct Huffman {
 		};
 
 		// Data structure
-		uint16_t data;		// handles the charecter that the node stores
+		uint16_t data;		// character code (or other value) that this node stores
 		Node* leaf[2];		// connects the node to the underlying nodes, forming a binary tree
 	};
 
