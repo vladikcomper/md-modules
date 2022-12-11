@@ -17,6 +17,7 @@
 #include "ASM68K_Listing.hpp"
 #include "ASM68K_Sym.hpp"
 #include "AS_Listing.hpp" 
+#include "AS_Listing_Legacy.hpp" 
 #include "Log.hpp"
 
 
@@ -25,10 +26,11 @@ std::unique_ptr<InputWrapper> getInputWrapper( const std::string& name ) {
 
 	std::map<std::string, std::function<std::unique_ptr<InputWrapper>()> >
 	wrappersTable {
-		{ "asm68k_sym", []() { return std::unique_ptr<InputWrapper>(new Input__ASM68K_Sym()); } },
-		{ "asm68k_lst", []() { return std::unique_ptr<InputWrapper>(new Input__ASM68K_Listing()); } },
-		{ "as_lst", 	[]() { return std::unique_ptr<InputWrapper>(new Input__AS_Listing()); } },         
-		{ "log", 		[]() { return std::unique_ptr<InputWrapper>(new Input__Log()); } }
+		{ "asm68k_sym", 	[]() { return std::unique_ptr<InputWrapper>(new Input__ASM68K_Sym()); } },
+		{ "asm68k_lst", 	[]() { return std::unique_ptr<InputWrapper>(new Input__ASM68K_Listing()); } },
+		{ "as_lst",		 	[]() { return std::unique_ptr<InputWrapper>(new Input__AS_Listing()); } },
+		{ "as_lst_legacy", 	[]() { return std::unique_ptr<InputWrapper>(new Input__AS_Listing_Legacy()); } },
+		{ "log", 			[]() { return std::unique_ptr<InputWrapper>(new Input__Log()); } }
 	};
 
 	auto entry = wrappersTable.find( name );

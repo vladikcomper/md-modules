@@ -5,16 +5,18 @@
  * ------------------------------------------------------------	*/
 
 #include <cstdint>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <map>
 
 #include "../../core/IO.hpp"
+#include "../../core/OptsParser.hpp"
 
 #include "InputWrapper.hpp"
 
 
 struct Input__AS_Listing : public InputWrapper {
-	
 
 	Input__AS_Listing() : InputWrapper() { // Constructor
 
@@ -23,7 +25,6 @@ struct Input__AS_Listing : public InputWrapper {
 	~Input__AS_Listing() {	// Destructor
 
 	}
-
 
 	/**
 	 * Interface for input file parsing
@@ -44,123 +45,129 @@ struct Input__AS_Listing : public InputWrapper {
 			uint32_t offsetMask = 0xFFFFFF,
 			const char * opts = "" ) {
 
-		const int sBufferSize = 1024;
+		// Default processing options
+		bool optProcessLocalLabels = true;
+		bool optIgnoreInternalSymbols = true;
 
 		// Variables
+		char localLabelSymbol = '.';		// default symbol for local labels
+		bool foundSymbolTable = false;
+
+		// Fetch options from "-inopt" argument's value
+		const std::map<std::string, OptsParser::record>
+			OptsList {
+				{ "localJoin",				{ .type = OptsParser::record::p_char,	.target = &localLabelSymbol				} },
+				{ "processLocals",			{ .type = OptsParser::record::p_bool,	.target = &optProcessLocalLabels		} },
+				{ "ignoreInternalSymbols",	{ .type = OptsParser::record::p_bool,	.target = &optIgnoreInternalSymbols		} }
+			};
+
+		// Setup buffer, symbols list and file for input
+		const int sBufferSize = 1024;
 		uint8_t sBuffer[ sBufferSize ];
 		std::multimap<uint32_t, std::string> SymbolMap;
 		IO::FileInput input = IO::FileInput( fileName, IO::text );
 		if ( !input.good() ) { throw "Couldn't open input file"; }
-		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
 
 		// For every string in a listing file ...
-		while ( input.readLine( sBuffer, sBufferSize ) >= 0 ) {
+		for ( 
+				int lineCounter = 0, lineLength; 
+				lineLength = input.readLine( sBuffer, sBufferSize ), lineLength >= 0; 
+				++lineCounter 
+			) {
 
-			// Known issues for the Sonic 2 disassembly:
-			//	* Some macros somehow define labels that looks like global ones (notably, _MOVE and such)
-			//	* Labels from injected Z80 code sometimes make it to the list ...
-
-			uint8_t* ptr = sBuffer;		// WARNING: dereffed type should be UNSIGNED, as it's used for certain range-based optimizations
-
-			// Check if this line has file idention number (pattern: "(d)", where d is a decimal digit)
-			if ( *ptr == '(' ) {
-				bool foundDigits = false;
-				ptr++;
-
-				// Cycle through as long as found characters are digits
-				while ( (unsigned)(*ptr-'0')<10 ) { foundDigits=true; ptr++; }
-
-				// If digit pattern doesn't end with ")" as expected, or no digits were found at all, stop
-				if ( *ptr++ != ')' || !foundDigits ) continue;
+			// If line is too short, do not proceed
+			if (lineLength < 8) {
+				continue;
 			}
 
-			// Ensure line has a proper number (pattern: "ddddd/", where d is any digit)
-			{
-				bool foundDigits = false;
-				while ( *ptr == ' ' ) { ptr++; } // skip spaces, if present
+			std::string_view strLine((char*)sBuffer, (size_t)lineLength);
 
-				// Cycle through as long as found characters are digits
-				while ( (unsigned)(*ptr-'0')<10 ) { foundDigits=true; ptr++; }
+			// Phase 1: Search for symbol table header ...
+			if (!foundSymbolTable) {
+				// Trim whitespace from the beginning ...
+				strLine.remove_prefix(
+					std::min(strLine.find_first_not_of(" \t"), strLine.size())
+				);
+				if (strLine.starts_with("symbol table")) {
+					foundSymbolTable = true;
 
-				// If digit pattern doesn't end with "/" as expected, or no digits were found at all, stop
-				if ( *ptr++ != '/' || !foundDigits ) continue;
-			}
-
-			// Ensure line has a proper offset (pattern: "hhhh :", where h is a hexidecimal character)
-			while ( *ptr == ' ' ) { ptr++; }						// skip spaces, if present
-			uint8_t* const sOffset = ptr;							// remember location, where offset should presumably start
-			{
-				bool foundHexDigits = false;
-
-				// Cycle though as longs as proper hexidecimal characters are fetched
-				while (	(unsigned)(*ptr-'0')<10 || (unsigned)(*ptr-'A')<6 ) {
-					foundHexDigits = true;
-					ptr++;
+					IO::Log(IO::debug, "Found symbols table header on line %d", lineCounter);
 				}
-
-				if ( *ptr == 0x00 ) continue;							// break if end of line was reached
-				*ptr++ = 0x00;											// separate string pointered by "offset" variable from the rest of the line
-				while ( *ptr == ' ' ) { ptr++; }						// skip spaces ...
-
-				// If offset pattern doesn't end with ":" as expected, or no hex characters were found at all, stop
-				if ( *ptr++ != ':' || !foundHexDigits ) continue;
 			}
 
-			// Check if line matches a label definition ...
-			if ( *ptr == ' ' && *(ptr+1) == '(' ) continue;
-			while ( *ptr && (ptr-sBuffer < 40) ) { ptr++; }			// align to column 40 (where line starts)
-			while ( *ptr==' ' || *ptr=='\t' ) { ptr++; }			// skip spaces or tabs, if present
-			uint8_t* const label = ptr;								// remember location, where label presumably starts...
-			
-			// The first character should be a latin letter (A..Z or a..z)
-			if ( (unsigned)(*ptr-'A')<26 || (unsigned)(*ptr-'a')<26 ) {
+			// Phase 2: Parse the symbol table
+			else {
+				// If line include table separator '|', process cells and extract labels and offsets from them ...
+				// NOTICE: This loop won't yield any results if '|' is absent completely.
+				for (
+					size_t left = 0, right = strLine.find_first_of('|');
+					right != std::string_view::npos;
+					left = right + 1, right = strLine.find_first_of('|', left)
+				) {
+					const auto maybeSymbol = this->parseSymbolTableEntry(strLine.substr(left, right-left), optProcessLocalLabels, localLabelSymbol);
 
-				// Other characters should be letters are digits or _ char
-				while ( 											
-					(unsigned)(*ptr-'A')<26 || (unsigned)(*ptr-'a')<26 || (unsigned)(*ptr-'0')<10 || *ptr=='_'
-				) { ptr++; }
-
-				// If the word is the only on the line and it ends with ":", treat it as a label
-				if ( *ptr==':' ) {
-					*ptr++ = 0x00;		// separate string pointered by "label" variable from the rest of the line
-
-					// Convert offset to uint32_t
-					uint32_t offset = 0;
-					for ( uint8_t* c = sOffset; *c; c++ ) {
-						offset = offset*0x10 + (((unsigned)(*c-'0')<10) ? (*c-'0') : (*c-('A'-10)));
-					}
-
-					// Add label to the symbols table, if:
-					//	1) Its absolute offset is higher than the previous offset successfully added
-					//	2) When base offset is subtracted and the mask is applied, the resulting offset is within allowed boundaries
-					if ( (lastSymbolOffset == (uint32_t)-1) || (offset >= lastSymbolOffset) ) {
+					if (maybeSymbol.has_value()) {
+						const auto symbol = maybeSymbol.value();
 						
-						// Check if this is a label after ds or rs macro ...
-						while ( *ptr==' ' || *ptr=='\t' ) { ptr++; }			// skip spaces or tabs, if present      
-						if ( *ptr == 'd' && *(ptr+1) == 's' && *(ptr+2)=='.' ) continue;
-						if ( *ptr == 'r' && *(ptr+1) == 's' && *(ptr+2)=='.' ) continue;  
+						if (optIgnoreInternalSymbols && symbol.second.starts_with("__")) continue;
 
-						// Add label to the symbols table
-						uint32_t converted_offset = (offset - baseOffset) & offsetMask;
-						if ( converted_offset >= offsetLeftBoundary && converted_offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
-							
-							// Add label to the symbols map
-							SymbolMap.insert({converted_offset, std::string((const char*)label)});
-
-							lastSymbolOffset = offset;	// stores an absolute offset, not the converted one ...
-						}
+						SymbolMap.insert(symbol);
 					}
-					else {
-						IO::Log( IO::debug, "Symbol %s at offset %X ignored: its offset is less than the previous symbol successfully fetched", label, offset );
-					}
-
 				}
 			}
+		}
 
+		if (!foundSymbolTable) {
+			throw "Coudn't find symbols table";
 		}
 
 		return SymbolMap;
 
+	}
+
+private:
+	std::optional<std::pair<uint32_t, std::string>> parseSymbolTableEntry(const std::string_view &strEntry, bool optProcessLocalLabels, char localLabelSymbol) {
+		#define IS_HEX_CHAR(X) 			((unsigned)(X-'0')<10||(unsigned)(X-'A')<6)
+		#define IS_START_OF_LABEL(X)	((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||X=='_')
+		#define IS_LABEL_CHAR(X)		((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(optProcessLocalLabels&&X==localLabelSymbol)||(unsigned)(X-'0')<10||X=='_')
+		#define IS_WHITESPACE(X)		(X==' '||X=='\t')
+
+		const auto end = strEntry.cend();
+		auto it = strEntry.cbegin();
+
+		// Skip whitespace at the beginning ...
+		while ( it != end && (IS_WHITESPACE(*it) || *it == '*') ) ++it;
+
+		// Capture label ...
+		if ( it == end || !(IS_START_OF_LABEL(*it)) ) return std::nullopt;
+		const auto labelBegin = it++;
+		while ( it != end && IS_LABEL_CHAR(*it) ) ++it;
+		const auto labelEnd = it;
+
+		// Skip " : " and following whitespace
+		if ( it == end || *it++ != ' ' ) return std::nullopt;
+		if ( it == end || *it++ != ':' ) return std::nullopt;
+		while ( it != end && IS_WHITESPACE(*it) ) ++it;
+
+		// Capture offset ...
+		if ( it == end || !(IS_HEX_CHAR(*it)) ) return std::nullopt;
+		uint32_t offset = 0;
+		while ( it != end && IS_HEX_CHAR(*it) ) {
+			offset = offset * 0x10 + (((unsigned)(*it-'0')<10) ? (*it-'0') : (*it-('A'-10)));
+			++it;
+		}
+
+		// Capture label type ...
+		if ( it == end || *it++ != ' ' ) return std::nullopt;
+		if ( it == end || *it++ != 'C' ) return std::nullopt;
+
+		// Return results
+		return std::optional<std::pair<uint32_t, std::string>>{ { offset, std::string(labelBegin, labelEnd) } };
+
+		#undef IS_HEX_CHAR
+		#undef IS_START_OF_LABEL
+		#undef IS_LABEL_CHAR
+		#undef IS_WHITESPACE
 	}
 
 };
