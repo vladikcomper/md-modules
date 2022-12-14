@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install GCC and Make
-      run: apt install g++ make
+      run: sudo apt install g++ make
     - name: Compile ConvSym
       run: cd utils/convsym && ./build.sh
     - name: Test ConvSym
