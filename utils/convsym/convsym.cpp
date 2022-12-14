@@ -209,6 +209,7 @@ int main (int argc, const char ** argv) {
 	}
 	else {
 		IO::Log( IO::error, "No symbols passed for output, operation aborted" );
+		return -3;
 	}
 
 	return 0;
