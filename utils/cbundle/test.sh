@@ -3,6 +3,10 @@ set -e
 
 cbundle=../cbundle
 
+if [ ! -z "$USE_VALGRIND" ]; then
+	cbundle="valgrind ../cbundle"
+fi
+
 cd _test
 
 $cbundle test.asm
