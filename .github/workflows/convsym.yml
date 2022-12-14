@@ -1,22 +1,21 @@
-name: ConvSym CI/CD
+name: ConvSym
 
 on:
   push:
-    branches: [ "git-action" ]
+    branches: [ "master" ]
+    paths: [ "utils/core/**", "utils/convsym/**" ]
   pull_request:
-    branches: [ "git-action" ]
+    branches: [ "master" ]
+    paths: [ "utils/core/**", "utils/convsym/**" ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
-    - name: Install GCC and Make
-      run: sudo apt install g++ make
-    - name: Compile ConvSym
+    - name: Build
       run: cd utils/convsym && ./build.sh
-    - name: Test ConvSym
+    - name: Test
       run: cd utils/convsym && ./test.sh
  
