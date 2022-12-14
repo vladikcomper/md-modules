@@ -59,7 +59,7 @@ public:
 		uint16_t lastBlock = (lastSymbolPtr->first) >> 16;
 
 		if (lastBlock > 63) {		// blocks index table is limited to $100 entries (which is enough to cover all the 24-bit addressable space)
-			IO::Log( IO::error, "Too many memory blocks to allocate (%02X), truncating to $40 blocks. Some symbols will be lost.", lastBlock+1 );
+			IO::Log( IO::error, "Too many memory blocks to allocate ($%X), truncating to $40 blocks. Some symbols will be lost.", lastBlock+1 );
 			lastBlock = 0x3F;
 		}
 
