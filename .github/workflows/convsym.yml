@@ -3,10 +3,8 @@ name: ConvSym CI/CD
 on:
   push:
     branches: [ "git-action" ]
-    paths: [ "utils/convsym", "utils/core" ]
   pull_request:
     branches: [ "git-action" ]
-    paths: [ "utils/convsym", "utils/core" ]
 
 jobs:
   build:
