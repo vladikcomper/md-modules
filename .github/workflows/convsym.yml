@@ -17,5 +17,5 @@ jobs:
     - name: Build
       run: cd utils/convsym && ./build.sh
     - name: Test
-      run: cd utils/convsym && ./test.sh
+      run: cd utils/convsym && ./test.py
  
