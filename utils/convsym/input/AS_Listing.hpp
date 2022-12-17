@@ -107,11 +107,18 @@ struct Input__AS_Listing : public InputWrapper {
 					const auto maybeSymbol = this->parseSymbolTableEntry(strLine.substr(left, right-left), optProcessLocalLabels, localLabelSymbol);
 
 					if (maybeSymbol.has_value()) {
-						const auto symbol = maybeSymbol.value();
+						auto symbol = maybeSymbol.value();
 						
 						if (optIgnoreInternalSymbols && symbol.second.starts_with("__")) continue;
 
-						SymbolMap.insert(symbol);
+						// Add label to the symbols table
+						const auto offset = (symbol.first - baseOffset) & offsetMask;
+						if ( offset >= offsetLeftBoundary && offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
+							symbol.first = offset;
+							IO::Log( IO::debug, "Adding symbol: %s", symbol.second.c_str() );
+
+							SymbolMap.insert(symbol);
+						}
 					}
 				}
 			}
