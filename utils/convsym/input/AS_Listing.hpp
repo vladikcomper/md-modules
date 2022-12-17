@@ -88,7 +88,8 @@ struct Input__AS_Listing : public InputWrapper {
 				strLine.remove_prefix(
 					std::min(strLine.find_first_not_of(" \t"), strLine.size())
 				);
-				if (strLine.starts_with("symbol table")) {
+				// Newer versions of AS seem to output "Symbol Table" string instead of "symbol table"
+				if (strLine.starts_with("symbol table") || strLine.starts_with("Symbol Table")) {
 					foundSymbolTable = true;
 
 					IO::Log(IO::debug, "Found symbols table header on line %d", lineCounter);
