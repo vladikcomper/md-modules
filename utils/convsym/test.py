@@ -36,7 +36,7 @@ class Buffer(DataSource):
 	def read(self) -> bytes: return self.value
 	def write(self, data: bytes): self.value = data
 
-CommandResult = tuple[Literal[True], DataSource] | tuple[Literal[False], str]
+CommandResult = Union[tuple[Literal[True], DataSource], tuple[Literal[False], str]]
 
 @dataclass()
 class Command:
