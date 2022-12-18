@@ -2,6 +2,7 @@
 import typing
 import subprocess
 import filecmp
+import tarfile
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -265,9 +266,101 @@ tests: tuple[Test, ...] = (
 			CheckMatch(output=File('output/sonic-1-hivebrain-2005.lst.deb2')),
 		),
 	),
+	Test(
+		description = 'asm68k_lst->log symbol generation (Sonic 1 Git 2022 Disassembly - ASM68K)',
+		pipeline=(
+			ConvSym(
+				input = File('input/sonic-1-git-2022-asm68k.lst'),
+				output = File('output/sonic-1-git-2022-asm68k.lst.log'),
+				options = ('-in', 'asm68k_lst', '-out', 'log')
+			),
+			CheckMatch(output=File('output-expected/sonic-1-git-2022-asm68k.lst.log')),
+		),
+	),
+	Test(
+		description = 'asm68k_sym->log symbol generation (Sonic 1 Git 2022 Disassembly - ASM68K)',
+		pipeline=(
+			ConvSym(
+				input = File('input/sonic-1-git-2022-asm68k.sym'),
+				output = File('output/sonic-1-git-2022-asm68k.sym.log'),
+				options = ('-in', 'asm68k_sym', '-out', 'log')
+			),
+			CheckMatch(output=File('output-expected/sonic-1-git-2022-asm68k.sym.log')),
+		),
+	),
+	Test(
+		description = 'as_lst->log symbol generation (Sonic 1 Git 2022 Disassembly - AS)',
+		pipeline=(
+			ConvSym(
+				input = File('input/sonic-1-git-2022-as.lst'),
+				output = File('output/sonic-1-git-2022-as.log'),
+				options = ('-in', 'as_lst', '-out', 'log', '-exclude', '-filter', 'z.+')
+			),
+			CheckMatch(output=File('output-expected/sonic-1-git-2022-as.log')),
+		),
+	),
+	Test(
+		description = 'as_lst->log symbol generation (Sonic 2 Git 2022 Disassembly)',
+		pipeline=(
+			ConvSym(
+				input = File('input/sonic-2-git-2022.lst'),
+				output = File('output/sonic-2-git-2022.log'),
+				options = ('-in', 'as_lst', '-out', 'log', '-exclude', '-filter', '(z.+)|(cf[A-Z].+)')
+			),
+			CheckMatch(output=File('output-expected/sonic-2-git-2022.log')),
+		),
+	),
+	Test(
+		description = 'as_lst->log symbol generation (Sonic 3K 2022 Disassembly)',
+		pipeline=(
+			ConvSym(
+				input = File('input/sonic-3k-git-2022.lst'),
+				output = File('output/sonic-3k-git-2022.log'),
+				options = ('-in', 'as_lst', '-out', 'log', '-exclude', '-filter', '(z.+)|(mus_.+)|(sfx_.+)|(cf[A-Z].+)')
+			),
+			CheckMatch(output=File('output-expected/sonic-3k-git-2022.log')),
+		),
+	),
+	Test(
+		description = 'as_lst_legacy->log symbol generation (Sonic 2 Git 2022 Disassembly)',
+		pipeline=(
+			ConvSym(
+				input = File('input/sonic-2-git-2022.lst'),
+				output = File('output/sonic-2-git-2022.as_lst_legacy.log'),
+				options = ('-in', 'as_lst_legacy', '-out', 'log')
+			),
+			CheckMatch(output=File('output-expected/sonic-2-git-2022.as_lst_legacy.log')),
+		),
+	),
+	Test(
+		description = 'as_lst_legacy->log symbol generation (Sonic 3K 2022 Disassembly)',
+		pipeline=(
+			ConvSym(
+				input = File('input/sonic-3k-git-2022.lst'),
+				output = File('output/sonic-3k-git-2022.as_lst_legacy.log'),
+				options = ('-in', 'as_lst_legacy', '-out', 'log')
+			),
+			CheckMatch(output=File('output-expected/sonic-3k-git-2022.as_lst_legacy.log')),
+		),
+	),
 )
 
+def unarchiveDirectory(path: str):
+	dir_path = Path(BASE_DIR, path)
+	dir_archive_path = Path(BASE_DIR, path + '.tar.xz')
+
+	if not dir_path.exists():
+		print(f"Unpacking {str(dir_path)}...")
+		with tarfile.open(dir_archive_path, 'r:xz') as f: f.extractall(dir_path)
+
+	if not dir_path.is_dir():
+		raise Exception(f'Expected {dir_path} to be a directory')
+
+
 def main():
+	unarchiveDirectory('input')
+	unarchiveDirectory('output-expected')
+
 	for test_id, test in enumerate(tests):
 		print(f'[Test {test_id:d}] {test.description} ... ', flush=True, end='')
 
