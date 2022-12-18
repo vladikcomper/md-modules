@@ -10,6 +10,6 @@ root = true
 end_of_line = lf
 
 # 4 space indentation for source code files
-[*.{asm,c,cpp,h,hpp}]
+[*.{asm,c,cpp,h,hpp,py}]
 indent_style = tab
 indent_size = 4
