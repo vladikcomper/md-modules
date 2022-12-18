@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import typing
+from typing import cast, Union, Literal, NamedTuple
 import subprocess
 import filecmp
 import tarfile
@@ -8,13 +8,13 @@ from dataclasses import dataclass
 
 BASE_DIR = '_test'
 
-CompareResult = tuple[typing.Literal[True], None] | tuple[typing.Literal[False], str]
+CompareResult = Union[tuple[Literal[True], None], tuple[Literal[False], str]]
 
 class DataSource:
 	def read(self) -> bytes: raise Exception('Not implemented')
 	def write(self, data: bytes): raise Exception('Not implemented')
 	def cmp(self, other) -> CompareResult:
-		data1, data2 = self.read(), typing.cast(DataSource, other).read()
+		data1, data2 = self.read(), cast(DataSource, other).read()
 		if data1 != data2:
 			return (False, f'Expected "{data2}", got "{data1}"') if len(data1) + len(data2) < 512 else (False, "Expected data to match")
 		return (True, None)
@@ -36,12 +36,12 @@ class Buffer(DataSource):
 	def read(self) -> bytes: return self.value
 	def write(self, data: bytes): self.value = data
 
-CommandResult = tuple[typing.Literal[True], DataSource] | tuple[typing.Literal[False], str]
+CommandResult = tuple[Literal[True], DataSource] | tuple[Literal[False], str]
 
-@dataclass(kw_only=True)
+@dataclass()
 class Command:
-	output: DataSource | None = None
-	input: DataSource | None = None
+	output: Union[DataSource, None] = None
+	input: Union[DataSource, None] = None
 
 	def execute(self, input: DataSource, output: DataSource) -> CommandResult:
 		return (False, 'Unable to execute command: not implemented')
@@ -56,8 +56,8 @@ class ConvSym(Command):
 
 		# Execute ConvSym
 		args = ['./convsym', '-', '-', *self.options]
-		args[1] = '-' if use_stdin else str(typing.cast(File, input).getPath())
-		args[2] = '-' if use_stdout else str(typing.cast(File, output).getPath())
+		args[1] = '-' if use_stdin else str(cast(File, input).getPath())
+		args[2] = '-' if use_stdout else str(cast(File, output).getPath())
 		result = subprocess.run(args, input=None if isinstance(input, File) else input.read(), text=False, capture_output=True)
 
 		# Collect output
@@ -69,10 +69,10 @@ class ConvSym(Command):
 class CheckMatch(Command):
 	def execute(self, input: DataSource, output: DataSource) -> CommandResult:
 		success, diff_message = input.cmp(output)
-		return (True, output) if success else (False, typing.cast(str, diff_message))
+		return (True, output) if success else (False, cast(str, diff_message))
 
 
-Test = typing.NamedTuple('Test', description=str, pipeline=tuple[Command, ...])
+Test = NamedTuple('Test', description=str, pipeline=tuple[Command, ...])
 
 
 tests: tuple[Test, ...] = (
