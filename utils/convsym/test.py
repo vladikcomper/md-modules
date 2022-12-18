@@ -361,6 +361,8 @@ def main():
 	unarchiveDirectory('input')
 	unarchiveDirectory('output-expected')
 
+	has_failed_tests = False
+
 	for test_id, test in enumerate(tests):
 		print(f'[Test {test_id:d}] {test.description} ... ', flush=True, end='')
 
@@ -373,11 +375,17 @@ def main():
 				if pipeline_result[0] == False: break
 
 			except Exception as e:
-				raise e
 				pipeline_result = (False, str(e)); break
 
 		success, value = pipeline_result
-		print("OK") if success else print(f'FAILED: {value}')
+		if success:
+			print("OK") 
+		else:
+			print(f'FAILED: {value}')
+			has_failed_tests = True
+
+	if has_failed_tests:
+		exit(1)
 
 
 if __name__ == '__main__':
