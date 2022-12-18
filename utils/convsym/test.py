@@ -70,16 +70,6 @@ class CheckMatch(Command):
 		success, diff_message = input.cmp(output)
 		return (True, output) if success else (False, typing.cast(str, diff_message))
 
-@dataclass
-class SymbolTableDiff(Command):
-	input2: DataSource
-
-	def execute(self, input: DataSource, output: DataSource) -> CommandResult:
-		table1, table2 = input.read().decode().splitlines(), self.input2.read().decode().splitlines()
-		data = '\n'.join(set(table1).symmetric_difference(set(table2)))
-		output.write(data.encode())
-		return (True, output)
-
 
 Test = typing.NamedTuple('Test', description=str, pipeline=tuple[Command, ...])
 
@@ -275,24 +265,6 @@ tests: tuple[Test, ...] = (
 			CheckMatch(output=File('output/sonic-1-hivebrain-2005.lst.deb2')),
 		),
 	),
-	# Test(
-	# 	description = 'asm68k_sym<->asm68k_lst symbols diff (Sonic 1 Git Disassembly)',
-	# 	runs = (
-	# 		ConvSym(
-	# 			input = CompressedFile('sonic1git.lst.gz'),
-	# 			output = CaptureStdout(),
-	# 			options = ('-input', 'asm68k_lst', '-output', 'log', '-tolower'),
-	# 		),
-	# 		ConvSym(
-	# 			input = File('input/sonic1git.sym'),
-	# 			output = CaptureStdout(),
-	# 			options = ('-input', 'asm68k_sym', '-output', 'log', '-tolower'),
-	# 		),
-	# 		SymbolTableDiff(
-	# 			output = File('output/sonic1git.symbol_diff.log')
-	# 		)
-	# 	),
-	# ),
 )
 
 def main():
