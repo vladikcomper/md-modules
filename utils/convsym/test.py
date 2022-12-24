@@ -152,23 +152,23 @@ tests: tuple[Test, ...] = (
 		),
 	),
 	Test(
-		description = 'as_lst_legacy->deb2 symbol generation (Sonic 2 Xenowhirl Disassembly)',
+		description = 'as_lst_exp->deb2 symbol generation (Sonic 2 Xenowhirl Disassembly)',
 		pipeline=(
 			ConvSym(
 				input = File('input/sonic-2.lst'),
 				output = File('output/sonic-2.deb2'),
-				options = ('-input', 'as_lst_legacy'),
+				options = ('-input', 'as_lst_exp'),
 			),
 			CheckMatch(output=File('output-expected/sonic-2.deb2')),
 		),
 	),
 	Test(
-		description = 'as_lst_legacy->deb2 symbol generation (Sonic 3K Disassembly)',
+		description = 'as_lst_exp->deb2 symbol generation (Sonic 3K Disassembly)',
 		pipeline=(
 			ConvSym(
 				input = File('input/sonic-3k.lst'),
 				output = File('output/sonic-3k.deb2'),
-				options = ('-input', 'as_lst_legacy'),
+				options = ('-input', 'as_lst_exp'),
 			),
 			CheckMatch(output=File('output-expected/sonic-3k.deb2')),
 		),
@@ -185,23 +185,23 @@ tests: tuple[Test, ...] = (
 		),
 	),
 	Test(
-		description = 'as_lst_legacy->deb1 symbol generation (Sonic 2 Xenowhirl Disassembly)',
+		description = 'as_lst_exp->deb1 symbol generation (Sonic 2 Xenowhirl Disassembly)',
 		pipeline=(
 			ConvSym(
 				input = File('input/sonic-2.lst'),
 				output = File('output/sonic-2.deb1'),
-				options = ('-input', 'as_lst_legacy', '-output', 'deb1'),
+				options = ('-input', 'as_lst_exp', '-output', 'deb1'),
 			),
 			CheckMatch(output=File('output-expected/sonic-2.deb1')),
 		),
 	),
 	Test(
-		description = 'as_lst_legacy->deb1 symbol generation (Sonic 3K Disassembly)',
+		description = 'as_lst_exp->deb1 symbol generation (Sonic 3K Disassembly)',
 		pipeline=(
 			ConvSym(
 				input = File('input/sonic-3k.lst'),
 				output = File('output/sonic-3k.deb1'),
-				options = ('-input', 'as_lst_legacy', '-output', 'deb1'),
+				options = ('-input', 'as_lst_exp', '-output', 'deb1'),
 			),
 			CheckMatch(output=File('output-expected/sonic-3k.deb1')),
 		),
@@ -322,25 +322,25 @@ tests: tuple[Test, ...] = (
 		),
 	),
 	Test(
-		description = 'as_lst_legacy->log symbol generation (Sonic 2 Git 2022 Disassembly)',
+		description = 'as_lst_exp->log symbol generation (Sonic 2 Git 2022 Disassembly)',
 		pipeline=(
 			ConvSym(
 				input = File('input/sonic-2-git-2022.lst'),
-				output = File('output/sonic-2-git-2022.as_lst_legacy.log'),
-				options = ('-in', 'as_lst_legacy', '-out', 'log')
+				output = File('output/sonic-2-git-2022.as_lst_exp.log'),
+				options = ('-in', 'as_lst_exp', '-out', 'log')
 			),
-			CheckMatch(output=File('output-expected/sonic-2-git-2022.as_lst_legacy.log')),
+			CheckMatch(output=File('output-expected/sonic-2-git-2022.as_lst_exp.log')),
 		),
 	),
 	Test(
-		description = 'as_lst_legacy->log symbol generation (Sonic 3K 2022 Disassembly)',
+		description = 'as_lst_exp->log symbol generation (Sonic 3K 2022 Disassembly)',
 		pipeline=(
 			ConvSym(
 				input = File('input/sonic-3k-git-2022.lst'),
-				output = File('output/sonic-3k-git-2022.as_lst_legacy.log'),
-				options = ('-in', 'as_lst_legacy', '-out', 'log')
+				output = File('output/sonic-3k-git-2022.as_lst_exp.log'),
+				options = ('-in', 'as_lst_exp', '-out', 'log')
 			),
-			CheckMatch(output=File('output-expected/sonic-3k-git-2022.as_lst_legacy.log')),
+			CheckMatch(output=File('output-expected/sonic-3k-git-2022.as_lst_exp.log')),
 		),
 	),
 )

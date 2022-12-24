@@ -17,7 +17,7 @@
 #include "ASM68K_Listing.hpp"
 #include "ASM68K_Sym.hpp"
 #include "AS_Listing.hpp" 
-#include "AS_Listing_Legacy.hpp" 
+#include "AS_Listing_Experimental.hpp" 
 #include "Log.hpp"
 
 
@@ -28,8 +28,8 @@ std::unique_ptr<InputWrapper> getInputWrapper( const std::string& name ) {
 	wrappersTable {
 		{ "asm68k_sym", 	[]() { return std::unique_ptr<InputWrapper>(new Input__ASM68K_Sym()); } },
 		{ "asm68k_lst", 	[]() { return std::unique_ptr<InputWrapper>(new Input__ASM68K_Listing()); } },
-		{ "as_lst",		 	[]() { return std::unique_ptr<InputWrapper>(new Input__AS_Listing()); } },
-		{ "as_lst_legacy", 	[]() { return std::unique_ptr<InputWrapper>(new Input__AS_Listing_Legacy()); } },
+		{ "as_lst",			[]() { return std::unique_ptr<InputWrapper>(new Input__AS_Listing()); } },
+		{ "as_lst_exp", 	[]() { return std::unique_ptr<InputWrapper>(new Input__AS_Listing_Experimental()); } },
 		{ "log", 			[]() { return std::unique_ptr<InputWrapper>(new Input__Log()); } }
 	};
 

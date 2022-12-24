@@ -13,13 +13,13 @@
 #include "InputWrapper.hpp"
 
 
-struct Input__AS_Listing_Legacy : public InputWrapper {
+struct Input__AS_Listing_Experimental : public InputWrapper {
 
-	Input__AS_Listing_Legacy() : InputWrapper() { // Constructor
+	Input__AS_Listing_Experimental() : InputWrapper() { // Constructor
 
 	}
 
-	~Input__AS_Listing_Legacy() {	// Destructor
+	~Input__AS_Listing_Experimental() {	// Destructor
 
 	}
 
