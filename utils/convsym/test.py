@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 BASE_DIR = '_test'
 
-CompareResult = Union[tuple[Literal[True], None], tuple[Literal[False], str]]
+CompareResult = Union['tuple[Literal[True], None]', 'tuple[Literal[False], str]']
 
 class DataSource:
 	def read(self) -> bytes: raise Exception('Not implemented')
@@ -36,7 +36,7 @@ class Buffer(DataSource):
 	def read(self) -> bytes: return self.value
 	def write(self, data: bytes): self.value = data
 
-CommandResult = Union[tuple[Literal[True], DataSource], tuple[Literal[False], str]]
+CommandResult = Union['tuple[Literal[True], DataSource]', 'tuple[Literal[False], str]']
 
 @dataclass()
 class Command:
@@ -48,7 +48,7 @@ class Command:
 
 @dataclass
 class ConvSym(Command):
-	options: tuple[str, ...] = ()
+	options: 'tuple[str, ...]' = ()
 
 	def execute(self, input: DataSource, output: DataSource) -> CommandResult:
 		use_stdin = not isinstance(input, File)
@@ -72,10 +72,10 @@ class CheckMatch(Command):
 		return (True, output) if success else (False, cast(str, diff_message))
 
 
-Test = NamedTuple('Test', description=str, pipeline=tuple[Command, ...])
+Test = NamedTuple('Test', description=str, pipeline='tuple[Command, ...]')
 
 
-tests: tuple[Test, ...] = (
+tests: 'tuple[Test, ...]' = (
 	Test(
 		description = 'log->log symbol generation (sanity check)',
 		pipeline=(
