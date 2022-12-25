@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 from typing import cast, Union, Literal, NamedTuple
+from dataclasses import dataclass
+from pathlib import Path
 import subprocess
+import platform
 import filecmp
 import tarfile
-from pathlib import Path
-from dataclasses import dataclass
 
 BASE_DIR = '_test'
 
@@ -13,8 +14,14 @@ CompareResult = Union['tuple[Literal[True], None]', 'tuple[Literal[False], str]'
 class DataSource:
 	def read(self) -> bytes: raise Exception('Not implemented')
 	def write(self, data: bytes): raise Exception('Not implemented')
-	def cmp(self, other) -> CompareResult:
+	def cmp(self, other, textMode=False) -> CompareResult:
 		data1, data2 = self.read(), cast(DataSource, other).read()
+
+		# For Windows and MacOS in text mode, we have to convert newlines, since all examples store Linux newlines
+		if textMode and platform.system() in ('Windows', 'Darwin'):
+			data1 = data1.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+			data2 = data2.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+
 		if data1 != data2:
 			return (False, f'Expected "{data2}", got "{data1}"') if len(data1) + len(data2) < 512 else (False, "Expected data to match")
 		return (True, None)
@@ -25,10 +32,12 @@ class File(DataSource):
 	def read(self) -> bytes: return self.getPath().read_bytes()
 	def write(self, data: bytes): return self.getPath().write_bytes(data)
 	def getPath(self) -> Path: return Path(BASE_DIR, self.path)
-	def cmp(self, other) -> CompareResult:
-		if isinstance(other, File): # Slight optimization if other data source is also file
+	def cmp(self, other, textMode=False) -> CompareResult:
+		# If both data sources to compare are files, we can use `filecmp.cmp` as an optimization.
+		# But this is only applicable in non-text mode OR with text mode on Linux, since all example use Linux newlines
+		if isinstance(other, File) and ((not textMode) or (textMode and platform.system() == 'Linux')):
 			return (True, None) if filecmp.cmp(self.getPath(), other.getPath()) else (False, f'Expected "{self.getPath()}" to match "{other.getPath()}"')
-		return super().cmp(other)
+		return super().cmp(other, textMode)
 
 @dataclass
 class Buffer(DataSource):
@@ -67,8 +76,10 @@ class ConvSym(Command):
 
 @dataclass
 class CheckMatch(Command):
+	text: bool = False
+
 	def execute(self, input: DataSource, output: DataSource) -> CommandResult:
-		success, diff_message = input.cmp(output)
+		success, diff_message = input.cmp(output, self.text)
 		return (True, output) if success else (False, cast(str, diff_message))
 
 
@@ -83,7 +94,7 @@ tests: 'tuple[Test, ...]' = (
 				input = Buffer(b'0: Start\n3FFFFF: End\n'),
 				options = ('-input', 'log', '-output', 'log'),
 			),
-			CheckMatch(output=Buffer(b'0: Start\n3FFFFF: End\n'))
+			CheckMatch(output=Buffer(b'0: Start\n3FFFFF: End\n'), text=True)
 		),
 	),
 	Test(
@@ -93,7 +104,7 @@ tests: 'tuple[Test, ...]' = (
 				input = Buffer(b'0: Start\n3FFFFF: End\n'),
 				options = ('-input', 'log', '-output', 'asm'),
 			),
-			CheckMatch(output=Buffer(b'Start:\tequ\t$0\nEnd:\tequ\t$3FFFFF\n'))
+			CheckMatch(output=Buffer(b'Start:\tequ\t$0\nEnd:\tequ\t$3FFFFF\n'), text=True)
 		),
 	),
 	Test(
@@ -104,7 +115,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/logtest-simple.log'),
 				options = ('-input', 'log', '-output', 'log'),
 			),
-			CheckMatch(output=File('output-expected/logtest-simple.log'))
+			CheckMatch(output=File('output-expected/logtest-simple.log'), text=True)
 		),
 	),
 	Test(
@@ -115,7 +126,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/logtest-advanced.log'),
 				options = ('-input', 'log', '-output', 'log', '-inopt', '/separator=: /useDecimal+'),
 			),
-			CheckMatch(output=File('output-expected/logtest-advanced.log'))
+			CheckMatch(output=File('output-expected/logtest-advanced.log'), text=True)
 		),
 	),
 	Test(
@@ -126,7 +137,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/asm68k-lst-sample.log'),
 				options = ('-input', 'asm68k_lst', '-output', 'log'),
 			),
-			CheckMatch(output=File('output-expected/asm68k-lst-sample.log'))
+			CheckMatch(output=File('output-expected/asm68k-lst-sample.log'), text=True)
 		),
 	),
 	Test(
@@ -137,7 +148,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/sonic-1-hivebrain-2005.log'),
 				options = ('-input', 'asm68k_lst', '-output', 'log', '-inopt', '/localSign=@ /localJoin=. /ignoreMacroExp+ /ignoreMacroDefs+ /addMacrosAsOpcodes+ /processLocals+'),
 			),
-			CheckMatch(output=File('output-expected/sonic-1-hivebrain-2005.log')),
+			CheckMatch(output=File('output-expected/sonic-1-hivebrain-2005.log'), text=True),
 		),
 	),
 	Test(
@@ -214,7 +225,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/sonic-1-hivebrain-2005.sym.log'),
 				options = ('-input', 'asm68k_sym', '-output', 'log'),
 			),
-			CheckMatch(output=File('output-expected/sonic-1-hivebrain-2005.sym.log')),
+			CheckMatch(output=File('output-expected/sonic-1-hivebrain-2005.sym.log'), text=True),
 		),
 	),
 	Test(
@@ -225,7 +236,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/sonic-1-hivebrain-2005.sym.asm'),
 				options = ('-input', 'asm68k_sym', '-output', 'asm'),
 			),
-			CheckMatch(output=File('output-expected/sonic-1-hivebrain-2005.sym.asm')),
+			CheckMatch(output=File('output-expected/sonic-1-hivebrain-2005.sym.asm'), text=True),
 		),
 	),
 	Test(
@@ -236,7 +247,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/sonic-1-git-2018.lst.log'),
 				options = ('-in', 'asm68k_lst', '-out', 'log', '-tolower', '-inopt', '/localSign=@ /localJoin=. /ignoreMacroExp- /ignoreMacroDefs- /addMacrosAsOpcodes+ /processLocals+')
 			),
-			CheckMatch(output=File('output-expected/sonic-1-git-2018.lst.log')),
+			CheckMatch(output=File('output-expected/sonic-1-git-2018.lst.log'), text=True),
 		),
 	),
 	Test(
@@ -247,7 +258,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/sonic-1-git-2018.sym.log'),
 				options = ('-in', 'asm68k_sym', '-out', 'log', '-tolower', '-inopt', '/localSign=@ /localJoin=. /processLocals+'),
 			),
-			CheckMatch(output=File('output-expected/sonic-1-git-2018.sym.log')),
+			CheckMatch(output=File('output-expected/sonic-1-git-2018.sym.log'), text=True),
 		),
 	),
 	Test(
@@ -274,7 +285,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/sonic-1-git-2022-asm68k.lst.log'),
 				options = ('-in', 'asm68k_lst', '-out', 'log')
 			),
-			CheckMatch(output=File('output-expected/sonic-1-git-2022-asm68k.lst.log')),
+			CheckMatch(output=File('output-expected/sonic-1-git-2022-asm68k.lst.log'), text=True),
 		),
 	),
 	Test(
@@ -285,7 +296,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/sonic-1-git-2022-asm68k.sym.log'),
 				options = ('-in', 'asm68k_sym', '-out', 'log')
 			),
-			CheckMatch(output=File('output-expected/sonic-1-git-2022-asm68k.sym.log')),
+			CheckMatch(output=File('output-expected/sonic-1-git-2022-asm68k.sym.log'), text=True),
 		),
 	),
 	Test(
@@ -296,7 +307,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/sonic-1-git-2022-as.log'),
 				options = ('-in', 'as_lst', '-out', 'log', '-exclude', '-filter', 'z.+')
 			),
-			CheckMatch(output=File('output-expected/sonic-1-git-2022-as.log')),
+			CheckMatch(output=File('output-expected/sonic-1-git-2022-as.log'), text=True),
 		),
 	),
 	Test(
@@ -307,7 +318,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/sonic-2-git-2022.log'),
 				options = ('-in', 'as_lst', '-out', 'log', '-exclude', '-filter', '(z.+)|(cf[A-Z].+)')
 			),
-			CheckMatch(output=File('output-expected/sonic-2-git-2022.log')),
+			CheckMatch(output=File('output-expected/sonic-2-git-2022.log'), text=True),
 		),
 	),
 	Test(
@@ -318,7 +329,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/sonic-3k-git-2022.log'),
 				options = ('-in', 'as_lst', '-out', 'log', '-exclude', '-filter', '(z.+)|(mus_.+)|(sfx_.+)|(cf[A-Z].+)')
 			),
-			CheckMatch(output=File('output-expected/sonic-3k-git-2022.log')),
+			CheckMatch(output=File('output-expected/sonic-3k-git-2022.log'), text=True),
 		),
 	),
 	Test(
@@ -329,7 +340,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/sonic-2-git-2022.as_lst_exp.log'),
 				options = ('-in', 'as_lst_exp', '-out', 'log')
 			),
-			CheckMatch(output=File('output-expected/sonic-2-git-2022.as_lst_exp.log')),
+			CheckMatch(output=File('output-expected/sonic-2-git-2022.as_lst_exp.log'), text=True),
 		),
 	),
 	Test(
@@ -340,7 +351,7 @@ tests: 'tuple[Test, ...]' = (
 				output = File('output/sonic-3k-git-2022.as_lst_exp.log'),
 				options = ('-in', 'as_lst_exp', '-out', 'log')
 			),
-			CheckMatch(output=File('output-expected/sonic-3k-git-2022.as_lst_exp.log')),
+			CheckMatch(output=File('output-expected/sonic-3k-git-2022.as_lst_exp.log'), text=True),
 		),
 	),
 )
