@@ -392,7 +392,10 @@ Default parser options can be expressed as follows:
 
 ### Version 2.8 (2022-12-28)
 
-* 
+* Completely overhauled `as_lst` parser; it's now stable and "Production-ready".
+* The old experimental parser is still available as `as_lst_exp`;
+* Improved built-in help (displayed in the command line): added usage examples, sorted options by groups, added README references;
+* Improved README, documented `as_lst` and `as_lst_exp` parsers.
 
 ### Version 2.7.2 (2022-08-12)
 
