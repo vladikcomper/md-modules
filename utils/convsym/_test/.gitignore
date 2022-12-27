@@ -1,5 +1,4 @@
-*.deb1
-*.deb2
-*.log
-*.asm
-!logtest.in.log
+input
+output-expected
+output/*
+!output/.gitkeep

@@ -11,11 +11,13 @@ The utility supports various input and output processing and transformation opti
 
 * [Usage](#usage)
   * [Supported options](#supported-options)
+  * [Examples](#examples)
 * [Converting SGDK symbols](#converting-sgdk-symbols)
 * [Input formats parsers](#input-formats-parsers)
   * [`asm68k_sym` parser](#asm68k_sym-parser)
   * [`asm68k_lst` parser](#asm68k_lst-parser)
-  * [`as_lst` parser](#input-formats-parsers)
+  * [`as_lst` parser](#as_lst-parser)
+  * [`as_lst_exp` parser](#as_lst_exp-parser)
   * [`log` parser](#log-input-parser)
 * [Output formats parsers](#output-formats-parsers)
   * [`deb2` parser](#deb2-output-parser)
@@ -39,52 +41,53 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
 ```
   -in [format]
   -input [format]
-    Selects input file format. Currently supported format specifiers: 
-    asm68k_sym, asm68k_lst, as_lst
-    Default value is: asm68k_sym
+    Selects input file format. Supported formats: asm68k_sym, asm68k_lst,
+    as_lst, as_lst_exp, log
+    Default: asm68k_sym
 
   -out [format]
   -output [format]
-    Selects output file format. Currently supported format specifiers: 
-    asm, deb1, deb2, log
-    Default value is: deb2
+    Selects output file format. Supported formats: asm, deb1, deb2, log
+    Default: deb2
 
+  -inopt [options]
+    Additional options specific for the input parser.
+
+  -outopt [options]
+    Additional options specific for the output parser.
+
+Offsets conversion options:
   -base [offset]
     Sets the base offset for the input data: it is subtracted from every 
     symbol's offset found in [input_file] to form the final offset.
-    Default value is: 0
+    Default: 0
 
   -mask [offset]
     Sets the mask for the offsets in the input data: it's applied to every 
-    offset found in [input_file] after the base offset subtraction (if occurs). 
-    Default value is: FFFFFF
+    offset found in [input_file] after the base offset subtraction (if occurs).
+    Default: FFFFFF
 
   -range [bottom] [upper]
     Determines the range for offsets allowed in a final symbol file (after 
-    subtraction of the base offset), default is: 0 3FFFFF
+    subtraction of the base offset).
+    Default: 0 3FFFFF
 
   -a
-    Enables "Append mode": symbol data is appended to the end of the output 
-    file. Data overwrites file contents by default. This is usually used to 
-    append symbols to ROMs.
+    Enables "Append mode": symbol data is appended to the end of the 
+    [output_file]. Data overwrites file contents by default.
+    This is usually used to append symbols to ROMs.
 
+Symbol table dump options:
   -org [offset]
     If set, symbol data will placed at the specified [offset] in the output 
     file. This option cannot be used in "append mode".
 
   -ref [offset]
-    If set, a 32-bit Big Endian offset pointing to the beginning of symbol data 
-    will be written at specified offset. This is can be used, if symbol data 
-    pointer must be written somewhere in the ROM header.
+    If set, a 32-bit Big Endian offset pointing to the beginning of symbol
+    data will be written at specified offset. This is can be used, 
+    if symbol data pointer must be written somewhere in the ROM header.
 
-  -inopt [options]
-    Additional options for the input parser. There parameters are specific to 
-    the selected input format.
-
-  -outopt [options]
-    Additional options for the output parser. There parameters are specific to 
-    the selected output format.
-
+Symbols conversion and filtering options:
   -toupper
     Converts all symbol names to uppercase.
 
@@ -92,12 +95,26 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
     Converts all symbol names to lowercase.
 
   -filter [regex]
-    Enables filtering of the symbol list fetched from the [input_file] based on 
-    a regular expression.
+    Enables filtering of the symbol list fetched from the [input_file]
+    based on a regular expression.
 
   -exclude
-    If set, filter works in "exclude mode": all labels that DO match the 
-    -filter regex are removed from the list, everything else stays.
+    If set, filter works in "exclude mode": all labels that DO match
+    the -filter regex are removed from the list, everything else stays.
+```
+
+### Examples
+
+Convert listing file `listing.lst` in `as_lst` format to `symbols.log` of `log` format:
+
+```sh
+convsym listing.lst symbols.log -input as_lst -output log
+```
+
+Convert listing file `listing.lst` in `as_lst` format to `deb2` format and append to the end of `rom.bin` file:
+
+```sh
+convsym listing.lst rom.bin -input as_lst -output deb2 -a
 ```
 
 ## Converting SGDK symbols
@@ -139,18 +156,20 @@ nm -n out/rom.out | awk '{print $1":",$3}' | ./convsym - out/rom.bin -in log -a
 Summary of currently supported input formats and their respective parsers (input data format can be specified via `-input` option, or its shorthand: `-in`):
 
 * `asm68k_sym`, `asm68k_lst` - **ASM68K** assembler symbol and listing files;
-* `as_lst` - **The AS Macro Assembler** listing files *(experimental)*;
-* `log` - Plain-text symbol tables *(since **version 2.1**)*.
+* `as_lst`, `as_lst_exp` - **The AS Macro Assembler** listing files (*stable* since **version 2.8**, and *experimental*);
+* `log` - Plain-text symbol tables (since **version 2.1**).
 
 Some parsers support additional options, which can be specified via `-inopt` option. These options are described below.
 
 ### `asm68k_sym` parser
 
-This parser expects a symbol file produced by the **ASM68K** assembler for input.
+This parser expects a symbol file produced by the **ASM68K** assembler for input. It's the recommended parser for projects using **ASM68K**.
+
+It also supports local symbols, if produced by the assembler.
 
 > **Note**
 > 
-> In order to output local labels in the symbol file, `/v+` assembly option should be used.
+> In order to include local labels in the symbol file, `/v+` assembly option should be used.
 
 **Options:**
 
@@ -174,7 +193,7 @@ Default parser options can be expressed as follows:
 
 ### `asm68k_lst` parser
 
-This parser expects a listing file produced by the **ASM68K** assembler for input.
+This parser expects a listing file produced by the **ASM68K** assembler for input. Local symbols are also supported by default.
 
 > **Note**
 >
@@ -213,6 +232,51 @@ This parser expects a listing file produced by the **ASM68K** assembler for inpu
 Default parser options can be expressed as follows:
 
 	-inopt "/localSign=@ /localJoin=. /ignoreMacroDefs+ /ignoreMacroExp- /addMacrosAsOpcodes+ /processLocals+"
+
+
+### `as_lst` parser
+
+This parser expects a listing file produced by the **AS** assembler for input. It's the recommended parser for projects using **AS**.
+
+Since version **version 2.8**, it works by processing a symbol table at the end of the file. This parser superseded the old experimental one, which is now available as `as_lst_exp` (so if you're looking for pre-v2.8 behaviour for some reason, use that instead).
+
+It also supports local symbols, if produced by the assembler.
+
+**Known issues**:
+
+* Sonic 2 and Sonic 3K disassemly also compile the Z80 driver in the same project using `org`/`phase` to locate Z80-related labels starting from offset $000000. This causes Z80 and M68K symbols to be interleaved, thus messing up the symbol table for up to the first 8 kb of ROM data. There's no clean way to get rid of conflicting labels, but thankfully the disassemblies have most of Z80-labels start with the letter `z`, so you can add the following command-line options to filter them out: `-exclude -filter "z.+"'`
+
+**Options:**
+
+Since **version 2.8**, this parser supports the following options:
+
+```
+  /localJoin=[x]
+    character used to join local label and its global "parent"
+
+  /processLocals[+|-]
+    specify whether local labels will processed (if not, the above
+    options have no effect)
+
+  /ignoreInternalSymbols[+|-]
+    whether to ignore internal symbols (e.g. `__FORW123`) generated by AS in 
+    place of nameless labels (+, - etc)
+```
+
+Default parser options can be expressed as follows:
+
+  -inopt "/localJoin=. /processLocals+ /ignoreInternalSymbols+"
+
+
+### `as_lst_exp` parser
+
+*This parser is available since **version 2.8**.*
+
+This is an experimental version of listing files parser for the AS assembler. Like `as_lst` parser, it expects a listing file produced by the **AS** assembler for input. 
+
+Using this parser is currently not recommended and its implementation may drastically change in future versions of ConvSym.
+
+Before **version 2.8** it was actually in place of the `as_lst` parser, but the latter has since been replaced with a more stable and refined implementation.
 
 
 ### `log` input parser
@@ -274,7 +338,7 @@ Default parser options can be expressed as follows:
 
 ### `deb1` output parser
 
-This parser outputs debug symbols database in old DEB1 format. This is an outdated and limited formatm which is not supported by the current version of "The Advanced Error Handler and Debugger". This parser only aims to retain compatibility with the Error Handler 1.0.
+This parser outputs debug symbols database in old DEB1 format. This is an outdated and limited format which is not supported by the current version of "The Advanced Error Handler and Debugger". This parser only aims to retain compatibility with the Error Handler 1.0.
 
 **Options:**
 
@@ -326,6 +390,13 @@ Default parser options can be expressed as follows:
 
 ## Version history
 
+### Version 2.8 (2022-12-28)
+
+* Completely overhauled `as_lst` parser; it's now stable and "Production-ready".
+* The old experimental parser is still available as `as_lst_exp`;
+* Improved built-in help (displayed in the command line): added usage examples, sorted options by groups, added README references;
+* Improved README, documented `as_lst` and `as_lst_exp` parsers.
+
 ### Version 2.7.2 (2022-08-12)
 
 * Fix SEGFAULT in `deb1` and `deb2` parsers due to out of boundary labels lookup.
@@ -333,7 +404,7 @@ Default parser options can be expressed as follows:
 ### Version 2.7.1 (2022-07-23)
 
 * Fix incorrect newlines produced by `log` and `asm` output parsers on Windows;
-* Fix minor memory leak when a parser crashes;
+* Fix a minor memory leak when a parser crashes;
 * Overall stability and portability improvements.
 
 ### Version 2.7 (2021-04-27)
