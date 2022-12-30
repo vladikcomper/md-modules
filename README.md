@@ -14,9 +14,9 @@ Various debugging modules and utilities for Sega Mega-Drive / Genesis ROMs.
     - **/modules/errorhandler/bundles** - bundles source code that define debugger macros and integrate pre-compiled Error Handler blob into your projects.
   - **/modules/core** - source code for debugger's core, which includes Console subsystem (used by Error Handler)
 
-## Pre-built utilities binaries
+## Pre-built utility binaries
 
-For your convenience, this repository includes pre-built utilities binaries, as those are used by modules. See `modules/exec` directory.
+For your convenience, this repository includes pre-built utility binaries, as those are used by modules. You can find them in the `modules/exec` directory.
 
 Binaries are provided for the following platforms:
 * **Windows 64-bit** (Windows 7 and above)
@@ -56,6 +56,6 @@ Linux users are expected to have `wine` installed in order to invoke them.
 
 ### Building modules
 
-Modules come with simple build scripts compile them under Windows (`build.bat`) and Linux (`build.sh`).
+Modules come with simple build scripts compile to them under Windows (`build.bat`) and Linux (`build.sh`).
 
 Go to a module directory (e.g. `module/errorhandler`) and run `build.bat` or `build.sh` dependening on your system.
