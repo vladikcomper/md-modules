@@ -1,9 +1,9 @@
 
-# ConvSym - Symbols extraction and conversion utility
+# ConvSym - Symbol extraction and conversion utility
 
-**ConvSym** is a command-line utility aimed to extract symbols lists from various assembler-specific file formats and convert them into DEB1/DEB2 formats supported by the "Advanced Error Handler and Debugger" or human-readable plain-text files.
+**ConvSym** is a command-line utility aimed to extract symbol lists from various assembler-specific file formats and convert them into DEB1/DEB2 formats supported by the "Advanced Error Handler and Debugger" or human-readable plain-text files.
 
-It was originally designed to be used with **ASM68K** and **The Macroassembler AS**, however, ConvSym's high configurability makes it possible to use with other tools and environments, e.g. SGDK (although those may not be fully supported by the "Advanced Error Handler and Debugger").
+It was originally designed to be used with the **ASM68K** and **The Macroassembler AS** assemblers, however, ConvSym's high configurability makes it possible to use with other tools and environments, including SGDK (although those may not be fully supported by the "Advanced Error Handler and Debugger").
 
 The utility supports various input and output processing and transformation options, allowing for a high level of flexibility.
 
@@ -124,9 +124,9 @@ convsym listing.lst rom.bin -input as_lst -output deb2 -a
 > SGDK isn't officially supported by the "Advanced Error Handler and Debugger", which makes use of the converted symbols, hence no installation instructions are provided.
 > At this point, you'll have to figure out installation on your own.
 
-While **ConvSym** doesn't support SGDK, it's still possible to feed it the symbols list and generate debug symbols database for the "Advanced Error Handler and Debugger".
+While **ConvSym** doesn't support SGDK, it's still possible to feed it the symbol list and generate debug symbols database for the "Advanced Error Handler and Debugger".
 
-Since **version 2.1**, ConvSym supports `log` input parser, so you can build symbols database from any source as long as you're able to represent symbols list in a simple plain text format: each line must contain symbol name, followed by ":" character (separator) and symbol's hexadecimal offset (you can also use a different separator, see `log` parser documentation below for more information). For example:
+Since **version 2.1**, ConvSym supports `log` input parser, so you can build symbols database from any source as long as you're able to represent symbol lists in a simple plain text format: each line must contain symbol name, followed by ":" character (separator) and symbol's hexadecimal offset (you can also use a different separator, see `log` parser documentation below for more information). For example:
 
 ```
 SomeSymbol: 0
@@ -357,7 +357,7 @@ Default parser options can be expressed as follows:
 
 ### `asm` output parser
 
-By default, this parser produces symbol list in assembly format, recognizable by both **ASM68K** and **AS** assemblers.
+By default, this parser produces a symbol list in assembly format recognized by both **ASM68K** and **AS** assemblers.
 
 The default format is the following:
 
