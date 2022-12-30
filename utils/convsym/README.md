@@ -265,7 +265,7 @@ Since **version 2.8**, this parser supports the following options:
 
 Default parser options can be expressed as follows:
 
-  -inopt "/localJoin=. /processLocals+ /ignoreInternalSymbols+"
+	-inopt "/localJoin=. /processLocals+ /ignoreInternalSymbols+"
 
 
 ### `as_lst_exp` parser
