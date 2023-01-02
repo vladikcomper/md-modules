@@ -113,7 +113,10 @@ ErrorHandler:
 	jsr		Console_WriteLine_Formatted(pc)
 
 	; Print caller
+	movea.l	0.w, a1							; a1 = stack top boundary
 	lea		6(a4), a2						; a2 = call stack (after exception stack frame)
+	jsr		Error_MaskStackBoundaries(pc)
+
 	jsr		Error_GuessCaller(pc)			; d1 = caller
 	lea 	Str_Caller(pc), a1				; a1 = formatted string
 	move.l	d1, -(sp)
@@ -148,9 +151,9 @@ ErrorHandler:
 	moveq	#7-1, d5						; number of registers - 1
 	jsr		Error_DrawRegisters(pc)
 
-	; Special case : stack register
+	; Special case : stack pointer (SP)
 	move.w	#'sp', d0
-	moveq	#0, d5
+	moveq	#0, d5							; number of registers - 1
 	move.l	a4, -(sp)
 	lea		(sp), a2
 	jsr		Error_DrawRegisters(pc)
@@ -198,9 +201,10 @@ ErrorHandler:
 	; Stack contents
 	; -----------------
 
-	movea.w	a4, a2
-	movea.w 2.w, a1							; a1 = stack top
-	subq.w	#1, a1							; hotfix to convert stack pointer $0000 to $FFFF, decrement by 1 shouldn't make any difference otherwise
+	movea.l 0.w, a1							; a1 = stack top
+	lea		(a4), a2						; a2 = stack bottom
+	subq.l	#1, a1							; hotfix to convert stack pointer $0000 to $FFFF, decrement by 1 shouldn't make any difference otherwise
+	bsr.s	Error_MaskStackBoundaries
 
 	jsr		Console_GetPosAsXY(pc)			; d0/d1 = XY-pos
 	moveq	#28-3, d5
@@ -246,6 +250,31 @@ Error_InitConsole:	__global
 
 ; ===============================================================
 ; ---------------------------------------------------------------
+; Masks top and bottom stack boundaries to 24-bit
+; ---------------------------------------------------------------
+; INPUT:
+;		a1		Stack top boundary
+;		a2		Current stack pointer
+;
+; USES:
+;		d1, d2
+; ---------------------------------------------------------------
+
+Error_MaskStackBoundaries:
+	move.l 	#$FFFFFF, d1
+
+	move.l	a1, d2
+	and.l	d1, d2
+	move.l	d2, a1
+
+	move.l	a2, d2
+	and.l	d1, d2
+	move.l	d2, a2
+	rts
+
+
+; ===============================================================
+; ---------------------------------------------------------------
 ; Subroutine to draw contents of stack row
 ; ---------------------------------------------------------------
 ; INPUT:
@@ -281,8 +310,8 @@ Error_DrawStackRow_Continue:
 
 	@loop:
 		moveq	#$FFFFFF00|_pal2, d1	; use light blue
-		cmp.w	a1, a2					; is current word out of stack?
-		blt.s	@0						; if not, branch
+		cmp.l	a1, a2					; is current word out of stack?
+		blo.s	@0						; if not, branch
 		moveq	#$FFFFFF00|_pal3, d1	; use dark blue
 	@0:	move.b	d1, (a0)+				; setup color
 		move.w	(a2)+, d1
@@ -333,6 +362,7 @@ Error_DrawRegisters:
 	rts
 
 
+
 ; ===============================================================
 ; ---------------------------------------------------------------
 ; Subroutine to draw series of registers
@@ -377,26 +407,28 @@ Str_IntHandler_Unknown:
 ; Subroutine to guess caller by inspecting stack
 ; ---------------------------------------------------------------
 ; INPUT:
-;		a2				Bottom of stack (after stack frame)
+;		a1				Stack top boundary
+;		a2				Stack bottom boundary (after stack frame)
 ;
 ; OUTPUT:
-;		d1		.l		Caller offset
+;		d1		.l		Caller offset or 0, if not found
 ;
 ; USES:
 ;		a1-a2
 ; ---------------------------------------------------------------
 
 Error_GuessCaller:
-	movea.w	2.w, a1					; a1 = stack top boundary
-	subq.w	#4, a1					; subtract a longword to set offset you should pass through
-	cmpa.w	a2, a1
+	subq.l	#4, a1					; set a final longword to read
+	cmpa.l	a2, a1
 	blo.s	@nocaller
 
 @try_offset:
 	cmp.w	#$40, (a2)				; does this seem like an offset?
 	blo.s	@caller_found			; if yes, branch
-	addq.w	#2, a2					; try some next offsets
-	cmpa.w	a2, a1
+
+@try_next_offset:
+	addq.l	#2, a2					; try some next offsets
+	cmpa.l	a2, a1
 	bhs.s	@try_offset
 
 @nocaller:
@@ -406,6 +438,8 @@ Error_GuessCaller:
 ; ---------------------------------------------------------------
 @caller_found:
 	move.l	(a2), d1
+	btst	#0, d1					; is this offset even?
+	bne.s	@try_next_offset		; if not, branch
 	rts
 
 
