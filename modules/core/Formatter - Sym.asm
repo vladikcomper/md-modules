@@ -39,22 +39,24 @@ FormatSym_Handlers:
 	ext.l	d1
 
 FormatSym:
-	btst	#3, d3							; is "display just label part so far" bit set?
-	bne.s	@0								; if yes, branch
-	pea		FormatString_CodeHandlers+$40(pc); otherwise, display displacement after this routine is finished
-@0:
 	movem.l	d1/d3/a1-a2, -(sp)
 	jsr		GetSymbolByOffset(pc)			; IN:	d1 = offset
-	bne.s	FormatSym_UnknownSymbol			; OUT:	d0/Z = error status, d1 = displacement, a1 = symbol pointer
+	bne.s	FormatSym_ChkUnknownSymbol		; OUT:	d0/Z = error status, d1 = displacement, a1 = symbol pointer
 	move.l	d1, (sp)						; replace offset stored in stack as D1 with displacement
 	jsr		DecodeSymbol(pc)				; IN:	a1 = symbol pointer
 	movem.l	(sp)+, d1/d3/a1-a2				; NOTICE: This doesn't affect CCR, so this routine still returns Carry
+	bcs.s	FormatSym_Return				; if got carry (buffer termination), return immediately
+
+FormatSym_ChkDrawDisplacement:
+	btst	#3, d3							; is "display just label part so far" bit set?
+	bne.s	FormatSym_Return				; if yes, branch (Z=0 or C=1)
+	jmp		FormatString_CodeHandlers+$40(pc); otherwise, also display displacement now
 
 FormatSym_Return:
 	rts
 
 ; ---------------------------------------------------------------
-FormatSym_UnknownSymbol:
+FormatSym_ChkUnknownSymbol:
 	movem.l	(sp)+, d1/d3/a1-a2
   	btst	#2, d3							; is "draw <unknown> on error" bit set?
 	beq.s	FormatSym_ReturnNC				; if not, branch
@@ -64,11 +66,12 @@ FormatSym_UnknownSymbol:
 ; ---------------------------------------------------------------
 FormatSym_ReturnNC:
 	moveq	#-1, d0							; reset Carry, keep D0 an error code
-	rts
+	bra.s	FormatSym_ChkDrawDisplacement
 
 ; ---------------------------------------------------------------
 FormatSym_Str_Unknown:
 	dc.b	'<unknown>',0
+	even
 
 ; ---------------------------------------------------------------
 ; INPUT:
