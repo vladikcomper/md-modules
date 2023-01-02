@@ -11,24 +11,10 @@
 
 ; ---------------------------------------------------------------
 	jmp		(Main).l					; entry point
-; ---------------------------------------------------------------
-
-; ---------------------------------------------------------------
-; Dummy labels for testing of offset decoding
-;
-; WARNING! All labels are rendered in lowercase, since
-; ASM68K's symbol's file is unsed.
-; ---------------------------------------------------------------
-
-short_data_chunk:
-	ds.b	$10				; $10 bytes
-
-long_data_chunk:
-	ds.b	$10001			; $10001 bytes
-	even
 
 ; ---------------------------------------------------------------
 
+	include	"..\..\core\Macros.asm"
 	include	"..\..\core\Symbols.asm"
 	include	"..\..\core\Formatter - Sym.asm"
 	include	"..\..\core\Formatter - Bin.asm"
@@ -80,7 +66,7 @@ Main:
 		bne		@SizeMismatch					; if they don't match, branch
 
 		subq.w	#1, d4
-		bmi.w	@CompareStringCorrupted
+		bmi.w	@NextTest
 
 		@compare_loop:
 			cmpm.b	(a1)+, (a5)+
@@ -127,12 +113,6 @@ Main:
 		bsr	@PrintFailureHeader
 		Console.Write <color|fgRed,'Error: Byte mismatch (',hex,'<>',hex,')', endl>, { <.b -1(a1)>, <.b -1(a5)> }
 		bra	@PrintFailureDiff
-		
-	; -------------------------------------------------------------------------		
-	@CompareStringCorrupted:
-		bsr	@PrintFailureHeader
-		Console.Write <color|fgRed,'Error: Compare string corrupted', endl>
-		bra	@PrintFailureDiff
 
 ; --------------------------------------------------------------
 ; Buffer flush function
@@ -152,27 +132,26 @@ dcs	macro
 	endm
 	
 addTest macro args,source_str,compare_str
+	@test_header\@:
+		dc.l	@source_string\@						; (a6) => Source string absolute pointer
+		dc.l	@compare_string\@						; 4(a6) => Compare string absolute pointer
+		dc.w	@test_end\@-@test_header\@				; 8(a6)	=> End of test relative pointer
 
-@test_header\@:
-	dc.l	@source_string\@						; (a6) => Source string absolute pointer
-	dc.l	@compare_string\@						; 4(a6) => Compare string absolute pointer
-	dc.w	@test_end\@-@test_header\@				; 8(a6)	=> End of test relative pointer
+		rept narg(args)									; $A(a6) and on => Arguments stack
+			dc\args
+			shift args
+		endr
 
-	rept narg(args)									; $A(a6) and on => Arguments stack
-		dc\args
-		shift args
-	endr
+	@source_string\@:
+		dc.b \source_str
 
-@source_string\@:
-	dc.b \source_str
-
-@compare_string\@:
-	dcs <\compare_str>								; this string also includes "length" byte for correct computations
-	even
-	
-@test_end\@:
+	@compare_string\@:
+		dcs <\compare_str>								; this string also includes "length" byte for correct computations
+		even
+		
+	@test_end\@:
 	endm
-	
+
 
 @TestsData:
 
@@ -327,6 +306,146 @@ addTest macro args,source_str,compare_str
 			<$89,' ',$8B,' ',$89,$00>, &
 			<'+1234 -01234567 -0001'>
 
+	; #29: Empty output test #1
+	addTest { <.l 0> }, &
+			<'',$00>, &
+			<''>
+
+	; #30: Empty output test #2
+	addTest { <.l @EmptyString> }, &
+			<$D0,$00>, &
+			<''>
+
+	; #31: Advanced symbol output test #1
+	addTest { <.l $100> }, &
+			<$B3,$00>, &
+			<'Offset_100'>
+
+	; #32: Advanced symbol output test #2
+	addTest { <.l $101> }, &
+			<$B3,$00>, &
+			<'Offset_100+0001'>
+
+	; #33: Advanced symbol output test #3
+	addTest { <.l $1FF> }, &
+			<$B3,$00>, &
+			<'Offset_100+00FF'>
+
+	; #34: Advanced symbol output test #4 (non-existent symbol)
+	addTest { <.l 0> }, &
+			<$B3,$00>, &
+			<'00000000'>
+
+	; #35: Advanced symbol output test #5 (non-existent symbol)
+	addTest { <.l 0> }, &
+			<$B7,$00>, &
+			<'<unknown>'>
+
+	; #36: Advanced symbol output test #6 (non-existent symbol)
+	addTest { <.l $FF> }, &
+			<$B3,$00>, &
+			<'000000FF'>
+
+	; #37: Advanced symbol output test #7 (non-existent symbol)
+	addTest { <.l $FF> }, &
+			<$B7,$00>, &
+			<'<unknown>'>
+
+	; #38: Advanced symbol output test #8 (far away symbol)
+	addTest { <.l $20000> }, &
+			<$B7,$00>, &
+			<'long_data_chunk+FF80'>
+
+	; #39: Advanced symbol output test #9 (far away symbol)
+	addTest { <.l $20080> }, &
+			<$B7,$00>, &
+			<'long_data_chunk+00010000'>
+
+	; #40: Advanced symbol output test #10 (RAM addr)
+	addTest { <.l $FF0000> }, &
+			<$B3,$00>, &
+			<'RAM_Offset_FF0000'>
+
+	; #41: Advanced symbol output test #11 (RAM addr)
+	addTest { <.l $FFFF0000> }, &
+			<$B7,$00>, &
+			<'RAM_Offset_FF0000'>
+
+	; #42: Advanced symbol output test #12 (RAM addr)
+	addTest { <.l $FFFF0001> }, &
+			<$B3,$00>, &
+			<'RAM_Offset_FF0000+0001'>
+
+	; #43: Advanced symbol output test #13 (RAM addr)
+	addTest { <.l $FFFF0002> }, &
+			<$B7,$00>, &
+			<'RAM_Offset_FF0000+0002'>
+
+	; #44: Advanced symbol output test #10 (RAM addr #2)
+	addTest { <.l $FF8000> }, &
+			<$B3,$00>, &
+			<'RAM_Offset_FFFF8000'>
+
+	; #45: Advanced symbol output test #11 (RAM addr #2)
+	addTest { <.w $8000> }, &
+			<$B1,$00>, &
+			<'RAM_Offset_FFFF8000'>
+
+	; #46: Advanced symbol output test #12 (RAM addr #2)
+	addTest { <.w $8001> }, &
+			<$B1,$00>, &
+			<'RAM_Offset_FFFF8000+0001'>
+
+	; #47: Advanced symbol output test #13 (RAM addr #3)
+	addTest { <.w $FF> }, &
+			<$B0,$00>, &
+			<'RAM_End'>
+
+	; #48: Symbol and displacement test #1
+	addTest { <.l $1001> }, &
+			<$B3+8,$C0,$00>, &
+			<'ShouldOverflowBufferWithDis+0001'>
+
+	; #49: Symbol and displacement test #2
+	addTest { <.l $1001> }, &
+			<$B3+8,$C0,'this is no longer visible!',$00>, &
+			<'ShouldOverflowBufferWithDis+0001'>
+
+	; #50: Symbol and displacement test #3
+	addTest { <.l $1001> }, &
+			<$B3+8,'(',$C0,')',$00>, &
+			<'ShouldOverflowBufferWithDis(+000'>
+
+	; #51: Symbol and displacement test #4
+	addTest { <.l $1000> }, &
+			<$B3+8,'(',$C0,')',$00>, &
+			<'ShouldOverflowBufferWithDis()'>
+
+	; #52: Symbol and displacement test #5
+	addTest { <.l $1003> }, &
+			<$B3,$00>, &
+			<'ShouldOverflowBufferWithDisp+000'>
+
+	; #53: Symbol and displacement test #6
+	addTest { <.l $1005> }, &
+			<$B3,$00>, &
+			<'ShouldOverflowBufferWithDisp2+00'>
+
+	; #54: Symbol and displacement test #7
+	addTest { <.l $1007> }, &
+			<$B3,$00>, &
+			<'ShouldOverflowBufferEvenWithoutD'>
+
+	; #55: Symbol and displacement test #8
+	addTest { <.l $1009> }, &
+			<$B3,$00>, &
+			<'ShouldOverflowBufferEvenWithoutD'>
+
+	; #56: Symbol and displacement test #9
+	addTest { <.l $100B> }, &
+			<$B3,$00>, &
+			<'ShouldOverflowBufferEvenWithoutD'>
+
 	dc.w	-1
 	 
 ; --------------------------------------------------------------
@@ -349,3 +468,8 @@ addTest macro args,source_str,compare_str
 ; --------------------------------------------------------------
 
 SymbolData:
+
+short_data_chunk:	equ	$10000
+long_data_chunk:	equ	$10080
+
+; WARNING! Don't put anything after "SymbolData:"
