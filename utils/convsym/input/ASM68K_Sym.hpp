@@ -69,7 +69,7 @@ struct Input__ASM68K_Sym : public InputWrapper {
 
 		// NOTICE: Symbols are usually written OUT OF ORDER in the symbols file,
 		//	so we have to map them first before filtering
-		std::map<uint32_t, std::string> UnfilteredSymbolsMap;
+		std::multimap<uint32_t, std::string> UnfilteredSymbolsMap;
 		input.setOffset( 0x0008 );
 
 		for(;;) {
