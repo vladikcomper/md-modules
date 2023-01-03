@@ -1,0 +1,4 @@
+bundle-*/
+*.Blob.asm
+*.Global.*.asm
+MDShell.InjectTable.log
