@@ -97,18 +97,15 @@ ErrorExcept:
 ##
 
 ; ---------------------------------------------------------------
-; Include error handler binary module
+; Error handler blob
 ; ---------------------------------------------------------------
 
 ErrorHandler:
-#ifdef BUNDLE-ASM68K
-	incbin	ErrorHandler.bin
+#ifdef DEBUG
+#include ErrorHandler.Debug.Blob.asm
+#else
+#include ErrorHandler.Blob.asm
 #endif
-##
-#ifdef BUNDLE-AS
-	binclude "ErrorHandler.bin"
-#endif
-##
 
 ; ---------------------------------------------------------------
 ; WARNING!

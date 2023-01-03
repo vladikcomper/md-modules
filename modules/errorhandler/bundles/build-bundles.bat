@@ -1,19 +1,17 @@
 @echo off
 
-copy /Y /B ..\errorhandler.debug.bin _test\ErrorHandler.bin
+python3 ..\..\..\utils\blobtoasm\blobtoasm.py ..\ErrorHandler.bin ErrorHandler.Blob.asm
+python3 ..\..\..\utils\blobtoasm\blobtoasm.py ..\ErrorHandler.Debug.bin ErrorHandler.Debug.Blob.asm
 
 echo --- BUILDING BUNDLE-ASM68K ---
 md bundle-asm68k
-..\..\exec\cbundle bundle-asm68k.asm
-copy /Y /B ..\errorhandler.bin bundle-asm68k\ErrorHandler.bin
+..\..\exec\cbundle bundle-asm68k.cbundle
 
 echo --- BUILDING BUNDLE-ASM68K-DEBUG ---
 md bundle-asm68k-debug
-..\..\exec\cbundle bundle-asm68k-debug.asm
-copy /Y /B ..\errorhandler.debug.bin bundle-asm68k-debug\ErrorHandler.bin
+..\..\exec\cbundle bundle-asm68k-debug.cbundle
 
 
 echo --- BUILDING BUNDLE-AS ---
 md bundle-as
-..\..\exec\cbundle bundle-as.asm
-copy /Y /B ..\errorhandler.bin bundle-as\ErrorHandler.bin
+..\..\exec\cbundle bundle-as.cbundle

@@ -8,7 +8,7 @@
 ; ---------------------------------------------------------------
 
 
-#include Debugger.Constants.am
+#include Debugger.Constants.asm
 
 
 #ifdef BUNDLE-AS
