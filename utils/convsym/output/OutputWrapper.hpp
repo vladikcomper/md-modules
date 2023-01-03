@@ -14,7 +14,7 @@ struct OutputWrapper {
 	virtual ~OutputWrapper() { }
 
 	// Function to setup output
-	static IO::FileOutput* setupOutput( const char * fileName, int32_t appendOffset, int32_t pointerOffset ) {
+	static IO::FileOutput* setupOutput( const char * fileName, int32_t appendOffset, int32_t pointerOffset, bool alignOnAppend ) {
 
 		// If append offset was specified, don't overwrite the contents of file
 		if ( appendOffset != 0 ) {
@@ -31,8 +31,19 @@ struct OutputWrapper {
 			if ( appendOffset == -1 ) {
 				output->setOffset( 0, IO::end );			// move pointer to the end of file ...
 				appendOffset = output->getCurrentOffset();
+
+				// If align on append option is on (default), make sure to pad `appendOffset` if it's not even
+				if (alignOnAppend && ((appendOffset & 1) != 0)) {
+					IO::Log(IO::debug, "Auto-aligning append offset.");
+					output->writeByte(0);
+					appendOffset++;
+				}
 			}
 			else {
+				if (alignOnAppend && ((appendOffset & 1) != 0)) {
+					IO::Log(IO::warning, "An odd append offset is specified; the offset wasn't auto-aligned.");
+				}
+
 				output->setOffset( appendOffset );		// move pointer to the specified append offset
 			}
 
@@ -64,7 +75,8 @@ struct OutputWrapper {
 			const char * fileName, 
 			uint32_t appendOffset = 0, 
 			uint32_t pointerOffset = 0,
-			const char * opts = "" 
+			const char * opts = "",
+			bool alignOnAppend = true
 		) = 0;
 
 };

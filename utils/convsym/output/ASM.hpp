@@ -33,7 +33,12 @@ public:
 			const char * fileName,
 			uint32_t appendOffset = 0,
 			uint32_t pointerOffset = 0,
-			const char * opts = "" ) {
+			const char * opts = "",
+			bool alignOnAppend = true ) {
+
+		if (appendOffset || pointerOffset || !alignOnAppend) {
+			IO::Log(IO::warning, "Append options aren't supported by the \"asm\" output parser.");
+		}
 
 		const char * lineFormat = *opts ? opts : "%s:\tequ\t$%X";
 		IO::FileOutput output = IO::FileOutput( fileName, IO::text );
