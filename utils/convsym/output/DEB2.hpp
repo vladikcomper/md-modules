@@ -38,9 +38,10 @@ public:
 			const char * fileName,
 			uint32_t appendOffset = 0,
 			uint32_t pointerOffset = 0,
-			const char * opts = "" ) {
+			const char * opts = "",
+			bool alignOnAppend = true ) {
 
-		IO::FileOutput output = *OutputWrapper::setupOutput( fileName, appendOffset, pointerOffset );
+		IO::FileOutput output = *OutputWrapper::setupOutput( fileName, appendOffset, pointerOffset, alignOnAppend );
 
 		/* Parse options from "-inopt" agrument's value */
 		bool optFavorLastLabels = false;
