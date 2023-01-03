@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.8									*
+ * ConvSym utility version 2.9									*
  * Main definitions file										*
- * (c) 2017-2018, 2020-2022, Vladikcomper						*
+ * (c) 2017-2018, 2020-2023, Vladikcomper						*
  * ------------------------------------------------------------	*/
 
 #include <cstdio>
