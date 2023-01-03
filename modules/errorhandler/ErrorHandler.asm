@@ -438,6 +438,7 @@ Error_GuessCaller:
 ; ---------------------------------------------------------------
 @caller_found:
 	move.l	(a2), d1
+	beq.s	@try_next_offset		; if offset is zero, branch
 	btst	#0, d1					; is this offset even?
 	bne.s	@try_next_offset		; if not, branch
 	rts
