@@ -415,7 +415,7 @@ def runTests(tests: 'tuple[Test, ...]') -> bool:
 			print(f'FAILED: {value}')
 			has_failed_tests = True
 
-	return has_failed_tests
+	return not has_failed_tests
 
 
 
