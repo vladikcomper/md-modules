@@ -7,7 +7,7 @@ Various debugging modules and utilities for Sega Mega-Drive / Genesis ROMs.
 - **/utils** - the collection of cross-platform utilities used for/by debuggers, written in C++
   - **/utils/convsym** - a symbol data extraction utility;
   - **/utils/cbundle** - a custom pre-processor used to build debugger's bundles from the shared "cross-assembler" source files;
-  - **/utils/blobtoasm** - a utility to convert binary files to M68K assembly with additional tricks (e.g. offset-based expression injection);
+  - **/utils/blobtoasm** - a utility to render binary files in M68K assembly with additional tricks (e.g. offset-based expression injection);
   - **/utils/core** - base C++ classes used by utilities;
 
 - **/modules** - the collection of debugging modules, written in M68K assembly
