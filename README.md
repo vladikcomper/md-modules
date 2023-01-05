@@ -5,9 +5,10 @@ Various debugging modules and utilities for Sega Mega-Drive / Genesis ROMs.
 ## Repository structure
 
 - **/utils** - the collection of cross-platform utilities used for/by debuggers, written in C++
-  - **/utils/convsym** - source code for *ConvSym*, the symbol data extraction utility
-  - **/utils/cbundle** - source code for *CBundle*, custom pre-processor used to build debugger's bundles from the shared "cross-assembler" source files
-  - **/utils/core** - base C++ classes used by utilities
+  - **/utils/convsym** - a symbol data extraction utility;
+  - **/utils/cbundle** - a custom pre-processor used to build debugger's bundles from the shared "cross-assembler" source files;
+  - **/utils/blobtoasm** - a utility to convert binary files to M68K assembly with additional tricks (e.g. offset-based expression injection);
+  - **/utils/core** - base C++ classes used by utilities;
 
 - **/modules** - the collection of debugging modules, written in M68K assembly
   - **/modules/errorhandler** - source code for Error Handler and Debugger blob
