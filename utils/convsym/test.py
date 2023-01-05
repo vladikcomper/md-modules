@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-from typing import cast, Union, Literal, NamedTuple
+from typing import cast, Union, List, Literal, NamedTuple
+from argparse import ArgumentParser
 from dataclasses import dataclass
 from pathlib import Path
 import subprocess
@@ -356,22 +357,41 @@ tests: 'tuple[Test, ...]' = (
 	),
 )
 
-def unarchiveDirectory(path: str):
+def unarchiveDirectory(path: str, *, skipIfExists=True):
+	dir_path = Path(BASE_DIR, path)
+	dir_archive_path = Path(BASE_DIR, path + '.tar.xz')
+	if dir_path.exists() and dir_path.is_dir() and skipIfExists:
+		return
+
+	print(f"Unpacking {str(dir_archive_path)}...")
+	with tarfile.open(dir_archive_path, 'r:xz') as f: f.extractall(BASE_DIR)
+
+
+def archiveDirectory(path: str):
 	dir_path = Path(BASE_DIR, path)
 	dir_archive_path = Path(BASE_DIR, path + '.tar.xz')
 
 	if not dir_path.exists():
-		print(f"Unpacking {str(dir_path)}...")
-		with tarfile.open(dir_archive_path, 'r:xz') as f: f.extractall(dir_path)
+		raise Exception(f'Directory {path} wasn\'t unpacked.')
+	if dir_archive_path.exists():
+		dir_archive_path.unlink()
 
-	if not dir_path.is_dir():
-		raise Exception(f'Expected {dir_path} to be a directory')
+	print(f"Archiving {str(dir_path)} -> {str(dir_archive_path)}")
+	with tarfile.open(dir_archive_path, 'x:xz', preset=9) as f:
+		f.add(dir_path, arcname=path)
 
 
-def main():
-	unarchiveDirectory('input')
-	unarchiveDirectory('output-expected')
+def getUsedFilesList(tests: 'tuple[Test, ...]') -> List[str]:
+	file_sources = [
+		source
+		for test in tests for command in test.pipeline for source in (command.input, command.output)
+		if isinstance(source, File)
+	]
+	file_paths = [ str(source.getPath()) for source in file_sources ]
+	return file_paths
 
+
+def runTests(tests: 'tuple[Test, ...]') -> bool:
 	has_failed_tests = False
 
 	for test_id, test in enumerate(tests):
@@ -395,8 +415,30 @@ def main():
 			print(f'FAILED: {value}')
 			has_failed_tests = True
 
-	if has_failed_tests:
-		exit(1)
+	return not has_failed_tests
+
+
+
+def main():
+	arg_parser = ArgumentParser(description='Handles tests for ConvSym utility')
+	arg_parser.add_argument('-c', '--command', choices=('run', 'update', 'list_files'), default='run')
+	args = arg_parser.parse_args()
+
+	if args.command == 'run':
+		unarchiveDirectory('input', skipIfExists=True)
+		unarchiveDirectory('output-expected', skipIfExists=True)
+
+		success = runTests(tests)
+
+		if not success:
+			exit(1)
+
+	elif args.command == 'update':
+		archiveDirectory('input')
+		archiveDirectory('output-expected')
+
+	elif args.command == 'list_files':
+		print('\n'.join(getUsedFilesList(tests)))
 
 
 if __name__ == '__main__':

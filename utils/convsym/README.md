@@ -77,6 +77,11 @@ Offsets conversion options:
     [output_file]. Data overwrites file contents by default.
     This is usually used to append symbols to ROMs.
 
+  -noalign
+    Don't align symbol data in "Append mode", which is aligned to nearest
+    even offset by default. Using this option is not recommended, it's only 
+    there to retain compatilibity with older ConvSym versions.
+
 Symbol table dump options:
   -org [offset]
     If set, symbol data will placed at the specified [offset] in the output 
@@ -390,6 +395,14 @@ Default parser options can be expressed as follows:
 
 ## Version history
 
+### Version 2.9 (2023-01-05)
+
+* When appending symbol data to the of ROM (when using `-a` flag), ConvSym now auto-aligns it on the even offset;
+* `-noalign` option was added to force the old behavior (don't align on append).
+
+* `asm68k_lst` parser:
+  - Fixed missing support for multiple labels (symbols) on the same offset.
+
 ### Version 2.8 (2022-12-28)
 
 * Completely overhauled `as_lst` parser; it's now stable and "Production-ready".
@@ -409,7 +422,7 @@ Default parser options can be expressed as follows:
 
 ### Version 2.7 (2021-04-27)
 
-* Added support for multiple lables sharing the same offset for all input and output wrappers;
+* Added support for multiple labels sharing the same offset for all input and output wrappers;
 
 * `deb1` and `deb2` output parsers:
 	- Add "/favorLastLabels" option, which toggles choosing last labels when there are multiple labels at the same offset (first labels are preferred otherwise).

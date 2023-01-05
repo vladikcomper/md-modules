@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.8									*
+ * ConvSym utility version 2.9									*
  * Main definitions file										*
- * (c) 2017-2018, 2020-2022, Vladikcomper						*
+ * (c) 2017-2018, 2020-2023, Vladikcomper						*
  * ------------------------------------------------------------	*/
 
 #include <cstdio>
@@ -25,7 +25,7 @@ int main (int argc, const char ** argv) {
 	/* Provide help if no sufficient arguments were passed */
 	if (argc<2) {
 		printf(
-			"ConvSym utility version 2.8\n"
+			"ConvSym utility version 2.9\n"
 			"(c) 2016-2023, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
@@ -70,6 +70,9 @@ int main (int argc, const char ** argv) {
 			"  -a\n"
 			"    Enables \"Append mode\": symbol data is appended to the end of the [output_file]. Data overwrites file contents by default. This is usually used to append symbols to ROMs.\n"
 			"\n"
+			"  -noalign\n"
+			"    Don't align symbol data in \"Append mode\", which is aligned to nearest even offset by default. Using this option is not recommended, it's only there to retain compatilibity with older ConvSym versions.\n"
+			"\n"
 			"Symbol table dump options:\n"
 			"  -org [offset]\n"
 			"    If set, symbol data will placed at the specified [offset] in the output file. This option cannot be used in \"append mode\".\n"
@@ -97,6 +100,7 @@ int main (int argc, const char ** argv) {
 	bool optAppend = false;								// enable or disable append mode
 	bool optDebug = false;								// enable or disable debug output
 	bool optFilterExclude = false;						// regex-based filter mode: include or exclude matched symbols
+	bool optNoAlignOnAppend = false;					// when appending, don't align symbol table on even offsets
 	bool optToUpper = false;
 	bool optToLower = false;
 
@@ -124,6 +128,7 @@ int main (int argc, const char ** argv) {
 				{ "-mask",		{ .type = ArgvParser::record::hexNumber,	.target = &offsetMask											} },
 				{ "-range",		{ .type = ArgvParser::record::hexRange,		.target = &offsetLeftBoundary,	.target2 = &offsetRightBoundary	} },
 				{ "-a",			{ .type = ArgvParser::record::flag,			.target = &optAppend											} },
+				{ "-noalign",	{ .type = ArgvParser::record::flag,			.target = &optNoAlignOnAppend 									} },
 				{ "-debug",		{ .type = ArgvParser::record::flag,			.target = &optDebug												} },
 				{ "-in",		{ .type = ArgvParser::record::string,		.target = &inputWrapperName										} },
 				{ "-input",		{ .type = ArgvParser::record::string,		.target = &inputWrapperName										} },
@@ -210,7 +215,7 @@ int main (int argc, const char ** argv) {
 	if ( Symbols.size() > 0 ) {
 		try {
 			std::unique_ptr<OutputWrapper> output = getOutputWrapper( outputWrapperName );
-			output->parse( Symbols, outputFileName, appendOffset, pointerOffset, outputOpts.c_str() );
+			output->parse( Symbols, outputFileName, appendOffset, pointerOffset, outputOpts.c_str(), !optNoAlignOnAppend );
 		}
 		catch (const char* err) {
 			IO::Log( IO::fatal, "Output generation failed: %s", err );
