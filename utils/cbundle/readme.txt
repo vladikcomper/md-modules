@@ -1,12 +1,25 @@
-CBundle utility version 1.6
-2017-2018, 2020-2021, vladikcomper
+CBundle utility version 2.0
+2017-2023, vladikcomper
 
 Command line arguments:
-  cbundle [script_file_path|-]
+  cbundle [script_file_path|-] [OPTIONS]
 
 NOTICE: Using "-" as a script file path redirects input to stdin.
 
-List of supported directives:
+OPTIONS:
+  -out [output_file_path|-]
+    If set, writes output to the given path, unless overriden by #file directive. Using - will redirect to stdout.
+
+  -def [symbol]
+    Pre-defines a symbol with the given, equivalent to #def [symbol] directive. To specify several symbols, repeat -def [symbol] as many times as needed.
+
+  -cwd [dir]
+    If set, changes current working directory to [dir]. Path can be relative.
+
+  -debug
+    Enable debug output.
+
+SUPPORTED DIRECTIVES:
 
   #define <Symbol>
     Defines a symbol.

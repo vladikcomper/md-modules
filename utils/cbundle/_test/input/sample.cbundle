@@ -4,7 +4,7 @@
 
 This raw line should be skipped as not part of any file...
 
-#file output-1.txt
+#file output/sample-file-1.txt
 This file contains only raw strings ...
 ... and no directives.
 #endf
@@ -12,8 +12,8 @@ This file contains only raw strings ...
 ## Define some symbols ...
 #define TestSymbol
 
-#file output-2.txt
-#include common-include.txt
+#file output/sample-file-2.txt
+#include input/sample-common-include.txt
 #ifdef TestSymbol2
 	This text AND the following block should have no effect...
 	#ifdef 1
