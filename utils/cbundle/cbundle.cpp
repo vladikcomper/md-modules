@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * Bundle Compilation utility v.1.6								*
+ * Bundle Compilation utility v.2.0								*
  * Main definitions file										*
- * (c) 2017-2018, 2020-2021, Vladikcomper						*
+ * (c) 2017-2023, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 // Standard C-libraries
@@ -29,8 +29,8 @@ int main (int argc, const char ** argv) {
 	/* Provide help if called without enough options */
 	if (argc<2) {
 		printf(
-			"CBundle utility version 1.6\n"
-			"2017-2018, 2020-2021, vladikcomper\n"
+			"CBundle utility version 2.0\n"
+			"2017-2023, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
 			"  cbundle [script_file_path|-]\n"
@@ -71,11 +71,16 @@ int main (int argc, const char ** argv) {
 
 	/* Parse command line arguments */
 	const char *inputFileName = argv[1];
+	std::string outputFileName = "";
+	std::vector<std::string> predefinedSymbols;
+
 	bool optDebug = false;
 	{
 		const std::map <std::string, ArgvParser::record>
 			ParametersList {
-				{ "-debug",	{ .type = ArgvParser::record::flag, .target = &optDebug } }
+				{ "-debug",	{ .type = ArgvParser::record::flag, 		.target = &optDebug 			} },
+				{ "-out",	{ .type = ArgvParser::record::string,		.target = &outputFileName 		} },
+				{ "-def",	{ .type = ArgvParser::record::string_list,	.target = &predefinedSymbols 	} },
 			};
 
 		/* Decode parameters acording to list defined by "ParametersList" variable */
@@ -89,9 +94,27 @@ int main (int argc, const char ** argv) {
 	}
 
 	IO::LogLevel = optDebug ? IO::debug : IO::warning;
+
+	/* Pre-define symbols of requested */
+	if (!predefinedSymbols.empty()) {
+		for (auto symbol : predefinedSymbols) {
+			Parser::symbols.insert(symbol);
+		}
+	}
 	
 	/* Process input file */
-	bool result = Parser::parseFile( inputFileName );
+	bool result = false;
+	if (!outputFileName.empty()) {
+		Parser::parseData out = {
+			.file = new IO::FileOutput(outputFileName.c_str()),
+			.fileName = outputFileName.c_str(),
+			.lineNumber = 0
+		};
+		result = Parser::parseFile( inputFileName, &out );
+	}
+	else {
+		result = Parser::parseFile( inputFileName );
+	}
 
 	if (result == false) {
 		IO::Log( IO::fatal, "Bundle generation failed." );
