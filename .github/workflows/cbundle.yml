@@ -1,0 +1,21 @@
+name: CBundle
+
+on:
+  push:
+    branches: [ "master" ]
+    paths: [ "utils/core/**", "utils/core-py/**", "utils/cbundle/**" ]
+  pull_request:
+    branches: [ "master" ]
+    paths: [ "utils/core/**", "utils/core-py/**", "utils/cbundle/**" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: cd utils/cbundle && ./build.sh
+    - name: Test
+      run: cd utils/cbundle && ./test.py
+ 
