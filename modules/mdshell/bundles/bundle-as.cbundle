@@ -1,0 +1,9 @@
+################################################################
+## Bundle compilation script for use in AS-based programs     ##
+################################################################
+
+#define BUNDLE-AS
+
+#file bundle-as/MDShell.asm
+#include MDShell.asm
+#endf
