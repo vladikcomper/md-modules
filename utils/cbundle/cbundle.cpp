@@ -10,6 +10,7 @@
 #include <cstdint>			// for uint8_t, uint16_t, etc.
 #include <cstdarg>			// for va_start, va_end, etc.
 #include <cstring>			// for strlen, strncspn, etc.
+#include <filesystem>
 
 // Standard C++ libraries
 #include <string>			// for strings processing
@@ -33,11 +34,24 @@ int main (int argc, const char ** argv) {
 			"2017-2023, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
-			"  cbundle [script_file_path|-]\n"
+			"  cbundle [script_file_path|-] [OPTIONS]\n"
 			"\n"
 			"NOTICE: Using \"-\" as a script file path redirects input to stdin.\n"
 			"\n"
-			"List of supported directives:\n"
+			"OPTIONS:\n"
+			"  -out [output_file_path|-]\n"
+			"    If set, writes output to the given path, unless overriden by #file directive. Using - will redirect to stdout.\n"
+			"\n"
+			"  -def [symbol]\n"
+			"    Pre-defines a symbol with the given, equivalent to #def [symbol] directive. To specify several symbols, repeat -def [symbol] as many times as needed.\n"
+			"\n"
+			"  -cwd [dir]\n"
+			"    If set, changes current working directory to [dir]. Path can be relative.\n"
+			"\n"
+			"  -debug\n"
+			"    Enable debug output.\n"
+			"\n"
+			"SUPPORTED DIRECTIVES:\n"
 			"\n"
 			"  #define <Symbol>\n"
 			"    Defines a symbol.\n"
@@ -72,6 +86,7 @@ int main (int argc, const char ** argv) {
 	/* Parse command line arguments */
 	const char *inputFileName = argv[1];
 	std::string outputFileName = "";
+	std::string currentPathOverride = "";
 	std::vector<std::string> predefinedSymbols;
 
 	bool optDebug = false;
@@ -79,6 +94,7 @@ int main (int argc, const char ** argv) {
 		const std::map <std::string, ArgvParser::record>
 			ParametersList {
 				{ "-debug",	{ .type = ArgvParser::record::flag, 		.target = &optDebug 			} },
+				{ "-cwd",	{ .type = ArgvParser::record::string,		.target = &currentPathOverride 	} },
 				{ "-out",	{ .type = ArgvParser::record::string,		.target = &outputFileName 		} },
 				{ "-def",	{ .type = ArgvParser::record::string_list,	.target = &predefinedSymbols 	} },
 			};
@@ -100,6 +116,11 @@ int main (int argc, const char ** argv) {
 		for (auto symbol : predefinedSymbols) {
 			Parser::symbols.insert(symbol);
 		}
+	}
+
+	/* Override current working directory if requested */
+	if (!currentPathOverride.empty()) {
+		std::filesystem::current_path(std::filesystem::absolute(currentPathOverride));
 	}
 	
 	/* Process input file */
