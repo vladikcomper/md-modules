@@ -3,13 +3,13 @@ name: ConvSym
 on:
   push:
     branches: [ "master" ]
-    paths: [ "utils/core/**", "utils/convsym/**" ]
+    paths: [ "utils/core/**", "utils/core-py/**", "utils/convsym/**" ]
   pull_request:
     branches: [ "master" ]
-    paths: [ "utils/core/**", "utils/convsym/**" ]
+    paths: [ "utils/core/**", "utils/core-py/**", "utils/convsym/**" ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
