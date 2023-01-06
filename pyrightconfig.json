@@ -1,0 +1,4 @@
+{
+	"pythonVersion": "3.8",
+	"extraPaths": ["utils/core-py"]
+}
