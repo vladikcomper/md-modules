@@ -20,9 +20,9 @@
 ; ---------------------------------------------------------------
 
 #ifdef ASM68K
-	include	"..\bundle-asm68k\MDShell.asm"
+	include	"..\..\bundle-asm68k\MDShell.asm"
 #else
-	include "..\bundle-as\MDShell.asm"
+	include "..\..\bundle-as\MDShell.asm"
 #endif
 
 ; --------------------------------------------------------------
