@@ -4,7 +4,7 @@
 ; Error handling and debugging modules
 ; 2016-2023, Vladikcomper
 ; ---------------------------------------------------------------
-; Format String testing module
+; Guess caller testing module
 ; ---------------------------------------------------------------
 
 	include "_test\MDShell.asm"

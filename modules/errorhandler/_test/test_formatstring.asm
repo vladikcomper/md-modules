@@ -7,7 +7,7 @@
 ; Format String testing module
 ; ---------------------------------------------------------------
 
-	include "MDShell-v11.asm"
+	include "MDShell.asm"
 
 ; ---------------------------------------------------------------
 	jmp		Main(pc)					; entry point
@@ -33,7 +33,7 @@ _bufferSize = $20					; if you change this, you have to alter all the buffer ove
 _canaryValue = $DC					; an arbitrary byte value, written after the buffer to detect overflows
 
 Main:
-	Console.Write <color|fgWhite,'Running "FormatString" tests...', endl>
+	Console.WriteLine 'Running "FormatString" tests...'
 
 	lea		@TestsData(pc), a6		; a6 = tests data
 	lea		StringsBuffer, a5		; a5 = string buffer
@@ -79,39 +79,40 @@ Main:
 		tst.w	(a6)							; is test header valid?
 		bpl.w	@RunTest						; if yes, keep doing tests
 		
-	Console.Write <color|fgWhite,endl,'Number of completed tests: ',dec, endl>, { <.b d1> }
-	Console.Write <color|fgGreen,'ALL TESTS HAVE PASSED SUCCESSFULLY', endl>
+	Console.WriteLine 'Number of completed tests: %<.b d1 dec>'
+	Console.WriteLine '%<pal1>ALL TESTS HAVE PASSED SUCCESSFULLY'
 	rts
 
 	; -------------------------------------------------------------------------		
 	@PrintFailureHeader:
-		Console.Write <color|fgRed,'Test #', dec, ' FAILED', endl>, { <.b d1> }
+		Console.WriteLine '%<pal2>Test #%<.b d1 dec> FAILED'
 		rts
 
 	; -------------------------------------------------------------------------		
 	@PrintFailureDiff:
-		Console.Write <color|fgWhite, 'Got:', endl, color|fgGrey, '"', str, '"', endl, color|fgWhite, 'Expected:', endl, color|fgGrey, '"', str, '"', endl >, { <.l a2>, <.l a3> }
+		Console.WriteLine '%<pal0>Got:%<endl>%<pal2>"%<.l a2 str>"'
+		Console.WriteLine '%<pal0>Expected:%<endl>%<pal2>"%<.l a3 str>"'
 		
 	@HaltTests:
-		Console.Write <color|fgRed,'TEST FAILURE, STOPPING', endl>
+		Console.WriteLine '%<pal1>TEST FAILURE, STOPPING'
 		rts
 
 	; -------------------------------------------------------------------------		
 	@BufferOverflow:
 		bsr	@PrintFailureHeader
-		Console.Write <color|fgRed,'Error: Writting past the end of buffer', endl>
+		Console.WriteLine '%<pal1>Error: Writting past the end of buffer'
 		bra @HaltTests
 
 	; -------------------------------------------------------------------------		
 	@SizeMismatch:
 		bsr	@PrintFailureHeader
-		Console.Write <color|fgRed,'Error: Size mismatch (',hex,'<>',hex,')', endl>, { <.b d3>, <.b d4> }
+		Console.WriteLine '%<pal1>Error: Size mismatch (%<.b d3> != %<.b d4>)'
 		bra	@PrintFailureDiff
 
 	; -------------------------------------------------------------------------		
 	@ByteMismatch:
 		bsr	@PrintFailureHeader
-		Console.Write <color|fgRed,'Error: Byte mismatch (',hex,'<>',hex,')', endl>, { <.b -1(a1)>, <.b -1(a5)> }
+		Console.WriteLine '%<pal1>Error: Byte mismatch (%<.b -1(a1)> != %<.b -1(a5)>)'
 		bra	@PrintFailureDiff
 
 ; --------------------------------------------------------------
