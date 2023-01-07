@@ -18,7 +18,12 @@ _ValidHeader = $DEB2
 ; ---------------------------------------------------------------
 
 GetSymbolByOffset:
-	lea		SymbolData(pc), a1
+	if def(_USE_SYMBOL_DATA_REF_)
+		movea.l	(SymbolData_Ptr).l, a1
+	else
+		lea		SymbolData(pc), a1
+	endc
+
 	cmp.w	#_ValidHeader, (a1)+	; verify header
 	bne.s	@return_error
 
@@ -137,7 +142,11 @@ GetSymbolByOffset:
 ; ---------------------------------------------------------------
 
 DecodeSymbol:
-	lea		SymbolData(pc), a3
+	if def(_USE_SYMBOL_DATA_REF_)
+		movea.l	(SymbolData_Ptr).l, a3
+	else
+		lea		SymbolData(pc), a3
+	endc
 	cmp.w	#_ValidHeader, (a3)+			; verify the header
 	bne.s	@return_cc
 	add.w	(a3), a3						; a3 = Huffman code table
