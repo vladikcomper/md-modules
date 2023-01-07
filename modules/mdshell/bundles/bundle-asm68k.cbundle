@@ -1,9 +1,0 @@
-################################################################
-## Bundle compilation script for use in ASM68K-based programs ##
-################################################################
-
-#define BUNDLE-ASM68K
-
-#file bundle-asm68k/MDShell.asm
-#include MDShell.asm
-#endf
