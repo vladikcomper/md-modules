@@ -149,7 +149,9 @@ Console_SetPosAsXY: __global
 	add.w	d0, d2
 	add.w	d0, d2
 	move.w	d2, (a3)
-	move.l	(a3), VDP_Ctrl
+	move.l	(a3)+, VDP_Ctrl
+
+	move.w	(a3)+, (a3)+			; Reset remaining characters counter
 
 @quit:
 	movem.l	(sp)+, d1-d2/a3

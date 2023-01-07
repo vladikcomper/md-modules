@@ -4,15 +4,18 @@ Various debugging modules and utilities for Sega Mega-Drive / Genesis ROMs.
 
 ## Repository structure
 
-- **/utils** - the collection of cross-platform utilities used for/by debuggers, written in C++
-  - **/utils/convsym** - source code for *ConvSym*, the symbol data extraction utility
-  - **/utils/cbundle** - source code for *CBundle*, custom pre-processor used to build debugger's bundles from the shared "cross-assembler" source files
-  - **/utils/core** - base C++ classes used by utilities
+This repository includes modules for Mega-Drive projects (`modules/` directory) and various utilities (`utils/` directory) in one place, since most of them are tightly integrated or depend on each other. See below for the lists of modules and utilities.
 
-- **/modules** - the collection of debugging modules, written in M68K assembly
-  - **/modules/errorhandler** - source code for Error Handler and Debugger blob
-    - **/modules/errorhandler/bundles** - bundles source code that define debugger macros and integrate pre-compiled Error Handler blob into your projects.
-  - **/modules/core** - source code for debugger's core, which includes Console subsystem (used by Error Handler)
+### Modules
+
+* [Error Handler](modules/errorhandler) - source code for the Advanced Error Handler and Debugger for Mega-Drive ROMs;
+  * [Error Handler/bundles](modules/errorhandler/bundles) - bundles source code that define debugger macros and integrate pre-compiled Error Handler blob into your projects;
+
+### Utilities
+
+* [ConvSym](utils/convsym) _(C++20)_ - a symbol extraction and conversion utility;
+* [CBundle](utils/cbundle) _(C++20)_ - a custom pre-processor used to build debugger's bundles from the shared "cross-assembler" source files;
+* [BlobToAsm](utils/blobtoasm) _(Python 3.8+)_ - a utility to render binary files in M68K assembly with additional tricks (e.g. offset-based expression injection);
 
 ## Pre-built utility binaries
 

@@ -5,3 +5,6 @@ set -e
 
 mkdir -p bundle-asm68k
 ../../exec/cbundle bundle-asm68k.cbundle
+
+mkdir -p bundle-as
+../../exec/cbundle bundle-as.cbundle

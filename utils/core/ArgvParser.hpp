@@ -9,6 +9,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include "IO.hpp"
 
@@ -17,7 +18,7 @@ namespace ArgvParser {
 
 	/* Structure that handles parameter definitions */
 	struct record {
-		enum { flag, hexNumber, hexRange, string } type;
+		enum { flag, hexNumber, hexRange, string, string_list } type;
 		void * target;
 		void * target2;
 	};
@@ -57,6 +58,11 @@ namespace ArgvParser {
 					case record::string:
 						_GET_NEXT_ARGUMENT
 						*((std::string*)parameter->second.target) = argv[i];
+						break;
+
+					case record::string_list:
+						_GET_NEXT_ARGUMENT
+						((std::vector<std::string>*)parameter->second.target)->emplace_back(argv[i]);
 						break;
 						
 					default:
