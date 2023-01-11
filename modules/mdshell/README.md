@@ -98,7 +98,10 @@ Since `x` and `y` are _operands_, all M68K addressing modes may be used to pass 
 
 Adds a newline.
 
-**Alternative:** Console.Write "%<endl>"
+**Alternative:**
+
+        Console.Write "%<endl>"
+
 
 ## Formatted string reference
 
