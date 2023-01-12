@@ -7,7 +7,7 @@
 ; Format String testing module
 ; ---------------------------------------------------------------
 
-	include "MDShell.asm"
+	include "..\..\mdshell\bundles\bundle-asm68k\MDShell.asm"
 
 ; ---------------------------------------------------------------
 	jmp		Main(pc)					; entry point

@@ -7,7 +7,7 @@
 ; Guess caller testing module
 ; ---------------------------------------------------------------
 
-	include "_test\MDShell.asm"
+	include "..\mdshell\bundles\bundle-asm68k\MDShell.asm"
 
 ; ---------------------------------------------------------------
 
@@ -25,22 +25,6 @@ Main:
 
 	Console.WriteLine "ALL DONE"
 	rts
-
-; ---------------------------------------------------------------
-; Macro to implement assertions
-; ---------------------------------------------------------------
-
-assert	macro	src, cond, dest
-	if narg=3
-		cmp.\0	\dest, \src
-	else narg=2
-		tst.\0	\src
-	endc
-	b\cond\.s	@skip\@
-	RaiseError	"Assertion failed:%<endl>\src \cond \dest"
-
-@skip\@:
-        endm
 
 ; ---------------------------------------------------------------
 ; Test "Error_MaskStackBoundaries"
