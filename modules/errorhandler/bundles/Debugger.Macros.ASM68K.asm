@@ -9,7 +9,7 @@
 ; ---------------------------------------------------------------
 
 assert	macro	src, cond, dest
-#ifdef MD-SHELL
+#ifndef MD-SHELL
 	; Assertions only work in DEBUG builds
 	ifdef __DEBUG__
 #endif
@@ -21,7 +21,7 @@ assert	macro	src, cond, dest
 		b\cond\.s	@skip\@
 		RaiseError	"Assertion failed:%<endl>\src \cond \dest"
 	@skip\@:
-#ifdef MD-SHELL
+#ifndef MD-SHELL
 	endc
 #endif
 	endm

@@ -18,7 +18,7 @@
 ; ---------------------------------------------------------------
 
 assert	macro	SRC, COND, DEST
-#ifdef MD-SHELL
+#ifndef MD-SHELL
 	; Assertions only work in DEBUG builds
 	ifdef __DEBUG__
 #endif
