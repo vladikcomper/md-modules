@@ -25,6 +25,7 @@ For your convenience, this repository includes pre-built utility binaries, as th
 Binaries are provided for the following platforms:
 * **Windows 64-bit** (Windows 7 and above)
 * **Linux 64-bit**
+* **MacOS 64-bit** (built on MacOS Big Sur)
 
 ## Building utilities
 
@@ -36,7 +37,7 @@ No dependencies are used rather than Standard C++ library.
 
 Builds have been tested and are expected to work with the following compilers: 
 * __GCC__ versions 6 through 12
-* __Clang__ verions 15
+* __Clang__ version 15
 
 Other popular compilers are expected to work as well.
 
@@ -44,11 +45,11 @@ Generally, only x86_64 architecture is tested, but utils are expected to build f
 
 ### Building and testing
 
-Utilities come with simple build scripts for Windows (`build.bat`) and Linux (`build.sh`).
+Utilities come with simple build scripts for Windows (`build.bat`) and Linux/MacOS (`build.sh`).
 
 Go to utility directory (e.g. `utils/convsym`) and run `build.bat` or `build.sh` dependening on your system.
 
-To test executables in your environment, run `test.bat` or `test.sh`, depending on system.
+To test executables in your environment, run `test.py` (Python 3.8+ is required).
 
 ## Building modules
 
