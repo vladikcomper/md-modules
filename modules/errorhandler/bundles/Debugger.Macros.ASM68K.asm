@@ -1,3 +1,40 @@
+; ---------------------------------------------------------------
+; Creates assertions for debugging
+; ---------------------------------------------------------------
+; EXAMPLES:
+;	assert.b	d0, eq, #1		; d0 must be $01, or else crash!
+;	assert.w	d5, eq			; d5 must be $0000!
+;	assert.l	a1, hi, a0		; asert a1 > a0, or else crash!
+;	assert.b	MemFlag, ne		; MemFlag must be non-zero!
+; ---------------------------------------------------------------
+
+assert	macro	src, cond, dest
+#ifdef MD-SHELL
+	; Assertions only work in DEBUG builds
+	ifdef __DEBUG__
+#endif
+	if narg=3
+		cmp.\0	\dest, \src
+	else narg=2
+		tst.\0	\src
+	endc
+		b\cond\.s	@skip\@
+		RaiseError	"Assertion failed:%<endl>\src \cond \dest"
+	@skip\@:
+#ifdef MD-SHELL
+	endc
+#endif
+	endm
+
+; ---------------------------------------------------------------
+; Raises an error with the given message
+; ---------------------------------------------------------------
+; EXAMPLES:
+;	RaiseError	"Something is wrong"
+;	RaiseError	"Your D0 value is BAD: %<.w d0>"
+;	RaiseError	"Module crashed! Extra info:", YourMod_Debugger
+; ---------------------------------------------------------------
+
 RaiseError &
 	macro	string, console_program, opts
 
@@ -19,6 +56,17 @@ RaiseError &
 	endm
 
 ; ---------------------------------------------------------------
+; Console interface
+; ---------------------------------------------------------------
+; EXAMPLES:
+;	Console.Run	YourConsoleProgram
+;	Console.Write "Hello "
+;	Console.WriteLine "...world!"
+;	Console.SetXY #1, #4
+;	Console.WriteLine "Your data is %<.b d0>"
+;	Console.WriteLine "%<pal0>Your code pointer: %<.l a0 sym>"
+; ---------------------------------------------------------------
+
 Console &
 	macro
 
