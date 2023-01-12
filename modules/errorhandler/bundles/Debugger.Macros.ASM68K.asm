@@ -11,7 +11,7 @@
 assert	macro	src, cond, dest
 #ifndef MD-SHELL
 	; Assertions only work in DEBUG builds
-	ifdef __DEBUG__
+	if def(__DEBUG__)
 #endif
 	if narg=3
 		cmp.\0	\dest, \src
