@@ -7,8 +7,8 @@
 ; Console testing module
 ; ---------------------------------------------------------------
 
-	incbin	"MDShell.bin"
-	include	"..\bundle-asm68k-debug\Debugger.asm"
+	incbin	"..\MDShell.bin"
+	include	"..\..\bundle-asm68k-debug\Debugger.asm"
 
 ; --------------------------------------------------------------
 
@@ -45,4 +45,4 @@ GlobalData:
 
 ; --------------------------------------------------------------
 
-	include	"..\bundle-asm68k-debug\ErrorHandler.asm"
+	include	"..\..\bundle-asm68k-debug\ErrorHandler.asm"

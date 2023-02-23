@@ -35,11 +35,11 @@ long	equ		3
 signed	equ		8
 
 ; for symbol formatters ...
-split	equ		8
+split	equ		8				; display symbol/offset only, don't draw displacement yet ...
 forced	equ		4				; display <unknown> if symbol was not found
 
 ; for symbol displacement or offset formatters ...
-weak	equ		8				; don't draw offset after <unknown> symbol
+weak	equ		8				; don't draw offset (for use with _sym|forced, see above)
 
 ; ---------------------------------------------------------------
 FormatString:	__global

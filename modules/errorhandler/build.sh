@@ -1,3 +1,6 @@
+#!/usr/bin/sh
+set -e
+
 wine ../exec/asm68k.exe /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- ErrorHandler.asm, ErrorHandler.bin, , ErrorHandler.lst
 ../exec/convsym ErrorHandler.lst "bundles/ErrorHandler.Global.ASM68K.asm" -input asm68k_lst -inopt "/processLocals-" -output asm -outopt "ErrorHandler.%s equ ErrorHandler+$%X" -inopt "/processLocals-" -filter "__global_.+"
 ../exec/convsym ErrorHandler.lst "bundles/ErrorHandler.Global.AS.asm" -input asm68k_lst -inopt "/processLocals-" -output asm -outopt "ErrorHandler_%s: label ErrorHandler+$%X" -inopt "/processLocals-" -filter "__global_.+"

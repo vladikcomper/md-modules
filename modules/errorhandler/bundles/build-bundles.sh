@@ -1,16 +1,17 @@
-cp ../ErrorHandler.Debug.bin _test/ErrorHandler.bin
+#!/usr/bin/sh
+set -e
+
+../../../utils/blobtoasm/blobtoasm.py ../ErrorHandler.bin ErrorHandler.Blob.asm
+../../../utils/blobtoasm/blobtoasm.py ../ErrorHandler.Debug.bin ErrorHandler.Debug.Blob.asm
 
 echo --- BUILDING BUNDLE-ASM68K ---
 mkdir -p bundle-asm68k
-../../exec/cbundle bundle-asm68k.asm
-cp ../ErrorHandler.bin bundle-asm68k/ErrorHandler.bin
+../../exec/cbundle bundle-asm68k.cbundle
 
 echo --- BUILDING BUNDLE-ASM68K-DEBUG ---
 mkdir -p bundle-asm68k-debug
-../../exec/cbundle bundle-asm68k-debug.asm
-cp ../ErrorHandler.Debug.bin bundle-asm68k-debug/ErrorHandler.bin
+../../exec/cbundle bundle-asm68k-debug.cbundle
 
 echo --- BUILDING BUNDLE-AS ---
 mkdir -p bundle-as
-../../exec/cbundle bundle-as.asm
-cp ../ErrorHandler.bin bundle-as/ErrorHandler.bin
+../../exec/cbundle bundle-as.cbundle
