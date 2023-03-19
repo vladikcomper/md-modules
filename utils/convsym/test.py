@@ -299,6 +299,17 @@ tests: 'tuple[Test, ...]' = (
 			CheckMatch(output=File('output-expected/sonic-3k-git-2022.as_lst_exp.log'), text=True),
 		),
 	),
+	Test(
+		description = 'asm68k_sym->log no-process-locals test (Custom Kernel)',
+		pipeline=(
+			ConvSym(
+				input = File('input/kernel.sym'),
+				output = File('output/kernel.log'),
+				options = ('-in', 'asm68k_sym', '-out', 'log', '-inopt', '/processLocals-')
+			),
+			CheckMatch(output=File('output-expected/kernel.log'), text=True),
+		),
+	),
 )
 
 
