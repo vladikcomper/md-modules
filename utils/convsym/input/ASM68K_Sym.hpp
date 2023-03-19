@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.9									*
+ * ConvSym utility version 2.9.1								*
  * Input wrapper for the ASM68K compiler's symbol format		*
  * ------------------------------------------------------------	*/
 
