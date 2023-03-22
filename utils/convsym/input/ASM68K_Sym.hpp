@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.9									*
+ * ConvSym utility version 2.9.1								*
  * Input wrapper for the ASM68K compiler's symbol format		*
  * ------------------------------------------------------------	*/
 
@@ -98,7 +98,12 @@ struct Input__ASM68K_Sym : public InputWrapper {
 			// Construct full label's name as std::string object
 			std::string strLabel;
 
-			if ( optProcessLocalLabels && (it->second[0] == localLabelSymbol) ) {
+			if (it->second[0] == localLabelSymbol) {
+				// Ignore local labels if "processLocals" is disabled
+				if ( !optProcessLocalLabels ) {
+					IO::Log( IO::debug, "Local symbol ignored: %s", strLabel.c_str() );
+					continue;
+				}
 				strLabel  = strLastGlobalLabel;
 				strLabel += localLabelRef;
 				strLabel += it->second.substr(1);	// ignore first character of local label

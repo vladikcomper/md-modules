@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.9									*
+ * ConvSym utility version 2.9.1								*
  * Output wrapper for simple symbol logging						*
  * ------------------------------------------------------------	*/
 
