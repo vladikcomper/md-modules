@@ -395,6 +395,11 @@ Default parser options can be expressed as follows:
 
 ## Version history
 
+### Version 2.9.1 (2023-03-22)
+
+* `asm68k_sym` parser:
+  - Fixed incorrect behavior of `/processLocals-` option switch, if local labels were present in the symbol file. ConvSym would just add local labels in raw unprocessed form (e.g. `@local`, not `globalParent.local`) instead of ignoring them.
+
 ### Version 2.9 (2023-01-05)
 
 * When appending symbol data to the of ROM (when using `-a` flag), ConvSym now auto-aligns it on the even offset;
