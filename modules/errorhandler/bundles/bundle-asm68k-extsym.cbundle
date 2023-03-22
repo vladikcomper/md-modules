@@ -1,0 +1,14 @@
+################################################################
+## Bundle compilation script for use in ASM68K-based programs ##
+################################################################
+
+#define BUNDLE-ASM68K
+#define EXTSYM
+
+#file bundle-asm68k-extsym/Debugger.asm
+#include Debugger.asm
+#endf
+
+#file bundle-asm68k-extsym/ErrorHandler.asm
+#include ErrorHandler.asm
+#endf

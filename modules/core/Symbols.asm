@@ -19,6 +19,7 @@ _ValidHeader = $DEB2
 
 GetSymbolByOffset:
 	if def(_USE_SYMBOL_DATA_REF_)
+__inject_symboldata_ptr_1:	; can be used by Blob2Asm, a symbol injector (aka poor man's linker)
 		movea.l	(SymbolData_Ptr).l, a1
 	else
 		lea		SymbolData(pc), a1
@@ -143,6 +144,7 @@ GetSymbolByOffset:
 
 DecodeSymbol:
 	if def(_USE_SYMBOL_DATA_REF_)
+__inject_symboldata_ptr_2:	; can be used by Blob2Asm, a symbol injector (aka poor man's linker)
 		movea.l	(SymbolData_Ptr).l, a3
 	else
 		lea		SymbolData(pc), a3
