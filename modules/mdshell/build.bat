@@ -1,6 +1,6 @@
 @echo off
 
-..\exec\asm68k.exe /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- MDShell.asm, MDShell.bin, MDShell.sym, MDShell.lst
+..\exec\asm68k.exe /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- MDShell.asm, MDShell.bin, MDShell.sym, MDShell.lst
 
 rem Collect global symbols for MDShell bundle
 ..\exec\convsym.exe MDShell.sym "bundles\MDShell.Global.ASM68K.asm" -output asm -outopt "ErrorHandler.%s equ $%X" -filter "__global_.+"

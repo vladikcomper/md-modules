@@ -12,7 +12,7 @@
 ; ---------------------------------------------------------------
 
 			rsreset
-Console_RAM				equ		__RS
+Console_RAM				equ		__rs
 Console.ScreenPosReq	rs.l	1				;		screen position request for VDP
 Console.CharsPerLine	rs.w	1				; d2	number of characters per line
 Console.CharsRemaining	rs.w	1				; d3	remaining number of characters
@@ -20,7 +20,7 @@ Console.BasePattern		rs.w	1				; d4	base pattern
 Console.ScreenRowSz		rs.w	1				; d6	row size within screen position
 Console.Validator		rs.b	1				;		should contain $5D to ensure this is valid console memory area
 						rs.b	1				;		<<FREE>>
-Console_RAM.size		equ		__RS-Console_RAM
+Console_RAM.size		equ		__rs-Console_RAM
 
 ; Drawing flags supported in strings
 _newl	equ		$E0
