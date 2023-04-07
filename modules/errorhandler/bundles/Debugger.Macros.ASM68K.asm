@@ -70,7 +70,7 @@ RaiseError &
 Console &
 	macro
 
-	if strcmp("\0","write")|strcmp("\0","writeline")
+	if strcmp("\0","write")|strcmp("\0","writeline")|strcmp("\0","Write")|strcmp("\0","WriteLine")
 		move.w	sr, -(sp)
 		__FSTRING_GenerateArgumentsCode \1
 		movem.l	a0-a2/d7, -(sp)
@@ -78,7 +78,7 @@ Console &
 			lea		4*4(sp), a2
 		endc
 		lea		@str\@(pc), a1
-		jsr		ErrorHandler.__global__console_\0\_formatted
+		jsr		ErrorHandler.__global__Console_\0\_Formatted
 		movem.l	(sp)+, a0-a2/d7
 		if (__sp>8)
 			lea		__sp(sp), sp
@@ -92,24 +92,24 @@ Console &
 		even
 	@instr_end\@:
 
-	elseif strcmp("\0","run")
-		jsr		ErrorHandler.__extern__console_only
+	elseif strcmp("\0","run")|strcmp("\0","Run")
+		jsr		ErrorHandler.__extern__Console_Only
 		jsr		\1
 		bra.s	*
 
-	elseif strcmp("\0","setxy")
+	elseif strcmp("\0","setxy")|strcmp("\0","SetXY")
 		move.w	sr, -(sp)
 		movem.l	d0-d1, -(sp)
 		move.w	\2, -(sp)
 		move.w	\1, -(sp)
-		jsr		ErrorHandler.__global__console_setposasxy_stack
+		jsr		ErrorHandler.__global__Console_SetPosAsXY_Stack
 		addq.w	#4, sp
 		movem.l	(sp)+, d0-d1
 		move.w	(sp)+, sr
 
-	elseif strcmp("\0","breakline")
+	elseif strcmp("\0","breakline")|strcmp("\0","BreakLine")
 		move.w	sr, -(sp)
-		jsr		ErrorHandler.__global__console_startnewline
+		jsr		ErrorHandler.__global__Console_StartNewLine
 		move.w	(sp)+, sr
 
 	else
