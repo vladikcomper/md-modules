@@ -278,4 +278,4 @@ MDShell_SelfCheck:
 ; ---------------------------------------------------------------
 @Str_InitialTest:
 	dc.b	_pal1, _newl, _setx, 1, _setw, 38, 'MD Shell Self-Diagnostics', _newl, 0
-
+	even
