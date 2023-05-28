@@ -115,6 +115,7 @@ ErrorHandler:
 #endif
 #endif
 
+#ifndef EXTSYM
 ; ---------------------------------------------------------------
 ; WARNING!
 ;	DO NOT put any data from now on! DO NOT use ROM padding!
@@ -122,3 +123,4 @@ ErrorHandler:
 ;	by ConvSym utility, otherwise debugger modules won't be able
 ;	to resolve symbol names.
 ; ---------------------------------------------------------------
+#endif
