@@ -97,23 +97,15 @@ ErrorHandler:
 	beq.s	@skip							; if not, branch
 
 	lea 	Str_Address(pc), a1				; a1 = formatted string
-	move.l	2(a4), d1
-	move.l	d1, -(sp)
-	move.l	d1, -(sp)
-	lea		(sp), a2						; a2 = arguments buffer
-	jsr		Console_WriteLine_Formatted(pc)
-	addq.w	#8, sp							; free arguments buffer
+	move.l	2(a4), d1						; d1 = address error offset
+	jsr		Error_DrawOffsetLocation(pc)
 	addq.w	#8, a4							; skip extension part of the stack frame
 @skip:
 
 	; Print module name error occured in
 	lea 	Str_Module(pc), a1				; a1 = formatted string
-	move.l	2(a4), d1
-	move.l	d1, -(sp)
-	move.l	d1, -(sp)
-	lea		(sp), a2						; a2 = arguments buffer
-	jsr		Console_WriteLine_Formatted(pc)
-	addq.w	#8, sp							; free arguments buffer
+	move.l	2(a4), d1						; d1 = last return offset
+	jsr		Error_DrawOffsetLocation(pc)
 
 	; Print caller
 	movea.l	0.w, a1							; a1 = stack top boundary
@@ -122,12 +114,9 @@ ErrorHandler:
 
 	jsr		Error_GuessCaller(pc)			; d1 = caller
 	lea 	Str_Caller(pc), a1				; a1 = formatted string
-	move.l	d1, -(sp)
-	move.l	d1, -(sp)
-	lea		(sp), a2						; a2 = arguments buffer
-	jsr		Console_WriteLine_Formatted(pc)
+	jsr		Error_DrawOffsetLocation(pc)
+
 	jsr		Console_StartNewLine(pc)
-	addq.w	#8,sp							; free arguments buffer
 
 	btst	#6, d6							; is execute console program bit set?
 	bne.w	Error_EnterConsoleProgram		; if yes, branch to error trap
@@ -192,11 +181,11 @@ ErrorHandler:
 
 	; Print vertical and horizontal interrupt handlers, if available
 	move.l	$78.w, d0						; d0 = VInt vector address
-	lea		Str_VInt(pc), a0
+	lea		Str_VInt(pc), a1
 	jsr		Error_DrawInterruptHandler(pc)
 
 	move.l	$70.w, d0						; d0 = HInt vector address
-	lea		Str_HInt(pc), a0
+	lea		Str_HInt(pc), a1
 	jsr		Error_DrawInterruptHandler(pc)
 
 	jsr		Console_StartNewLine(pc)		; newline
@@ -228,7 +217,8 @@ ErrorHandler:
 
 ; ---------------------------------------------------------------
 Error_IdleLoop:
-	bra.s	*
+	nop
+	bra.s	Error_IdleLoop
 
 ; ---------------------------------------------------------------
 ; Routine to enter console mode after writting error header
@@ -332,6 +322,25 @@ Error_DrawStackRow_Continue:
 	lea		$30(sp), sp
 	rts
 
+; ===============================================================
+; ---------------------------------------------------------------
+; Utility function to draw exception location
+; ---------------------------------------------------------------
+; INPUT:
+;		d1	.l	Exception offset
+;		a1		Exception string (should include 2 arguments)
+; ---------------------------------------------------------------
+
+Error_DrawOffsetLocation:
+	jsr		Console_Write_Formatted(pc)		; display label
+	move.l	d1, -(sp)
+	move.l	d1, -(sp)
+	lea		(sp), a2						; a2 = arguments buffer
+	lea		Str_OffsetLocation(pc), a1
+	jsr		Console_WriteLine_Formatted(pc)
+	addq.w	#8,sp							; free arguments buffer
+	rts
+
 
 ; ===============================================================
 ; ---------------------------------------------------------------
@@ -363,6 +372,8 @@ Error_DrawRegisters:
 		dbf		d5, @regloop
 
 	lea		$10(sp), sp
+
+Error_Return:
 	rts
 
 
@@ -373,37 +384,26 @@ Error_DrawRegisters:
 ; ---------------------------------------------------------------
 ; INPUT:
 ;		d0	.l	Interrupt handler address
-;		a0		Handler name string
+;		a1		Handler name string
 ; ---------------------------------------------------------------
 
 Error_DrawInterruptHandler:
 	move.l	d0, d1
 	swap	d1
 	not.b	d1							; does handler address point to RAM (block $FF)?
-	bne.s	@ret						; if not, branch
+	bne.s	Error_Return				; if not, branch
 
-	subq.w	#8, sp
-	move.l	a0, (sp)					; Argument #0 : String pointer
 	movea.l	d0, a2						; a2 = handler routine
-	lea		Str_IntHandler_Unknown(pc), a1
 	cmp.w	#$4EF9, (a2)+				; does routine include jmp (xxx).l opcode?
-	bne.s	@0							; if not, process "Str_IntHandler_Unknown"
-	lea		Str_IntHandler(pc), a1		; otherwise, process "Str_IntHandler"
-	move.l	(a2), 4(sp)					; Argument #1 : Jump offset
-@0	lea		(sp), a2
-	jsr		Console_Write_Formatted(pc)
-	addq.w	#8, sp
-
-@ret:
-	rts
+	bne.s	@uknown_handler_address		; if not, process "Str_IntHandler_Unknown"
+	move.l	(a2), d1					; d1 = interrupt handler offset
+	bra.s	Error_DrawOffsetLocation
 
 ; ---------------------------------------------------------------
-Str_IntHandler:
-	dc.b	_str, _pal0, _sym|long|split|forced, _pal2, _disp|weak, _newl, 0
-	
-Str_IntHandler_Unknown:
-	dc.b	_str, _pal0, '<undefined>', _newl, 0
-	even
+@uknown_handler_address:
+	jsr		Console_Write_Formatted(pc)
+	lea		Str_Undefined(pc), a1
+	jmp		Console_WriteLine_Formatted(pc)
 
 
 ; ===============================================================
@@ -577,13 +577,16 @@ Str_SetErrorScreen:
 	dc.b	_pal1, _newl, _setx, 1, _setw, 38, 0
 
 Str_Address:
-	dc.b	_pal1, 'Address: ', _pal2, _hex|long, ' ', _pal0, _sym|long|split|forced, _pal2, _disp|weak, 0
+	dc.b	_pal1, 'Address: ', 0
 
 Str_Module:
-	dc.b	_pal1, 'Module: ', _pal2, _hex|long, ' ', _pal0, _sym|long|split|forced, _pal2, _disp|weak, 0
+	dc.b	_pal1, 'Module: ', 0
 
 Str_Caller:
- 	dc.b	_pal1, 'Caller: ', _pal2, _hex|long, ' ', _pal0, _sym|long|split|forced, _pal2, _disp|weak, 0
+ 	dc.b	_pal1, 'Caller: ', 0
+
+Str_OffsetLocation:
+	dc.b	_pal2, _hex|long, ' ', _pal0, _sym|long|split|forced, _pal2, _disp|weak, 0
 
 Str_USP:
 	dc.b	_setx, $10, _pal0, 'usp: ', _pal2, _hex|long, 0
@@ -596,6 +599,9 @@ Str_VInt:
 
 Str_HInt:
 	dc.b	_pal1, 'HInt: ', 0
+
+Str_Undefined:
+	dc.b	_pal0, '<undefined>', 0
 	even
 
 ; ---------------------------------------------------------------
