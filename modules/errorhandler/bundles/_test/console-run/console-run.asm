@@ -10,6 +10,7 @@
 	; NOTICE: This file is a symbolic link.
 	; You should compile MDShell to enable it.
 	include	"..\MDShell.asm"
+
 	include	"..\..\bundle-asm68k-debug\Debugger.asm"
 
 ; --------------------------------------------------------------
