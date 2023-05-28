@@ -97,20 +97,23 @@ ErrorHandler:
 	beq.s	@skip							; if not, branch
 
 	lea 	Str_Address(pc), a1				; a1 = formatted string
-	lea		2(a4), a2						; a2 = arguments buffer
+	move.l	2(a4), d1
+	move.l	d1, -(sp)
+	move.l	d1, -(sp)
+	lea		(sp), a2						; a2 = arguments buffer
 	jsr		Console_WriteLine_Formatted(pc)
+	addq.w	#8, sp							; free arguments buffer
 	addq.w	#8, a4							; skip extension part of the stack frame
 @skip:
 
-	; Print error location
-	lea 	Str_Location(pc), a1			; a1 = formatted string
-	lea		2(a4), a2						; a2 = arguments buffer
-	jsr		Console_WriteLine_Formatted(pc)
-
 	; Print module name error occured in
 	lea 	Str_Module(pc), a1				; a1 = formatted string
-	lea		2(a4), a2						; a2 = arguments buffer
+	move.l	2(a4), d1
+	move.l	d1, -(sp)
+	move.l	d1, -(sp)
+	lea		(sp), a2						; a2 = arguments buffer
 	jsr		Console_WriteLine_Formatted(pc)
+	addq.w	#8, sp							; free arguments buffer
 
 	; Print caller
 	movea.l	0.w, a1							; a1 = stack top boundary
@@ -120,10 +123,11 @@ ErrorHandler:
 	jsr		Error_GuessCaller(pc)			; d1 = caller
 	lea 	Str_Caller(pc), a1				; a1 = formatted string
 	move.l	d1, -(sp)
+	move.l	d1, -(sp)
 	lea		(sp), a2						; a2 = arguments buffer
 	jsr		Console_WriteLine_Formatted(pc)
 	jsr		Console_StartNewLine(pc)
-	addq.w	#4,sp							; free argument
+	addq.w	#8,sp							; free arguments buffer
 
 	btst	#6, d6							; is execute console program bit set?
 	bne.w	Error_EnterConsoleProgram		; if yes, branch to error trap
@@ -573,16 +577,13 @@ Str_SetErrorScreen:
 	dc.b	_pal1, _newl, _setx, 1, _setw, 38, 0
 
 Str_Address:
-	dc.b	_pal1, 'Address: ', _pal0, _sym|long|split, _pal2, _disp, 0
-
-Str_Location:
-	dc.b	_pal1, 'Location: ', _pal2, _hex|long, 0
+	dc.b	_pal1, 'Address: ', _pal2, _hex|long, ' ', _pal0, _sym|long|split|forced, _pal2, _disp|weak, 0
 
 Str_Module:
-	dc.b	_pal1, 'Module: ', _pal0, _sym|long|split|forced, _pal2, _disp|weak, 0
+	dc.b	_pal1, 'Module: ', _pal2, _hex|long, ' ', _pal0, _sym|long|split|forced, _pal2, _disp|weak, 0
 
 Str_Caller:
- 	dc.b	_pal1, 'Caller: ', _pal0, _sym|long|split, _pal2, _disp, 0
+ 	dc.b	_pal1, 'Caller: ', _pal2, _hex|long, ' ', _pal0, _sym|long|split|forced, _pal2, _disp|weak, 0
 
 Str_USP:
 	dc.b	_setx, $10, _pal0, 'usp: ', _pal2, _hex|long, 0
