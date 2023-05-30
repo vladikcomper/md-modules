@@ -73,7 +73,11 @@ ErrorExcept:
 #ifdef DEBUG
 #include ErrorHandler.Debug.Global.ASM68K.asm
 #else
+#ifdef EXTSYM
+#include ErrorHandler.ExtSymbols.Global.ASM68K.asm
+#else
 #include ErrorHandler.Global.ASM68K.asm
+#endif
 #endif
 #endif
 ##
@@ -104,9 +108,14 @@ ErrorHandler:
 #ifdef DEBUG
 #include ErrorHandler.Debug.Blob.asm
 #else
+#ifdef EXTSYM
+#include ErrorHandler.ExtSymbols.Blob.asm
+#else
 #include ErrorHandler.Blob.asm
 #endif
+#endif
 
+#ifndef EXTSYM
 ; ---------------------------------------------------------------
 ; WARNING!
 ;	DO NOT put any data from now on! DO NOT use ROM padding!
@@ -114,3 +123,4 @@ ErrorHandler:
 ;	by ConvSym utility, otherwise debugger modules won't be able
 ;	to resolve symbol names.
 ; ---------------------------------------------------------------
+#endif

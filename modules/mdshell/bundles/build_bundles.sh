@@ -8,3 +8,6 @@ mkdir -p bundle-asm68k
 
 mkdir -p bundle-as
 ../../exec/cbundle MDShell.asm -def MD-SHELL -def BUNDLE-AS -out bundle-as/MDShell.asm
+
+mkdir -p bundle-headless
+../../exec/cbundle MDShell.asm -def MD-SHELL -def HEADLESS -out bundle-headless/MDShell.asm

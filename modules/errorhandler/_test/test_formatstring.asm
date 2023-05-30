@@ -10,9 +10,6 @@
 	include "..\..\mdshell\bundles\bundle-asm68k\MDShell.asm"
 
 ; ---------------------------------------------------------------
-	jmp		Main(pc)					; entry point
-
-; ---------------------------------------------------------------
 
 	include	"..\..\core\Macros.asm"
 	include	"..\..\core\Symbols.asm"

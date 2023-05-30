@@ -19,16 +19,18 @@
 ;	certain calls due to AS limitations.
 ; ---------------------------------------------------------------
 
+	; NOTICE: This file is a symbolic link.
+	; You should compile MDShell to enable it.
+	include	"..\MDShell.asm"
+
 #ifdef ASM68K
-	incbin	"..\MDShell.bin"
 	include	"..\..\bundle-asm68k-debug\Debugger.asm"
 #else
-	binclude	"..\MDShell.bin"
-	include 	"..\..\bundle-as\Debugger.asm"
+	include "..\..\bundle-as\Debugger.asm"
 #endif
 
 ; --------------------------------------------------------------
-                
+Main:
 	; Initialize registers with pseudo-random values,
 	; found at "RegisterData" byte-array (see below)
 	movem.l	RegisterData, d0-a6

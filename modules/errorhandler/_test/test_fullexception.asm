@@ -1,23 +1,26 @@
 
 ; ===============================================================
 ; ---------------------------------------------------------------
-; MD-Shell 2.0
-; A custom shell for running M68K code as Mega-Drive ROM
+; Error handling and debugging modules
+; 2016-2023, Vladikcomper
 ; ---------------------------------------------------------------
-; (c) 2023, Vladikcomper
+; Full exception test
 ; ---------------------------------------------------------------
 
-__blob_start:
+VInt_Address:	equ		$FFFFC000
+HInt_Address:	equ		$00FFC006
+
+RAM_Interrupts:	equ		VInt_Address
 
 Vectors:
-	dc.l	$FFFFF0,		EntryPoint,		BusError,		AddressError
-	dc.l	IllegalInstr,	ZeroDivide,		ChkInstr,		TrapvInstr
-	dc.l	PrivilegeViol,	Trace,			Line1010Emu,	Line1111Emu
-	dc.l	ErrorExcept,	ErrorExcept,	ErrorExcept,	ErrorExcept
-	dc.l	ErrorExcept,	ErrorExcept,	ErrorExcept,	ErrorExcept
-	dc.l	ErrorExcept,	ErrorExcept,	ErrorExcept,	ErrorExcept
-	dc.l	ErrorExcept,	ErrorTrap,		ErrorTrap,		ErrorTrap
-	dc.l	IdleInt,		ErrorTrap,		IdleInt,		ErrorTrap
+	dc.l	$FFFFF0,		EntryPoint,		ErrorTrap,		ErrorTrap
+	dc.l	ErrorTrap,		ErrorTrap,		ErrorTrap,		ErrorTrap
+	dc.l	ErrorTrap,		ErrorTrap,		ErrorTrap,		ErrorTrap
+	dc.l	ErrorTrap,		ErrorTrap,		ErrorTrap,		ErrorTrap
+	dc.l	ErrorTrap,		ErrorTrap,		ErrorTrap,		ErrorTrap
+	dc.l	ErrorTrap,		ErrorTrap,		ErrorTrap,		ErrorTrap
+	dc.l	ErrorTrap,		ErrorTrap,		ErrorTrap,		ErrorTrap
+	dc.l	HInt_Address,	ErrorTrap,		VInt_Address,	ErrorTrap
 	dc.l	ErrorTrap,		ErrorTrap,		ErrorTrap,		ErrorTrap
 	dc.l	ErrorTrap,		ErrorTrap,		ErrorTrap,		ErrorTrap
 	dc.l	ErrorTrap,		ErrorTrap,		ErrorTrap,		ErrorTrap
@@ -30,7 +33,7 @@ Vectors:
 ; ---------------------------------------------------------------
 ROMHeader:
 	dc.b	'SEGA MEGA DRIVE ' 										; Hardware system ID
-	dc.b	'(C)VLAD 2023.JAN'										; Release date
+	dc.b	'(C)VLAD 2023.MAY'										; Release date
 	dc.b	'SEGA MEGA DRIVE APPLICATION                     '		; Domestic name
 	dc.b	'SEGA MEGA DRIVE APPLICATION                     '		; International name
 	dc.b	'GM xxxxxxxx-xx'										; Serial/version number
@@ -43,20 +46,9 @@ ROMHeader:
 	dc.b	'JUE             ' 										; Supported regions
 
 ; ---------------------------------------------------------------
-; Symbol data pointer to be inserted by ConvSym
-; ---------------------------------------------------------------
-
-SymbolData_Ptr:		dc.l	$00000000
-
-	if SymbolData_Ptr <> $200
-		inform 2, "SymbolData_Ptr should be on offset $200."
-	endc
-
-; ---------------------------------------------------------------
-; Injectable symbols (will be overriden in blob)
-; ---------------------------------------------------------------
-
-Injectable_Main:		equ		MDShell_SelfCheck
+ErrorTrap:
+	nop
+	bra.s	ErrorTrap
 
 ; ---------------------------------------------------------------
 ; Entry Point : Initializes hardware
@@ -206,6 +198,7 @@ EntryPoint:
 ; ---------------------------------------------------------------
 
 ProgramStart:
+	movea.l	0.w, sp
 
 	; Init joypad ports
 	moveq	#$40,d0
@@ -213,69 +206,74 @@ ProgramStart:
 	move.b	d0, $A1000B	; init port 2 (joypad 2)
 	move.b	d0, $A1000D	; init port 3 (extra)
 
-	; Enter console program
-	move	#$2700, sr
-	lea		-Console_RAM.size(sp), sp		; allocate memory for console
-	lea		(sp), a3						; a3 = Console RAM pointer
-	jsr		ErrorHandler_SetupVDP(pc)
-	jsr		Error_InitConsole(pc)
-
-	; Reset registers
-	moveq	#0, d0
-	moveq	#0, d1
-	moveq	#0, d2
-	moveq	#0, d3
-	moveq	#0, d4
-	moveq	#0, d5
-	moveq	#0, d6
-	moveq	#0, d7
-	move.l	d0, a0
-	move.l	d1, a1
-	move.l	d2, a2
-	move.l	d3, a3
-	move.l	d4, a4
-	move.l	d5, a5
-	move.l	d6, a6
-
-__inject_main:
-	jsr		(Injectable_Main).l				; should be defined
-	;fallthrough
-
-ErrorTrap:
-	nop
-	bra.s	ErrorTrap
-
+	lea		RAM_Interrupts, a0
+	lea		VInt_Data(pc), a1
+	move.l	(a1)+, (a0)+
+	move.l	(a1)+, (a0)+
+	move.l	(a1)+, (a0)+
+	; fallthrough
 
 ; ---------------------------------------------------------------
-; Interrupts handling
+; Main programme
 ; ---------------------------------------------------------------
 
-IdleInt:
+Main:
+	movem.l	FakeRegData, d0-a6
+
+	jsr		FakeException
+	; [[unreachable]]
+	bra		ErrorTrap
+
+; ---------------------------------------------------------------
+FakeException:
+	move.w	sr, -(sp)
+
+	; Extended stack frame (8 bytes)
+	move.w	#$5678, -(sp)
+	move.l	#FakeAddressErrorLocation, -(sp)
+	move.w	#$1234, -(sp)
+
+	jsr		ErrorHandler
+	dc.b	"FAKE ADDRESS ERROR", 0
+	dc.b	%00000011
 	rte
 
+; ---------------------------------------------------------------
+VInt_Data:
+	jmp		(Dummy_VInt).l
+
+HInt_Data:
+	jmp		(Dummy_HInt).l
 
 ; ---------------------------------------------------------------
-; Error Handler bundle
-; ---------------------------------------------------------------
+Dummy_VInt:
+	rte
 
-; Tell error handler that we want to inject Symbol table pointer from outside
-_USE_SYMBOL_DATA_REF_: equ 1
-
-	include	'ErrorHandler.asm'
-
-; Anything after this symbol won't be included in blob
-
-__blob_end:
+Dummy_HInt:
+	rte
 
 ; ---------------------------------------------------------------
-; Self-check routine
+FakeRegData:
+	dc.l	$00000000		; d0
+	dc.l	$00010001		; d1
+	dc.l	$00020002		; d2
+	dc.l	$00030003		; d3
+	dc.l	$00040004		; d4
+	dc.l	$00050005		; d5
+	dc.l	$00060006		; d6
+	dc.l	$00070007		; d7
+	dc.l	$00000000		; a0
+	dc.l	$00010000		; a1
+	dc.l	$00020000		; a2
+	dc.l	$00030000		; a3
+	dc.l	$00040000		; a4
+	dc.l	$00050000		; a5
+	dc.l	$00060000		; a6
+
+; ---------------------------------------------------------------
+FakeAddressErrorLocation:
+	nop
+
 ; ---------------------------------------------------------------
 
-MDShell_SelfCheck:
-	lea		@Str_InitialTest(pc), a0
-	jmp		Console_Write(pc)
-
-; ---------------------------------------------------------------
-@Str_InitialTest:
-	dc.b	_pal1, _newl, _setx, 1, _setw, 38, 'MD Shell Self-Diagnostics', _newl, 0
-	even
+	include	"ErrorHandler.asm"
