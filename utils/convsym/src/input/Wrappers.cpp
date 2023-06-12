@@ -10,15 +10,15 @@
 #include <memory>
 #include <functional>
 
-#include "../../core/IO.hpp"
+#include <IO.hpp>
 
 #include "InputWrapper.hpp"
 
-#include "ASM68K_Listing.hpp"
-#include "ASM68K_Sym.hpp"
-#include "AS_Listing.hpp" 
-#include "AS_Listing_Experimental.hpp" 
-#include "Log.hpp"
+#include "ASM68K_Listing.cpp"
+#include "ASM68K_Sym.cpp"
+#include "AS_Listing.cpp"
+#include "AS_Listing_Experimental.cpp"
+#include "Log.cpp"
 
 
 /* Input wrappers map */

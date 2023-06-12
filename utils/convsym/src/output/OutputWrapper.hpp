@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 
-#include "../../core/IO.hpp"
+#include <IO.hpp>
 
 
 /* Base class for the output formats handlers */

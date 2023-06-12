@@ -9,11 +9,11 @@
 #include <string>
 #include <vector>
 
-#include "../../core/OptsParser.hpp"
-#include "../../core/Huffman.hpp"
-#include "../../core/BitStream.hpp"
-#include "../../core/IO.hpp"
-#include "../../core/utils.hpp"
+#include <OptsParser.hpp>
+#include <Huffman.hpp>
+#include <BitStream.hpp>
+#include <IO.hpp>
+#include <utils.hpp>
 
 #include "OutputWrapper.hpp"
 

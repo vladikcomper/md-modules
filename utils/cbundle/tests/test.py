@@ -5,11 +5,10 @@ from pathlib import Path
 import subprocess
 
 import sys
-
-sys.path.append('../core-py')
+sys.path.append('../../lib-py')
 from test_framework import Test, Command, CommandResult, DataSource, File, CheckMatch, Buffer, Void, archiveDirectory, unarchiveDirectory, getUsedFilesList, runTests
 
-BASE_DIR = '_test'
+CBUNDLE_PATH = '../../../build/cbundle'
 
 @dataclass
 class CBundle(Command):
@@ -20,7 +19,7 @@ class CBundle(Command):
 		use_stdout = not isinstance(output, File)
 
 		# Launch CBundle
-		args = ['./cbundle', '-', *self.options]
+		args = [CBUNDLE_PATH, '-', *self.options]
 		args[1] = '-' if use_stdin else str(cast(File, input).getPath())
 		if not isinstance(output, Void):
 			args += ['-out', '-' if use_stdout else str(cast(File, output).getPath())]
@@ -88,16 +87,15 @@ tests: 'tuple[Test, ...]' = (
 		pipeline=(
 			CBundle(
 				input = File('input/sample.cbundle'),
-				options=('-cwd', BASE_DIR)
 			),
 			CheckMatch(
-				input=File(f'{BASE_DIR}/output/sample-file-1.txt'),
-				output=File(f'{BASE_DIR}/output-expected/sample-file-1.txt'),
+				input=File('output/sample-file-1.txt'),
+				output=File('output-expected/sample-file-1.txt'),
 				text=True
 			),
 			CheckMatch(
-				input=File(f'{BASE_DIR}/output/sample-file-2.txt'),
-				output=File(f'{BASE_DIR}/output-expected/sample-file-2.txt'),
+				input=File('output/sample-file-2.txt'),
+				output=File('output-expected/sample-file-2.txt'),
 				text=True
 			),
 		),

@@ -1,27 +1,27 @@
 
 /* ------------------------------------------------------------ *
  * ConvSym utility version 2.9.1								*
- * Output wrapper for assembly file with equates				*
+ * Output wrapper for simple symbol logging						*
  * ------------------------------------------------------------	*/
 
 #include <map>
 #include <cstdint>
 #include <string>
 
-#include "../../core/IO.hpp"
+#include <IO.hpp>
 
 #include "OutputWrapper.hpp"
 
 
-struct Output__Asm : public OutputWrapper {
+struct Output__Log : public OutputWrapper {
 
 public:
 
-	Output__Asm() {	// Constructor
+	Output__Log() {	// Constructor
 
 	};
 
-	~Output__Asm() {	// Destructor
+	~Output__Log() {	// Destructor
 
 	};
 
@@ -37,14 +37,14 @@ public:
 			bool alignOnAppend = true ) {
 
 		if (appendOffset || pointerOffset || !alignOnAppend) {
-			IO::Log(IO::warning, "Append options aren't supported by the \"asm\" output parser.");
+			IO::Log(IO::warning, "Append options aren't supported by the \"log\" output parser.");
 		}
-
-		const char * lineFormat = *opts ? opts : "%s:\tequ\t$%X";
+	
+		const char * lineFormat = *opts ? opts : "%X: %s";
 		IO::FileOutput output = IO::FileOutput( fileName, IO::text );
 
 		for ( auto symbol : SymbolList ) {
-			output.writeLine( lineFormat, symbol.second.c_str(), symbol.first );
+			output.writeLine( lineFormat, symbol.first, symbol.second.c_str() );
 		}
 
 	}

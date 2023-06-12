@@ -1,8 +1,9 @@
 
 /* ------------------------------------------------------------ *
- * Bundle Compilation utility v.1.6								*
+ * Bundle Compilation utility v.2.0.1							*
+ *																*
  * Script parser module											*
- * (c) 2017-2018, 2020-2021, Vladikcomper						*
+ * (c) 2017-2023, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 #define LINE_BUFFER_SIZE 4096
@@ -11,7 +12,7 @@
 #include <map>
 #include <set>
 
-#include "../core/IO.hpp"
+#include <IO.hpp>
 
 namespace Parser {
 
