@@ -4,12 +4,11 @@ from argparse import ArgumentParser
 from dataclasses import dataclass
 import subprocess
 
-BASE_DIR = '_test'
-
 import sys
-sys.path.append('../core-py')
+sys.path.append('../../lib-py')
 from test_framework import Test, Command, CommandResult, CheckMatch, DataSource, File, Buffer, archiveDirectory, unarchiveDirectory, getUsedFilesList, runTests, setBaseDir
 
+CONVSYM_PATH = '../../../build/convsym'
 
 @dataclass
 class ConvSym(Command):
@@ -20,7 +19,7 @@ class ConvSym(Command):
 		use_stdout = not isinstance(output, File)
 
 		# Execute ConvSym
-		args = ['./convsym', '-', '-', *self.options]
+		args = [CONVSYM_PATH, '-', '-', *self.options]
 		args[1] = '-' if use_stdin else str(cast(File, input).getPath())
 		args[2] = '-' if use_stdout else str(cast(File, output).getPath())
 		result = subprocess.run(args, input=None if isinstance(input, File) else input.read(), text=False, capture_output=True)
@@ -317,8 +316,6 @@ def main():
 	arg_parser = ArgumentParser(description='Handles tests for ConvSym utility')
 	arg_parser.add_argument('-c', '--command', choices=('run', 'update', 'list_files'), default='run')
 	args = arg_parser.parse_args()
-
-	setBaseDir(BASE_DIR)
 
 	if args.command == 'run':
 		unarchiveDirectory('input', skipIfExists=True)

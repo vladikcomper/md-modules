@@ -1,6 +1,7 @@
 
 /* ------------------------------------------------------------ *
- * Bundle Compilation utility v.2.0								*
+ * Bundle Compilation utility v.2.0.1							*
+ *																*
  * Main definitions file										*
  * (c) 2017-2023, Vladikcomper									*
  * ------------------------------------------------------------	*/
@@ -19,10 +20,10 @@
 #include <map>				// ''
 
 // Helper classes
-#include "../core/IO.hpp"
-#include "../core/ArgvParser.hpp"
+#include <IO.hpp>
+#include <ArgvParser.hpp>
 
-#include "ScriptParser.hpp"
+#include "parser.cpp"
 
 /* Main function */
 int main (int argc, const char ** argv) {
@@ -30,7 +31,7 @@ int main (int argc, const char ** argv) {
 	/* Provide help if called without enough options */
 	if (argc<2) {
 		printf(
-			"CBundle utility version 2.0\n"
+			"CBundle utility version 2.0.1\n"
 			"2017-2023, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"

@@ -12,11 +12,11 @@
 #include <functional>
 #include <regex>
 
-#include "../core/IO.hpp"
-#include "../core/ArgvParser.hpp"
+#include <IO.hpp>
+#include <ArgvParser.hpp>
 
-#include "input/Wrappers.hpp"	// for GetInputWrapper[..]() and their linkage
-#include "output/Wrappers.hpp"	// for GetOutputWrapper[..]() and their linkage
+#include "input/Wrappers.cpp"	// for GetInputWrapper[..]() and their linkage
+#include "output/Wrappers.cpp"	// for GetOutputWrapper[..]() and their linkage
 
 
 /* Main function */

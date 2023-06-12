@@ -8,7 +8,7 @@
 #include <string>
 #include <map>
 
-#include "../../core/IO.hpp"
+#include <IO.hpp>
 
 #include "InputWrapper.hpp"
 

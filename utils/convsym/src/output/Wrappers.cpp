@@ -13,13 +13,14 @@
 #include <map>
 #include <functional>
 
-#include "../../core/IO.hpp"
+#include <IO.hpp>
 
 #include "OutputWrapper.hpp"
-#include "DEB1.hpp"
-#include "DEB2.hpp"
-#include "Log.hpp"
-#include "ASM.hpp"
+
+#include "DEB1.cpp"
+#include "DEB2.cpp"
+#include "Log.cpp"
+#include "ASM.cpp"
 
 
 /* Input wrappers map */

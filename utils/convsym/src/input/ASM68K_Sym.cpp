@@ -8,8 +8,8 @@
 #include <string>
 #include <map>
 
-#include "../../core/IO.hpp"
-#include "../../core/OptsParser.hpp"
+#include <IO.hpp>
+#include <OptsParser.hpp>
 
 #include "InputWrapper.hpp"
 
