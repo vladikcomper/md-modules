@@ -1,5 +1,5 @@
 
-BUILD_DIR ?= ../../build
+BUILD_DIR ?= ../../build/utils
 SRC_DIR ?= src
 LIB_DIR ?= ../lib
 
@@ -11,7 +11,7 @@ ifeq ($(OS), Windows NT)
 	EXEC_NAME = cbundle.exe
 endif
 
-EXEC_PATH = $(BUILD_DIR)/$(EXEC_NAME)
+EXECUTABLE = $(BUILD_DIR)/$(EXEC_NAME)
 
 CXXFLAGS ?= -std=c++20 -O3 -pedantic-errors -Wall -I../lib
 LDFLAGS ?= -s
@@ -20,14 +20,18 @@ LDFLAGS ?= -s
 
 all:	cbundle readme
 
-cbundle:	$(EXEC_PATH)
+cbundle:	$(EXECUTABLE)
 
-test:		$(EXEC_PATH)
+test:		$(EXECUTABLE)
 	cd tests && ./test.py
 
 # Executable returns non-zero exit code when the help is displayed, so we have to ignore it
-readme:		$(EXEC_PATH)
-	$(EXEC_PATH) > readme.txt || true
+readme:		$(EXECUTABLE)
+	$(EXECUTABLE) > readme.txt || true
 
-$(EXEC_PATH):	$(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(LIB_DIR)/*.hpp)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(SRC_DIR)/main.cpp -o $(EXEC_PATH)
+$(EXECUTABLE):	$(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(LIB_DIR)/*.hpp)
+$(EXECUTABLE):	| $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(SRC_DIR)/main.cpp -o $(EXECUTABLE)
+
+$(BUILD_DIR):
+	mkdir $(BUILD_DIR)

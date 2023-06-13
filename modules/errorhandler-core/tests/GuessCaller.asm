@@ -7,7 +7,7 @@
 ; Guess caller testing module
 ; ---------------------------------------------------------------
 
-	include "..\mdshell\bundles\bundle-asm68k\MDShell.asm"
+	include "..\..\..\build\mdshell\asm68k\MDShell.asm"
 
 ; ---------------------------------------------------------------
 

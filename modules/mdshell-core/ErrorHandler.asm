@@ -62,4 +62,4 @@ ErrorExcept:
 ; Error Handler bundle
 ; ---------------------------------------------------------------
 
-	include	'..\errorhandler\ErrorHandler.asm'
+	include	'..\errorhandler-core\ErrorHandler.asm'
