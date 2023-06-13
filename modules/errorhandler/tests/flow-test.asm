@@ -19,18 +19,22 @@
 ;	certain calls due to AS limitations.
 ; ---------------------------------------------------------------
 
+	include	"..\..\..\build\modules\mdshell\headless\MDShell.asm"
+
 #ifdef ASM68K
-	include	"..\..\bundle-asm68k\MDShell.asm"
+	include	"..\..\..\build\modules\errorhandler\asm68k-debug\Debugger.asm"
 #else
-	include "..\..\bundle-as\MDShell.asm"
+	include	"..\..\..\build\modules\errorhandler\as\Debugger.asm"
 #endif
 
 ; --------------------------------------------------------------
-
 Main:
 	; Initialize registers with pseudo-random values,
 	; found at "RegisterData" byte-array (see below)
 	movem.l	RegisterData, d0-a6
+
+	; First off, check registers after issuing "Console.Run" ...
+	jsr		CheckRegisterIntergity
 
 ; --------------------------------------------------------------
 Test_BasicString:
@@ -159,3 +163,12 @@ RegisterData:
 RegisterNames:
 	dc.w 'd0',0,'d1',0,'d2',0,'d3',0,'d4',0,'d5',0,'d6',0,'d7',0
 	dc.w 'a0',0,'a1',0,'a2',0,'a3',0,'a4',0,'a5',0,'a6',0
+	
+; --------------------------------------------------------------
+
+#ifdef ASM68K
+	include	"..\..\..\build\modules\errorhandler\asm68k-debug\ErrorHandler.asm"
+#else
+	include	"..\..\..\build\modules\errorhandler\as\ErrorHandler.asm"
+#endif
+

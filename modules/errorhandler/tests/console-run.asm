@@ -7,11 +7,9 @@
 ; Console testing module
 ; ---------------------------------------------------------------
 
-	; NOTICE: This file is a symbolic link.
-	; You should compile MDShell to enable it.
-	include	"..\MDShell.asm"
+	include	"..\..\..\build\modules\mdshell\headless\MDShell.asm"
 
-	include	"..\..\bundle-asm68k-debug\Debugger.asm"
+	include	"..\..\..\build\modules\errorhandler\asm68k\Debugger.asm"
 
 ; --------------------------------------------------------------
 
@@ -49,4 +47,4 @@ GlobalData:
 
 ; --------------------------------------------------------------
 
-	include	"..\..\bundle-asm68k-debug\ErrorHandler.asm"
+	include	"..\..\..\build\modules\errorhandler\asm68k\ErrorHandler.asm"

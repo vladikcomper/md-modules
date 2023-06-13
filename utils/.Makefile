@@ -1,4 +1,6 @@
 
+# WARNING! Please don't invoke this Makefile directly
+
 UTILS_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 # On Windows, executables end with .exe
@@ -14,7 +16,7 @@ endif
 
 .PHONY: all
 
-all:	$(CONVSYM) $(CBUNDLE) $(BLOB2ASM)
+all:	$(CONVSYM) $(CBUNDLE) $(BLOBTOASM)
 
 $(CONVSYM):
 	make -C $(UTILS_DIR)/convsym

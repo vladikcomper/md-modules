@@ -19,32 +19,18 @@
 ;	certain calls due to AS limitations.
 ; ---------------------------------------------------------------
 
-	; NOTICE: This file is a symbolic link.
-	; You should compile MDShell to enable it.
-	include	"..\MDShell.asm"
-
 #ifdef ASM68K
-	include	"..\..\bundle-asm68k-debug\Debugger.asm"
+	include	"..\..\..\build\modules\mdshell\asm68k\MDShell.asm"
 #else
-	include "..\..\bundle-as\Debugger.asm"
+	include "..\..\..\build\modules\mdshell\as\MDShell.asm"
 #endif
 
 ; --------------------------------------------------------------
+
 Main:
 	; Initialize registers with pseudo-random values,
 	; found at "RegisterData" byte-array (see below)
 	movem.l	RegisterData, d0-a6
-
-	; Run main routine in debugger console environment
-	Console.Run Main
-
-; --------------------------------------------------------------
-; Main routine to perform tests
-; --------------------------------------------------------------
-
-Main:
-	; First off, check registers after issuing "Console.Run" ...
-	jsr		CheckRegisterIntergity
 
 ; --------------------------------------------------------------
 Test_BasicString:
@@ -173,12 +159,3 @@ RegisterData:
 RegisterNames:
 	dc.w 'd0',0,'d1',0,'d2',0,'d3',0,'d4',0,'d5',0,'d6',0,'d7',0
 	dc.w 'a0',0,'a1',0,'a2',0,'a3',0,'a4',0,'a5',0,'a6',0
-	
-; --------------------------------------------------------------
-
-#ifdef ASM68K
-	include	"..\..\bundle-asm68k-debug\ErrorHandler.asm"
-#else
-	include	"..\..\bundle-as\ErrorHandler.asm"
-#endif
-

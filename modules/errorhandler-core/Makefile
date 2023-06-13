@@ -6,7 +6,7 @@ CORE_DIR ?= ../core
 ASM68K ?= wine ../exec/asm68k.exe
 ASFLAGS = /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae-
 
-.PHONY:	all release	debug extsym clean
+.PHONY:	all release	debug extsym tests clean
 
 all:	release	debug extsym
 
@@ -15,6 +15,10 @@ release:	$(BUILD_DIR)/ErrorHandler.bin $(BUILD_DIR)/ErrorHandler.sym
 debug:	$(BUILD_DIR)/ErrorHandler.Debug.bin $(BUILD_DIR)/ErrorHandler.Debug.sym
 
 extsym:	$(BUILD_DIR)/ErrorHandler.ExtSymbols.bin $(BUILD_DIR)/ErrorHandler.ExtSymbols.sym
+
+tests:	release	debug extsym
+	make -C ../mdshell
+	make -C tests -f .Makefile
 
 clean:
 	rm -f $(BUILD_DIR)/*.*

@@ -1,5 +1,5 @@
 
-include ../../utils/Makefile # For $(CONVSYM), $(CBUNDLE) etc
+include ../../utils/.Makefile # For $(CONVSYM), $(CBUNDLE) etc
 
 
 BUILD_DIR ?= ../../build/modules/mdshell
@@ -11,7 +11,7 @@ CORE_SRC_FILES ?= $(wildcard ../mdshell-core/*.asm) $(wildcard ../core/*.asm)
 ERRORHANDLER_FILES = $(wildcard ../errorhandler/*.asm)
 
 
-.PHONY:	all asm68k as headless clean
+.PHONY:	all asm68k as headless tests clean
 
 all:	asm68k as headless
 
@@ -20,6 +20,9 @@ asm68k:	$(BUILD_DIR)/asm68k/MDShell.asm
 as:	$(BUILD_DIR)/as/MDShell.asm
 
 headless:	$(BUILD_DIR)/headless/MDShell.asm
+
+tests:	asm68k as headless
+	make -C tests -f .Makefile
 
 clean:
 	rm -rf $(BUILD_DIR)/*
