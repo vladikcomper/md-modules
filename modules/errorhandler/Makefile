@@ -1,5 +1,5 @@
 
-include ../../utils/Makefile # For $(CONVSYM), $(CBUNDLE) etc
+include ../../utils/.Makefile # For $(CONVSYM), $(CBUNDLE) etc
 
 
 BUILD_DIR ?= ../../build/modules/errorhandler
@@ -10,7 +10,7 @@ SRC_FILES = $(wildcard $(SRC_DIR)/*.asm)
 CORE_SRC_FILES ?= $(wildcard ../errorhandler-core/*.asm) $(wildcard ../core/*.asm)
 
 
-.PHONY:	all asm68k asm68k-debug asm68k-extsym as as-extsym clean
+.PHONY:	all asm68k asm68k-debug asm68k-extsym as as-extsym tests clean
 
 all:	asm68k asm68k-debug asm68k-extsym as as-extsym
 
@@ -23,6 +23,9 @@ asm68k-extsym:	$(BUILD_DIR)/asm68k-extsym/Debugger.asm $(BUILD_DIR)/asm68k-extsy
 as:	$(BUILD_DIR)/as/Debugger.asm $(BUILD_DIR)/as/ErrorHandler.asm
 
 as-extsym:	$(BUILD_DIR)/as-extsym/Debugger.asm $(BUILD_DIR)/as-extsym/ErrorHandler.asm
+
+tests:	all
+	make -C tests -f .Makefile
 
 clean:
 	rm -rf $(BUILD_DIR)/*
@@ -55,7 +58,7 @@ $(BUILD_DIR)/as-extsym/Debugger.asm $(BUILD_DIR)/as-extsym/ErrorHandler.asm &: $
 
 
 $(BUILD_DIR)/ErrorHandler.Global.ASM68K.asm:	$(CORE_BUILD_DIR)/ErrorHandler.sym | $(BUILD_DIR) $(CONVSYM)
-	$(CONVSYM) $^ $@ -output asm -outopt "ErrorHandler.%s equ ErrorHandler_+$$%X" -inopt "/processLocals-" -filter "__global_.+"
+	$(CONVSYM) $^ $@ -output asm -outopt "ErrorHandler.%s equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
 
 $(BUILD_DIR)/ErrorHandler.Debug.Global.ASM68K.asm:	$(CORE_BUILD_DIR)/ErrorHandler.Debug.sym | $(BUILD_DIR) $(CONVSYM)
 	$(CONVSYM) $^ $@ -output asm -outopt "ErrorHandler.%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
@@ -64,10 +67,10 @@ $(BUILD_DIR)/ErrorHandler.ExtSymbols.Global.ASM68K.asm:	$(CORE_BUILD_DIR)/ErrorH
 	$(CONVSYM) $^ $@ -output asm -outopt "ErrorHandler.%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
 
 $(BUILD_DIR)/ErrorHandler.Global.AS.asm:	$(CORE_BUILD_DIR)/ErrorHandler.sym | $(BUILD_DIR) $(CONVSYM)
-	$(CONVSYM) $^ $@ -output asm -outopt "ErrorHandler_%s label ErrorHandler_+$$%X" -inopt "/processLocals-" -filter "__global_.+"
+	$(CONVSYM) $^ $@ -output asm -outopt "ErrorHandler_%s label ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
 
 $(BUILD_DIR)/ErrorHandler.ExtSymbols.Global.AS.asm:	$(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.sym | $(BUILD_DIR) $(CONVSYM)
-	$(CONVSYM) $^ $@ -output asm -outopt "ErrorHandler_%s label ErrorHandler_+$$%X" -inopt "/processLocals-" -filter "__global_.+"
+	$(CONVSYM) $^ $@ -output asm -outopt "ErrorHandler_%s label ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
 
 
 $(BUILD_DIR)/ErrorHandler.Blob.asm:	$(CORE_BUILD_DIR)/ErrorHandler.bin | $(BUILD_DIR)

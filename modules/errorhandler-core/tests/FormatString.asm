@@ -7,7 +7,7 @@
 ; Format String testing module
 ; ---------------------------------------------------------------
 
-	include "..\..\..\build\mdshell\asm68k\MDShell.asm"
+	include "..\..\..\build\modules\mdshell\asm68k\MDShell.asm"
 
 ; ---------------------------------------------------------------
 

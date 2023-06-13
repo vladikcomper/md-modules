@@ -7,11 +7,13 @@
 ; Console testing module
 ; ---------------------------------------------------------------
 
-	incbin	'..\MDShell.bin'
-	include	'..\..\bundle-asm68k-debug\Debugger.asm'
+	include	"..\..\..\build\modules\mdshell\headless\MDShell.asm"
+
+	include	"..\..\..\build\modules\errorhandler\asm68k\Debugger.asm"
 
 ; --------------------------------------------------------------
 
+Main:
 	moveq	#$5F, d7
 
 	RaiseError	'Oh look! d7 = %<.w d7>', MyErrorHandler
@@ -28,4 +30,4 @@ MyErrorHandler:
 
 ; --------------------------------------------------------------
 
-	include	'..\..\bundle-asm68k-debug\ErrorHandler.asm'
+	include	"..\..\..\build\modules\errorhandler\asm68k\ErrorHandler.asm"
