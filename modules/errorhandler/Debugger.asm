@@ -2,7 +2,8 @@
 ; ===============================================================
 ; ---------------------------------------------------------------
 ; Error handling and debugging modules
-; 2016-2017, Vladikcomper
+;
+; (c) 2016-2023, Vladikcomper
 ; ---------------------------------------------------------------
 ; Debugging macros definitions file
 ; ---------------------------------------------------------------
@@ -16,7 +17,11 @@
 ; Import error handler global functions
 ; ---------------------------------------------------------------
 
-#include ErrorHandler.Global.AS.asm
+#ifdef EXTSYM
+#include ../../build/modules/errorhandler/ErrorHandler.ExtSymbols.Global.AS.asm
+#else
+#include ../../build/modules/errorhandler/ErrorHandler.Global.AS.asm
+#endif
 #endif
 
 ; ---------------------------------------------------------------

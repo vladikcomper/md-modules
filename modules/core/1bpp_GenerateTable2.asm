@@ -6,7 +6,7 @@
 ; INPUT:
 ;		a1		Address for the generated table
 ;		d4	.w	Pixel index for bit #0
-;		d5	.w	Pixel indec for bit #1
+;		d5	.w	Pixel index for bit #1
 ;
 ; USES:
 ;		d0-d7

@@ -7,17 +7,17 @@
 ; Format String testing module
 ; ---------------------------------------------------------------
 
-	include "..\..\mdshell\bundles\bundle-asm68k\MDShell.asm"
+	include "..\..\..\build\mdshell\asm68k\MDShell.asm"
 
 ; ---------------------------------------------------------------
 
 	include	"..\..\core\Macros.asm"
 	include	"..\..\core\Symbols.asm"
-	include	"..\..\core\Formatter - Sym.asm"
-	include	"..\..\core\Formatter - Bin.asm"
-	include	"..\..\core\Formatter - Dec.asm"
-	include	"..\..\core\Formatter - Hex.asm"
-	include	"..\..\core\Format String.asm"
+	include	"..\..\core\Formatter_Sym.asm"
+	include	"..\..\core\Formatter_Bin.asm"
+	include	"..\..\core\Formatter_Dec.asm"
+	include	"..\..\core\Formatter_Hex.asm"
+	include	"..\..\core\Format_String.asm"
 
 ; ---------------------------------------------------------------
 ; Main routine

@@ -9,7 +9,7 @@
 ; You don't have to build it, unless you want to manually modify
 ; 'bundles\ErrorHandler.Extern.*.asm' files.
 ; ---------------------------------------------------------------
-; 2023, Vladikcomper
+; (c) 2023, Vladikcomper
 ; ---------------------------------------------------------------
 
 ErrorHandler.__extern__console_only:
