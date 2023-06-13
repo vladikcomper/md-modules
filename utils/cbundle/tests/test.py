@@ -8,7 +8,7 @@ import sys
 sys.path.append('../../lib-py')
 from test_framework import Test, Command, CommandResult, DataSource, File, CheckMatch, Buffer, Void, archiveDirectory, unarchiveDirectory, getUsedFilesList, runTests
 
-CBUNDLE_PATH = '../../../build/cbundle'
+CBUNDLE_PATH = '../../../build/utils/cbundle'
 
 @dataclass
 class CBundle(Command):
