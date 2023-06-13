@@ -8,7 +8,7 @@ import sys
 sys.path.append('../../lib-py')
 from test_framework import Test, Command, CommandResult, CheckMatch, DataSource, File, Buffer, archiveDirectory, unarchiveDirectory, getUsedFilesList, runTests, setBaseDir
 
-CONVSYM_PATH = '../../../build/convsym'
+CONVSYM_PATH = '../../../build/utils/convsym'
 
 @dataclass
 class ConvSym(Command):
