@@ -22,7 +22,7 @@ as:	$(BUILD_DIR)/as/MDShell.asm
 headless:	$(BUILD_DIR)/headless/MDShell.asm
 
 tests:	asm68k as headless
-	make -C tests -f .Makefile
+	$(MAKE) -C tests -f .Makefile
 
 clean:
 	rm -rf $(BUILD_DIR)/*
@@ -53,7 +53,7 @@ $(BUILD_DIR)/MDShell.InjectTable.log: $(CORE_BUILD_DIR)/MDShell.sym | $(BUILD_DI
 	$(CONVSYM) $^ $@ -output asm -outopt "%s: %X" -filter "__(inject|blob)_.+"
 
 $(CORE_BUILD_DIR)/MDShell.sym $(CORE_BUILD_DIR)/MDShell.bin &: $(CORE_SRC_FILES)
-	make -C ../mdshell-core
+	$(MAKE) -C ../mdshell-core
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)

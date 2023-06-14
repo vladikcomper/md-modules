@@ -17,8 +17,8 @@ debug:	$(BUILD_DIR)/ErrorHandler.Debug.bin $(BUILD_DIR)/ErrorHandler.Debug.sym
 extsym:	$(BUILD_DIR)/ErrorHandler.ExtSymbols.bin $(BUILD_DIR)/ErrorHandler.ExtSymbols.sym
 
 tests:	release	debug extsym
-	make -C ../mdshell
-	make -C tests -f .Makefile
+	$(MAKE) -C ../mdshell
+	$(MAKE) -C tests -f .Makefile
 
 clean:
 	rm -f $(BUILD_DIR)/*.*

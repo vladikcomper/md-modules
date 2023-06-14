@@ -12,7 +12,7 @@ BLOBTOASM := $(UTILS_DIR)/blobtoasm/blobtoasm.py
 all:	$(CONVSYM) $(CBUNDLE)
 
 $(CONVSYM):
-	gmake -C $(UTILS_DIR)/convsym
+	$(MAKE) -C $(UTILS_DIR)/convsym
 
 $(CBUNDLE):
-	gmake -C $(UTILS_DIR)/cbundle
+	$(MAKE) -C $(UTILS_DIR)/cbundle
