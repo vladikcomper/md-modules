@@ -1,0 +1,19 @@
+
+# WARNING! Please don't invoke this Makefile directly
+
+UTILS_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+
+# On Windows, executables end with .exe
+CONVSYM := $(UTILS_DIR)/../build/utils/convsym.exe
+CBUNDLE := $(UTILS_DIR)/../build/utils/cbundle.exe
+BLOBTOASM := python3 $(UTILS_DIR)/blobtoasm/blobtoasm.py
+
+.PHONY: all
+
+all:	$(CONVSYM) $(CBUNDLE)
+
+$(CONVSYM):
+	make -C $(UTILS_DIR)/convsym -f Makefile.win
+
+$(CBUNDLE):
+	make -C $(UTILS_DIR)/cbundle -f Makefile.win
