@@ -8,8 +8,7 @@ This repository includes modules for Mega-Drive projects (`modules/` directory) 
 
 ### Modules
 
-* [Error Handler](modules/errorhandler) - source code for the Advanced Error Handler and Debugger for Mega-Drive ROMs;
-  * [Error Handler/bundles](modules/errorhandler/bundles) - bundles source code that define debugger macros and integrate pre-compiled Error Handler blob into your projects;
+* [Error Handler](modules/errorhandler) - the Advanced Error Handler and Debugger for handling exceptions and debugging your Mega-Drive ROMs;
 * [MD-Shell](modules/mdshell) - a stand-alone easy to use "assembly header" to run small programs as Mega-Drive ROMs.
 
 ### Utilities
@@ -18,49 +17,87 @@ This repository includes modules for Mega-Drive projects (`modules/` directory) 
 * [CBundle](utils/cbundle) _(C++20)_ - a custom pre-processor used to build debugger's bundles from the shared "cross-assembler" source files;
 * [BlobToAsm](utils/blobtoasm) _(Python 3.8+)_ - a utility to render binary files in M68K assembly with additional tricks (e.g. offset-based expression injection);
 
-## Pre-built utility binaries
+## Building from source code
 
-For your convenience, this repository includes pre-built utility binaries, as those are used by modules. You can find them in the `modules/exec` directory.
-
-Binaries are provided for the following platforms:
-* **Windows 64-bit** (Windows 7 and above)
-* **Linux 64-bit**
-* **MacOS 64-bit** (built on MacOS Big Sur)
-
-## Building utilities
+This repository aims to be cross-platform, designed with Linux, Windows, MacOS (and other BSD systems) in mind. It makes extensive use of GNU-flavored Makefiles for both \*nix and Windows systems (see `Makefile` for \*nix and `Makefile.win` for Windows). Please read notes below to make sure you have all the prerequisites and your platform is fully supported.
 
 ### Dependencies
 
-No dependencies are used rather than Standard C++ library.
+- *GNU Make* is required to build pretty much everything.
 
-### Compiler and architectures support
+- **Utilities** require a *GCC* or *Clang* compiler with C++20 support and *Python 3.8* or newer.
 
-Builds have been tested and are expected to work with the following compilers: 
-* __GCC__ versions 6 through 12
-* __Clang__ version 15
+- **Modules** fully depend on *utilities*, so they require all the dependencies listed above. Non-Windows systems also require *Wine* to run assemblers (they're 32-bit Windows executables).
 
-Other popular compilers are expected to work as well.
+### Linux (Ubuntu/Debian)
 
-Generally, only x86_64 architecture is tested, but utils are expected to build for ARM and other targets.
+Make sure you have the necessary dependencies:
 
-### Building and testing
+```sh
+apt install g++ make python3 wine
+```
 
-Utilities come with simple build scripts for Windows (`build.bat`) and Linux/MacOS (`build.sh`).
+To build everything, use one of the following commands:
 
-Go to utility directory (e.g. `utils/convsym`) and run `build.bat` or `build.sh` dependening on your system.
+```sh
+make
+# or separately:
+make utils
+make modules
+```
 
-To test executables in your environment, run `test.py` (Python 3.8+ is required).
+### FreeBSD
 
-## Building modules
+Make sure you have the necessary dependencies:
 
-### Dependencies
+```sh
+pkg install clang++ gmake python3 wine
+```
 
-Debugging modules are built using ASM68K or AS assemblers (depending on their versions). Windows executables of these assemblers are included in the repository and used by build scripts.
+Please note that you specifically need to use GNU-Make instead of BSD-flavoured Make everywhere:
 
-Linux users are expected to have `wine` installed in order to invoke them.
+```sh
+gmake
+# or separately:
+gmake utils
+gmake modules
+```
 
-### Building modules
+### MacOS
 
-Modules come with simple build scripts compile to them under Windows (`build.bat`) and Linux (`build.sh`).
+Make sure you have Wine:
 
-Go to a module directory (e.g. `module/errorhandler`) and run `build.bat` or `build.sh` dependening on your system.
+```sh
+brew tap homebrew/cask-versions
+brew install --cask --no-quarantine wine-stable
+```
+
+> **Warning**
+>
+> Since MacOS Catalina 10.15, 32-bit software is no longer supported. You may not be able to build *Modules* which require 32-bit Wine.
+
+To build everything, use one of the following commands:
+
+```sh
+make
+# or separately:
+make utils
+make modules
+```
+
+### Windows
+
+Make sure you have all the dependencies. This examples uses Chocolatey to automate dependency installation, but you may choose any other option that works for you:
+
+```sh
+choco install mingw python3 make
+```
+
+On Windows, you must always use `Makefile.win` instead of `Makefile`, so you have to pass `-f Makefile.win` option to every invocation of `make`:
+
+```sh
+make -f Makefile.win
+# or separately:
+make -f Makefile.win utils
+make -f Makefile.win modules
+```
