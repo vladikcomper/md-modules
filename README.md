@@ -51,8 +51,18 @@ make modules
 Make sure you have the necessary dependencies:
 
 ```sh
-pkg install clang++ gmake python3 wine
+pkg install gmake python3 wine
 ```
+
+> **Note**
+>
+> If you're running a 64-bit system, you'll likely also need a 32-bit installation of Wine. As of FreeBSD 13, the following script may automate the process:
+>
+> ```sh
+> /usr/local/share/wine/pkg32.sh install wine
+> ```
+> 
+> Consult your distribution's manuals for more information.
 
 Please note that you specifically need to use GNU-Make instead of BSD-flavoured Make everywhere:
 
