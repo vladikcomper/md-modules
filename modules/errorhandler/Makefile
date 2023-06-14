@@ -25,7 +25,7 @@ as:	$(BUILD_DIR)/as/Debugger.asm $(BUILD_DIR)/as/ErrorHandler.asm
 as-extsym:	$(BUILD_DIR)/as-extsym/Debugger.asm $(BUILD_DIR)/as-extsym/ErrorHandler.asm
 
 tests:	all
-	make -C tests -f .Makefile
+	$(MAKE) -C tests -f .Makefile
 
 clean:
 	rm -rf $(BUILD_DIR)/*
@@ -88,13 +88,13 @@ $(BUILD_DIR)/ErrorHandler.ExtSymbols.InjectTable.log:	$(CORE_BUILD_DIR)/ErrorHan
 
 
 $(CORE_BUILD_DIR)/ErrorHandler.bin $(CORE_BUILD_DIR)/ErrorHandler.sym &:	$(CORE_SRC_FILES)
-	make -C ../errorhandler-core release
+	$(MAKE) -C ../errorhandler-core release
 
 $(CORE_BUILD_DIR)/ErrorHandler.Debug.bin  $(CORE_BUILD_DIR)/ErrorHandler.Debug.sym &:	$(CORE_SRC_FILES)
-	make -C ../errorhandler-core debug
+	$(MAKE) -C ../errorhandler-core debug
 
 $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.bin  $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.sym &:	$(CORE_SRC_FILES)
-	make -C ../errorhandler-core extsym
+	$(MAKE) -C ../errorhandler-core extsym
 
 
 $(BUILD_DIR):

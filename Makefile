@@ -4,12 +4,12 @@
 all:	utils modules
 
 utils:
-	make -C utils/convsym
-	make -C utils/cbundle
+	$(MAKE) -C utils/convsym
+	$(MAKE) -C utils/cbundle
 
 modules:
-	make -C modules/mdshell
-	make -C modules/errorhandler
+	$(MAKE) -C modules/mdshell
+	$(MAKE) -C modules/errorhandler
 
 clean:
 	rm -drf build/modules build/utils
