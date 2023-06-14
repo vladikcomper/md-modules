@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: cd utils/cbundle && ./build.sh
+      run: cd utils/cbundle && make
     - name: Test
-      run: cd utils/cbundle && ./test.py
+      run: cd utils/cbundle && make test
  

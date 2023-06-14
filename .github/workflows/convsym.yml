@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: cd utils/convsym && ./build.sh
+      run: cd utils/convsym && make
     - name: Test
-      run: cd utils/convsym && ./test.py
+      run: cd utils/convsym && make test
  
