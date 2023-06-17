@@ -113,8 +113,6 @@ ErrorHandler:
 	; Print caller
 	movea.l	0.w, a1							; a1 = stack top boundary
 	lea		6(a4), a2						; a2 = call stack (after exception stack frame)
-	jsr		Error_MaskStackBoundaries(pc)
-
 	jsr		Error_GuessCaller(pc)			; d1 = caller
 	lea 	Str_Caller(pc), a1				; a1 = formatted string
 	jsr		Error_DrawOffsetLocation(pc)
@@ -426,6 +424,7 @@ Error_DrawInterruptHandler:
 
 Error_GuessCaller:
 	subq.l	#4, a1					; set a final longword to read
+	jsr		Error_MaskStackBoundaries(pc)
 	cmpa.l	a2, a1
 	blo.s	@nocaller
 
