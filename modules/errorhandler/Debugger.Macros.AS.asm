@@ -28,7 +28,7 @@ assert	macro	SRC, COND, DEST
 			tst.ATTRIBUTE	SRC
 		endif
 
-		switch "COND"
+		switch lowstring("COND")
 		case "eq"
 			beq	.skip
 		case "ne"
@@ -91,11 +91,26 @@ RaiseError	macro	string, consoleprogram, opts
 		else
 			dc.b	_eh_enter_console|((((*)&1)!1)*_eh_align_offset)	; ''
 		endif
-		align	2															; ... to tell Error handler to skip this byte, so it'll jump to ...
-		jmp		consoleprogram										; ... an aligned "jmp" instruction that calls console program itself
+		align	2													; ... to tell Error handler to skip this byte, so it'll jump to ...
+		if DEBUGGER__EXTENSIONS__ENABLE
+			jsr		consoleprogram										; ... an aligned "jsr" instruction that calls console program itself
+			jmp		DebuggerExtensions___global__ErrorHandler_PagesController
+		else
+			jmp		consoleprogram										; ... an aligned "jmp" instruction that calls console program itself
+		endif
 	else
-		dc.b	opts+0						; otherwise, just specify \opts for error handler, +0 will generate dc.b 0 ...
-		align	2							; ... in case \opts argument is empty or skipped
+		if DEBUGGER__EXTENSIONS__ENABLE
+			if "opts"<>""
+				dc.b	opts+_eh_return|((((*)&1)!1)*_eh_align_offset)			; add flag "_eh_align_offset" if the next byte is at odd offset ...
+			else
+				dc.b	_eh_return|((((*)&1)!1)*_eh_align_offset)			; add flag "_eh_align_offset" if the next byte is at odd offset ...
+			endif
+			align	2													; ... to tell Error handler to skip this byte, so it'll jump to ...
+			jmp		DebuggerExtensions___global__ErrorHandler_PagesController
+		else
+			dc.b	opts+0						; otherwise, just specify \opts for error handler, +0 will generate dc.b 0 ...
+			align	2							; ... in case \opts argument is empty or skipped
+		endif
 	endif
 	align	2
 
@@ -123,7 +138,7 @@ Console	macro	argument1, argument2
 		movem.l	a0-a2/d7, -(sp)
 		lea		4*4(sp), a2
 		lea		__data(pc), a1
-		jsr		ErrorHandler___global__console_write_formatted
+		jsr		ErrorHandler___global__Console_Write_Formatted
 		movem.l	(sp)+, a0-a2/d7
 		if (__sp>8)
 			lea		__sp(sp), sp
@@ -143,7 +158,7 @@ Console	macro	argument1, argument2
 		movem.l	a0-a2/d7, -(sp)
 		lea		4*4(sp), a2
 		lea		__data(pc), a1
-		jsr		ErrorHandler___global__console_writeline_formatted
+		jsr		ErrorHandler___global__Console_WriteLine_Formatted
 		movem.l	(sp)+, a0-a2/d7
 		if (__sp>8)
 			lea		__sp(sp), sp
@@ -158,7 +173,7 @@ Console	macro	argument1, argument2
 	__leave:
 
 	case "run"
-		jsr		ErrorHandler___extern__console_only
+		jsr		DebuggerExtensions___global__ErrorHandler_ConsoleOnly
 		jsr		argument1
 		bra.s	*
 
@@ -167,14 +182,14 @@ Console	macro	argument1, argument2
 		movem.l	d0-d1, -(sp)
 		move.w	argument2, -(sp)
 		move.w	argument1, -(sp)
-		jsr		ErrorHandler___global__console_setposasxy_stack
+		jsr		ErrorHandler___global__Console_SetPosAsXY_Stack
 		addq.w	#4, sp
 		movem.l	(sp)+, d0-d1
 		move.w	(sp)+, sr
 
 	case "breakline"
 		move.w	sr, -(sp)
-		jsr		ErrorHandler___global__console_startnewline
+		jsr		ErrorHandler___global__Console_StartNewLine
 		move.w	(sp)+, sr
 
 	elsecase
@@ -188,9 +203,15 @@ __ErrorMessage  macro string, opts
 		__FSTRING_GenerateArgumentsCode string
 		jsr		ErrorHandler
 		__FSTRING_GenerateDecodedString string
-		dc.b	opts+0
-		align	2
 
+		if DEBUGGER__EXTENSIONS__ENABLE
+			dc.b	opts+_eh_return|((((*)&1)^1)*_eh_align_offset)	; add flag "_eh_align_offset" if the next byte is at odd offset ...
+			align	2												; ... to tell Error handler to skip this byte, so it'll jump to ...
+			jmp		DebuggerExtensions___global__ErrorHandler_PagesController	; ... extensions controller
+		else
+			dc.b	opts+0
+			align	2
+		endif
 	endm
 
 ; ---------------------------------------------------------------
@@ -199,7 +220,7 @@ __ErrorMessage  macro string, opts
 
 __FSTRING_PushArgument macro OPERAND,DEST
 
-	switch OPERAND
+	switch lowstring(OPERAND)
 	case "d0"
 		move.ATTRIBUTE	d0,DEST
 	case "d1"
@@ -248,7 +269,8 @@ __FSTRING_PushArgument macro OPERAND,DEST
 		move.ATTRIBUTE	(a6),DEST
 
 	elsecase
-		move.ATTRIBUTE	{OPERAND},DEST
+	__evaluated_operand: set VAL(OPERAND)
+		move.ATTRIBUTE	__evaluated_operand,DEST
 
 	endcase
 	endm

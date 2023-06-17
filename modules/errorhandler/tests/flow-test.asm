@@ -19,6 +19,8 @@
 ;	certain calls due to AS limitations.
 ; ---------------------------------------------------------------
 
+__DEBUG__:	equ	1	; turn on assertions
+
 	include	"..\..\..\build\modules\mdshell\headless\MDShell.asm"
 
 #ifdef ASM68K
@@ -26,6 +28,7 @@
 #else
 	include	"..\..\..\build\modules\errorhandler\as\Debugger.asm"
 #endif
+
 
 ; --------------------------------------------------------------
 Main:
@@ -101,7 +104,16 @@ Test_Formatter_SYM_SPLIT:
 	Console.Write "%<pal1>sym|split: %<pal0>"
 	Console.Write "%<.b d0 sym|split>%<pal2>%<symdisp>%<pal0>-"
 	Console.Write "%<.w d0 sym|split>%<pal2>%<symdisp>%<pal0>-"
-	Console.Write "%<.l d0 sym|split>%<pal2>%<symdisp>%<pal0>"
+	Console.Write "%<.l d0 sym|split>%<pal2>%<symdisp>%<pal0>%<endl>"
+	jsr		CheckRegisterIntergity
+
+; --------------------------------------------------------------
+Test_ConsoleWriteExtended:
+	Console.WriteLine "%<pal1>EntryPoint: %<pal0>%<.l 4 sym>"
+	Console.WriteLine "%<pal1>Main+0000: %<pal0>%<.l Main>"
+	Console.WriteLine "%<pal1>Main+0004: %<pal0>%<.l Main+4>"
+	Console.WriteLine "%<pal1>Test_MiscCommands+0000: %<pal0>%<.l Test_MiscCommands>"
+
 	jsr		CheckRegisterIntergity
 
 ; --------------------------------------------------------------
@@ -113,7 +125,22 @@ Test_MiscCommands:
 	Console.Write "Positioning test #2 ..."
 	jsr		CheckRegisterIntergity
 
+; --------------------------------------------------------------
+Test_Assertions:
+	Console.SetXY #0, #26
+	Console.Write "Testing assertions..."
+
+	assert.l	d0, eq, #$472F741E
+	assert.l	d1, ge, RegisterData+4
+	assert.w	d2, hs, RegisterData+8+2
+	assert.b	d3, ls, RegisterData+12+3
+
+	jsr		CheckRegisterIntergity
+
+; --------------------------------------------------------------
+	Console.Write " ALL DONE!"
 	rts
+
 
 ; ==============================================================
 ; --------------------------------------------------------------

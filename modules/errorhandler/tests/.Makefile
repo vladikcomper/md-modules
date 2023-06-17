@@ -37,7 +37,7 @@ flow-test:	| $(TEST_BUILD_DIR) $(CONVSYM) $(CBUNDLE)
 	
 	set AS_MSGPATH="..\..\exec\as"
 	set USEANSI=n
-	$(ASL) -xx -A -L -OLIST $(TEST_BUILD_DIR)/flow-test-as.lst $(TEST_BUILD_DIR)/flow-test-as.asm -o $(TEST_BUILD_DIR)/flow-test-as.p
+	$(ASL) -U -xx -A -L -OLIST $(TEST_BUILD_DIR)/flow-test-as.lst $(TEST_BUILD_DIR)/flow-test-as.asm -o $(TEST_BUILD_DIR)/flow-test-as.p
 	$(P2BIN) $(TEST_BUILD_DIR)/flow-test-as.p $(TEST_BUILD_DIR)/flow-test-as.gen -r 0x-0x
 	rm $(TEST_BUILD_DIR)/flow-test-as.p
 	$(CONVSYM) $(TEST_BUILD_DIR)/flow-test-as.lst $(TEST_BUILD_DIR)/flow-test-as.gen -in as_lst -a -ref 200

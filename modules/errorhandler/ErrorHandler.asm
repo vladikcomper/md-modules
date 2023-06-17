@@ -71,35 +71,46 @@ ErrorExcept:
 ; Import error handler global functions
 ; ---------------------------------------------------------------
 
+; Debugger extension functions
+#include ../../build/modules/debuggers/Extensions.Globals.asm
+
+; Error handler & core functions
 #ifdef DEBUG
-#include ../../build/modules/errorhandler/ErrorHandler.Debug.Global.ASM68K.asm
+#include ../../build/modules/errorhandler-core/ErrorHandler.Debug.Globals.asm
 #else
 #ifdef EXTSYM
-#include ../../build/modules/errorhandler/ErrorHandler.ExtSymbols.Global.ASM68K.asm
+#include ../../build/modules/errorhandler-core/ErrorHandler.ExtSymbols.Globals.asm
 #else
-#include ../../build/modules/errorhandler/ErrorHandler.Global.ASM68K.asm
+#include ../../build/modules/errorhandler-core/ErrorHandler.Globals.asm
 #endif
 #endif
 #endif
 ##
 #ifdef BUNDLE-AS
-## WARNING! Global functions definitions are moved to Debugger.asm file, since AS sucks with forward-references.
+## WARNING! Global functions definitions are moved to Debugger.asm file, since AS sucks at forward-references.
 #endif
 ##
-
 
 ; ---------------------------------------------------------------
-; Error handler external functions (compiled only when used)
+; Built-in debuggers
 ; ---------------------------------------------------------------
 
-#ifdef BUNDLE-ASM68K
-#include ErrorHandler.Extern.ASM68K.asm
-#endif
-##
-#ifdef BUNDLE-AS
-#include ErrorHandler.Extern.AS.asm
-#endif
-##
+Debugger_Backtrace:
+#include ../../build/modules/debuggers/Backtrace.Blob.asm
+
+; ---------------------------------------------------------------
+; Debugger extensions
+; ---------------------------------------------------------------
+
+DebuggerExtensions:
+#include ../../build/modules/debuggers/Extensions.Blob.asm
+
+; WARNING! Don't move! This must be placed directly below "DebuggerExtensions"
+DebuggerExtensions_ExtraDebuggerList:
+	dc.l	DEBUGGER__EXTENSIONS__BTN_A_DEBUGGER	; for button A
+	dc.l	DEBUGGER__EXTENSIONS__BTN_C_DEBUGGER	; for button C (not B)
+	dc.l	DEBUGGER__EXTENSIONS__BTN_B_DEBUGGER	; for button B (not C)
+
 
 ; ---------------------------------------------------------------
 ; Error handler blob
@@ -107,12 +118,12 @@ ErrorExcept:
 
 ErrorHandler:
 #ifdef DEBUG
-#include ../../build/modules/errorhandler/ErrorHandler.Debug.Blob.asm
+#include ../../build/modules/errorhandler-core/ErrorHandler.Debug.Blob.asm
 #else
 #ifdef EXTSYM
-#include ../../build/modules/errorhandler/ErrorHandler.ExtSymbols.Blob.asm
+#include ../../build/modules/errorhandler-core/ErrorHandler.ExtSymbols.Blob.asm
 #else
-#include ../../build/modules/errorhandler/ErrorHandler.Blob.asm
+#include ../../build/modules/errorhandler-core/ErrorHandler.Blob.asm
 #endif
 #endif
 
