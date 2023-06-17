@@ -15,14 +15,13 @@
 ; Constants
 ; ---------------------------------------------------------------
 
-VRAM_Font		equ 	(('!'-1)*$20)
-VRAM_PlaneA 	equ		$8000
-VRAM_PlaneB 	equ		VRAM_PlaneA
+VRAM_Font:			equ 	(('!'-1)*$20)
+VRAM_ErrorScreen:	equ		$8000
 
-_white			equ 	0
-_yellow 		equ 	1<<13
-_blue			equ 	2<<13
-_blue2			equ 	3<<13
+_white:			equ 	0
+_yellow: 		equ 	1<<13
+_blue:			equ 	2<<13
+_blue2:			equ 	3<<13
 
 
 ; ===============================================================
@@ -255,7 +254,7 @@ Error_InitConsole:	__global
 ;		d1, d2
 ; ---------------------------------------------------------------
 
-Error_MaskStackBoundaries:
+Error_MaskStackBoundaries:	__global
 	move.l 	#$FFFFFF, d1
 
 	move.l	a1, d2
@@ -332,8 +331,11 @@ Error_DrawStackRow_Continue:
 ;		a1		Exception string (should include 2 arguments)
 ; ---------------------------------------------------------------
 
-Error_DrawOffsetLocation:
+Error_DrawOffsetLocation:	__global
 	jsr		Console_Write_Formatted(pc)		; display label
+	; fallthrough
+
+Error_DrawOffsetLocation2:	__global
 	move.l	d1, -(sp)
 	move.l	d1, -(sp)
 	lea		(sp), a2						; a2 = arguments buffer
@@ -468,7 +470,7 @@ ErrorHandler_SetupVDP:	__global
 		bvs.s	@wait_dma				; wait until it's finished
 
 	; Setup VDP registers for Error Handler screen
-	lea 	@VDPConfig(pc), a0
+	lea 	ErrorHandler_VDPConfig(pc), a0
 
 	@setup_regs:
 		move.w	(a0)+, d0
@@ -495,11 +497,9 @@ ErrorHandler_SetupVDP:	__global
 ; Error screen's VDP configuration
 ; ---------------------------------------------------------------
 
-@VDPConfig:
+ErrorHandler_VDPConfig:	__global
 	dc.w	$8004							; $00, disable HInts
 	dc.w	$8134							; $01, disable DISP
-	dc.w	$8200+VRAM_PlaneA/$400			; $02, set Plane A nametable offset in VRAM
-	dc.w	$8400+VRAM_PlaneB/$2000 		; $04, set Plane B nametable offset in VRAM
 	dc.w	$8500							; $05, set Sprites offset to $0000
 	dc.w	$8700							; $07, set backdrop color
 	dc.w	$8B00							; $0B, set VScroll=full, HScroll=full
@@ -509,7 +509,12 @@ ErrorHandler_SetupVDP:	__global
 	dc.w	$9011							; $10, use 512x512 plane resolution
 	dc.w	$9100							; $11, reset Window X-position
 	dc.w	$9200							; $12, reset Window Y-position
-	dc.w	0								; WARNING! Make sure the next word is positive!
+	; fallthrough
+
+ErrorHandler_VDPConfig_Nametables:	__global
+	dc.w	$8200+VRAM_ErrorScreen/$400		; $02, set Plane A nametable offset in VRAM
+	dc.w	$8400+VRAM_ErrorScreen/$2000	; $04, set Plane B nametable offset in VRAM
+	dc.w	0
 
 
 ; ===============================================================
@@ -536,18 +541,6 @@ ErrorHandler_ConsoleConfig:
 	dc.w	-1							; end marker
 
 	; ---------------------------------------------------------------
-	; Console RAM initial config
-	; ---------------------------------------------------------------
-
-	dcvram	VRAM_PlaneA					; screen start address / plane nametable pointer
-	dc.w	40							; number of characters per line
-	dc.w	40							; number of charasters on the first line (meant to be the same as the above)
-	dc.w	0							; base font pattern (tile id for ASCII $00 + palette flags)
-	dc.w	$80							; size of screen row (in bytes)
-
-	dc.w	$2000/$20-1					; size of screen (in tiles - 1)
-
-	; ---------------------------------------------------------------
 	; CRAM data
 	; ---------------------------------------------------------------
 	; FORMAT:
@@ -570,6 +563,22 @@ ErrorHandler_ConsoleConfig:
 	dc.w	$00CE, -7*2					; line 1: yellow text
 	dc.w	$0EEA, -7*2					; line 2: lighter blue text
 	dc.w	$0E86, -7*2					; line 3: darker blue text
+
+	; ---------------------------------------------------------------
+	; Console RAM initial config
+	; ---------------------------------------------------------------
+
+	dcvram	VRAM_ErrorScreen			; screen start address / plane nametable pointer
+	; fallthrough
+
+ErrorHandler_ConsoleConfig_Shared:	__global
+	dc.w	40							; number of characters per line
+	dc.w	40							; number of charasters on the first line (meant to be the same as the above)
+	dc.w	0							; base font pattern (tile id for ASCII $00 + palette flags)
+	dc.w	$80							; size of screen row (in bytes)
+
+	dc.w	$2000/$20-1					; size of screen (in tiles - 1)
+
 
 ; ---------------------------------------------------------------
 ; Error Handler interface data
