@@ -8,6 +8,8 @@
 ; ---------------------------------------------------------------
 
 	include	'..\core\Macros.asm'
+	include	'..\core\Console.defs.asm'
+	include	'..\core\Format_String.defs.asm'
 
 ; ---------------------------------------------------------------
 ; Constants
