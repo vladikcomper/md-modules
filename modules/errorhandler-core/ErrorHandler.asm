@@ -57,7 +57,7 @@ _blue2:			equ 	3<<13
 ;				jmp <ConsoleProgram> is word-aligned.
 ; ---------------------------------------------------------------
 
-ErrorHandler:
+ErrorHandler:	__global
 	move	#$2700, sr						; disable interrupts for good
 	lea		-Console_RAM.size(sp), sp		; STACK => allocate memory for console
 	movem.l d0-a6, -(sp) 					; STACK => dump registers ($3C bytes)
@@ -216,7 +216,7 @@ ErrorHandler:
 	bne.s	Error_RunConsoleProgram
 
 ; ---------------------------------------------------------------
-Error_IdleLoop:
+Error_IdleLoop:	__global
 	nop
 	bra.s	Error_IdleLoop
 
