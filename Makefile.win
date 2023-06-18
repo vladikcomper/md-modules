@@ -12,4 +12,4 @@ modules:
 	make -C modules\errorhandler -f Makefile.win
 
 clean:
-	del /q /f build\modules build\utils
+	rd /s /q build\modules build\utils

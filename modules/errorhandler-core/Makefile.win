@@ -44,13 +44,13 @@ $(BUILD_DIR)\ErrorHandler.ExtSymbols.bin $(BUILD_DIR)\ErrorHandler.ExtSymbols.sy
 # Global symbol tables
 
 $(BUILD_DIR)\ErrorHandler.Globals.asm:	$(BUILD_DIR)\ErrorHandler.sym | $(BUILD_DIR) $(CONVSYM)
-	$(CONVSYM) $^ $@ -output asm -outopt "ErrorHandler_%s: equ ErrorHandler+$$%X" -inopt "\processLocals-" -filter "__global_.+"
+	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
 
 $(BUILD_DIR)\ErrorHandler.Debug.Globals.asm:	$(BUILD_DIR)\ErrorHandler.Debug.sym | $(BUILD_DIR) $(CONVSYM)
-	$(CONVSYM) $^ $@ -output asm -outopt "ErrorHandler_%s: equ ErrorHandler+$$%X" -inopt "\processLocals-" -filter "__global_.+"
+	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
 
 $(BUILD_DIR)\ErrorHandler.ExtSymbols.Globals.asm:	$(BUILD_DIR)\ErrorHandler.ExtSymbols.sym | $(BUILD_DIR) $(CONVSYM)
-	$(CONVSYM) $^ $@ -output asm -outopt "ErrorHandler_%s: equ ErrorHandler+$$%X" -inopt "\processLocals-" -filter "__global_.+"
+	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
 
 
 # Linkable blobs in assembly format

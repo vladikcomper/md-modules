@@ -1,5 +1,5 @@
 
-include ..\..\utils\.Makefile # For $(CONVSYM), $(CBUNDLE) etc
+include ..\..\utils\.Makefile.win # For $(CONVSYM), $(CBUNDLE) etc
 
 
 BUILD_DIR ?= ..\..\build\modules\mdshell
@@ -28,7 +28,7 @@ tests:	asm68k as headless
 	make -C tests -f .Makefile.win
 
 clean:
-	del /q /f $(BUILD_DIR)\*
+	rd /s /q $(BUILD_DIR)
 
 
 $(BUILD_DIR)\asm68k\MDShell.asm:	$(SRC_FILES) $(EH_SRC_FILES) $(CORE_BUILD_DIR)\MDShell.Globals.asm $(CORE_BUILD_DIR)\MDShell.Blob.asm $(EXT_BUILD_DIR)\Extensions.Blob.asm $(EXT_BUILD_DIR)\Backtrace.Blob.asm | $(BUILD_DIR) $(CBUNDLE)
