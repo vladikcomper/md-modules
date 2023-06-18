@@ -1,10 +1,12 @@
-#ifndef HEADLESS
 ; ===============================================================
 ; ---------------------------------------------------------------
-; MD Shell 2.0
+; MD Shell 2.5
 ;
 ; (c) 2023, Vladikcomper
 ; ---------------------------------------------------------------
+
+
+#include ../errorhandler/Debugger.Extensions.asm
 
 
 #include ../errorhandler/Debugger.Constants.asm
@@ -14,15 +16,11 @@
 ; Import global functions
 ; ---------------------------------------------------------------
 
-#ifdef BUNDLE-ASM68K
-#include ../../build/modules/mdshell/MDShell.Global.ASM68K.asm
-#endif
-##
-##
-#ifdef BUNDLE-AS
-#include ../../build/modules/mdshell/MDShell.Global.AS.asm
-#endif
-##
+; Debugger extension functions
+#include ../../build/modules/debuggers/Extensions.Globals.asm
+
+; MD Shell & Core functions
+#include ../../build/modules/mdshell-core/MDShell.Globals.asm
 
 ; ---------------------------------------------------------------
 ; Macros
@@ -37,7 +35,6 @@
 #include ../errorhandler/Debugger.Macros.AS.asm
 #endif
 ##
-#endif
 
 
 ; ---------------------------------------------------------------
@@ -45,4 +42,9 @@
 ; ---------------------------------------------------------------
 
 MDShell:
-#include ../../build/modules/mdshell/MDShell.Blob.asm
+#include ../../build/modules/mdshell-core/MDShell.Blob.asm
+
+
+#include ../errorhandler/ErrorHandler.Extensions.asm
+
+#include ../errorhandler/ErrorHandler.Exceptions.asm
