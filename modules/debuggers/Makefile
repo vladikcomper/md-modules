@@ -20,7 +20,7 @@ clean:
 	rm -f $(BUILD_DIR)/*.*
 
 $(BUILD_DIR)/Extensions.Globals.asm: $(BUILD_DIR)/Extensions.sym | $(CONVSYM)
-	$(CONVSYM) $^ $@ -output asm -outopt "DebuggerExtensions_%s: equ DebuggerExtensions+$$%X" -inopt "/processLocals-" -filter "__global_.+"
+	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ DebuggerExtensions+$$%X" -inopt "/processLocals-" -filter "__global_.+"
 
 $(BUILD_DIR)/Extensions.Blob.asm: $(BUILD_DIR)/Extensions.bin $(BUILD_DIR)/Extensions.SymbolTable.log $(SRC_DIR)/inject-tables/Extensions.txt | $(BLOBTOASM)
 	$(BLOBTOASM) $(BUILD_DIR)/Extensions.bin $@ -t $(BUILD_DIR)/Extensions.SymbolTable.log -m $(SRC_DIR)/inject-tables/Extensions.txt
