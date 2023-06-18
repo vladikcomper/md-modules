@@ -1,3 +1,5 @@
+	if def(_CONSOLE_DEFS)=0
+_CONSOLE_DEFS:	equ	1
 
 ; ===============================================================
 ; ---------------------------------------------------------------
@@ -40,3 +42,5 @@ _setpat	equ		$F8
 _setx	equ		$FA
 
 _ConsoleMagic	equ	'CO'
+
+	endc	; _CONSOLE_DEFS

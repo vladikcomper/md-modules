@@ -1,3 +1,5 @@
+	if def(_FORMAT_STRING_DEFS)=0
+_FORMAT_STRING_DEFS:	equ	1
 
 ; ===============================================================
 ; ---------------------------------------------------------------
@@ -32,3 +34,5 @@ forced	equ		4				; display <unknown> if symbol was not found
 
 ; for symbol displacement or offset formatters ...
 weak	equ		8				; don't draw offset (for use with _sym|forced, see above)
+
+	endc	; _FORMAT_STRING_DEFS
