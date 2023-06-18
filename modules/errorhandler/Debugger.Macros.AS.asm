@@ -83,7 +83,7 @@ RaiseError	macro	string, consoleprogram, opts
 	pea		*(pc)
 	move.w	sr, -(sp)
 	__FSTRING_GenerateArgumentsCode string
-	jsr		ErrorHandler
+	jsr		__global__ErrorHandler
 	__FSTRING_GenerateDecodedString string
 	if ("consoleprogram"<>"")			; if console program offset is specified ...
 		__align_flag:	set	((((*)&1)!1)*_eh_align_offset)
@@ -95,7 +95,7 @@ RaiseError	macro	string, consoleprogram, opts
 		align	2													; ... to tell Error handler to skip this byte, so it'll jump to ...
 		if DEBUGGER__EXTENSIONS__ENABLE
 			jsr		consoleprogram										; ... an aligned "jsr" instruction that calls console program itself
-			jmp		DebuggerExtensions___global__ErrorHandler_PagesController
+			jmp		__global__ErrorHandler_PagesController
 		else
 			jmp		consoleprogram										; ... an aligned "jmp" instruction that calls console program itself
 		endif
@@ -108,7 +108,7 @@ RaiseError	macro	string, consoleprogram, opts
 				dc.b	_eh_return|__align_flag							; add flag "_eh_align_offset" if the next byte is at odd offset ...
 			endif
 			align	2													; ... to tell Error handler to skip this byte, so it'll jump to ...
-			jmp		DebuggerExtensions___global__ErrorHandler_PagesController
+			jmp		__global__ErrorHandler_PagesController
 		else
 			dc.b	opts+0						; otherwise, just specify \opts for error handler, +0 will generate dc.b 0 ...
 			align	2							; ... in case \opts argument is empty or skipped
@@ -142,7 +142,7 @@ Console	macro	argument1, argument2
 		movem.l	a0-a2/d7, -(sp)
 		lea		4*4(sp), a2
 		lea		__data(pc), a1
-		jsr		ErrorHandler___global__Console_Write_Formatted
+		jsr		__global__Console_Write_Formatted
 		movem.l	(sp)+, a0-a2/d7
 		if (__sp>8)
 			lea		__sp(sp), sp
@@ -162,7 +162,7 @@ Console	macro	argument1, argument2
 		movem.l	a0-a2/d7, -(sp)
 		lea		4*4(sp), a2
 		lea		__data(pc), a1
-		jsr		ErrorHandler___global__Console_WriteLine_Formatted
+		jsr		__global__Console_WriteLine_Formatted
 		movem.l	(sp)+, a0-a2/d7
 		if (__sp>8)
 			lea		__sp(sp), sp
@@ -188,14 +188,14 @@ Console	macro	argument1, argument2
 		movem.l	d0-d1, -(sp)
 		move.w	argument2, -(sp)
 		move.w	argument1, -(sp)
-		jsr		ErrorHandler___global__Console_SetPosAsXY_Stack
+		jsr		__global__Console_SetPosAsXY_Stack
 		addq.w	#4, sp
 		movem.l	(sp)+, d0-d1
 		move.w	(sp)+, sr
 
 	case "breakline"
 		move.w	sr, -(sp)
-		jsr		ErrorHandler___global__Console_StartNewLine
+		jsr		__global__Console_StartNewLine
 		move.w	(sp)+, sr
 
 	elsecase
@@ -207,16 +207,16 @@ Console	macro	argument1, argument2
 ; ---------------------------------------------------------------
 __ErrorMessage  macro string, opts
 		__FSTRING_GenerateArgumentsCode string
-		jsr		ErrorHandler
+		jsr		__global__ErrorHandler
 		__FSTRING_GenerateDecodedString string
 
 		if DEBUGGER__EXTENSIONS__ENABLE
 		__align_flag: set (((*)&1)!1)*_eh_align_offset
 			dc.b	(opts)+_eh_return|__align_flag	; add flag "_eh_align_offset" if the next byte is at odd offset ...
 			align	2												; ... to tell Error handler to skip this byte, so it'll jump to ...
-			jmp		DebuggerExtensions___global__ErrorHandler_PagesController	; ... extensions controller
+			jmp		__global__ErrorHandler_PagesController	; ... extensions controller
 		else
-			dc.b	opts+0
+			dc.b	(opts)+0
 			align	2
 		endif
 	endm

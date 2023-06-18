@@ -41,14 +41,14 @@ RaiseError &
 	pea		*(pc)
 	move.w	sr, -(sp)
 	__FSTRING_GenerateArgumentsCode \string
-	jsr		ErrorHandler
+	jsr		__global__ErrorHandler
 	__FSTRING_GenerateDecodedString \string
 	if strlen("\console_program")			; if console program offset is specified ...
 		dc.b	\opts+_eh_enter_console|(((*&1)^1)*_eh_align_offset)	; add flag "_eh_align_offset" if the next byte is at odd offset ...
 		even															; ... to tell Error handler to skip this byte, so it'll jump to ...
 		if DEBUGGER__EXTENSIONS__ENABLE
 			jsr		\console_program										; ... an aligned "jsr" instruction that calls console program itself
-			jmp		DebuggerExtensions___global__ErrorHandler_PagesController
+			jmp		__global__ErrorHandler_PagesController
 		else
 			jmp		\console_program										; ... an aligned "jmp" instruction that calls console program itself
 		endc
@@ -56,7 +56,7 @@ RaiseError &
 		if DEBUGGER__EXTENSIONS__ENABLE
 			dc.b	\opts+_eh_return|(((*&1)^1)*_eh_align_offset)			; add flag "_eh_align_offset" if the next byte is at odd offset ...
 			even															; ... to tell Error handler to skip this byte, so it'll jump to ...
-			jmp		DebuggerExtensions___global__ErrorHandler_PagesController
+			jmp		__global__ErrorHandler_PagesController
 		else
 			dc.b	\opts+0						; otherwise, just specify \opts for error handler, +0 will generate dc.b 0 ...
 			even								; ... in case \opts argument is empty or skipped
@@ -91,7 +91,7 @@ Console &
 			lea		4*4(sp), a2
 		endc
 		lea		@str\@(pc), a1
-		jsr		ErrorHandler___global__Console_\0\_Formatted
+		jsr		__global__Console_\0\_Formatted
 		movem.l	(sp)+, a0-a2/d7
 		if (__sp>8)
 			lea		__sp(sp), sp
@@ -117,14 +117,14 @@ Console &
 		movem.l	d0-d1, -(sp)
 		move.w	\2, -(sp)
 		move.w	\1, -(sp)
-		jsr		ErrorHandler___global__Console_SetPosAsXY_Stack
+		jsr		__global__Console_SetPosAsXY_Stack
 		addq.w	#4, sp
 		movem.l	(sp)+, d0-d1
 		move.w	(sp)+, sr
 
 	elseif strcmp("\0","breakline")|strcmp("\0","BreakLine")
 		move.w	sr, -(sp)
-		jsr		ErrorHandler___global__Console_StartNewLine
+		jsr		__global__Console_StartNewLine
 		move.w	(sp)+, sr
 
 	else
@@ -137,12 +137,12 @@ Console &
 __ErrorMessage &
 	macro	string, opts
 		__FSTRING_GenerateArgumentsCode \string
-		jsr		ErrorHandler
+		jsr		__global__ErrorHandler
 		__FSTRING_GenerateDecodedString \string
 		if DEBUGGER__EXTENSIONS__ENABLE
 			dc.b	\opts+_eh_return|(((*&1)^1)*_eh_align_offset)	; add flag "_eh_align_offset" if the next byte is at odd offset ...
 			even													; ... to tell Error handler to skip this byte, so it'll jump to ...
-			jmp		DebuggerExtensions___global__ErrorHandler_PagesController	; ... extensions controller
+			jmp		__global__ErrorHandler_PagesController	; ... extensions controller
 		else
 			dc.b	\opts+0
 			even
