@@ -6,10 +6,11 @@
 ; (c) 2023, Vladikcomper
 ; -----------------------------------------------------------------------------
 
+		include	"..\core\Macros.asm"
 		include	"..\core\Console.defs.asm"		; for "_pal0", "_newl" etc
 
 ; -----------------------------------------------------------------------------
-Debugger_Backtrace:
+Debugger_Backtrace:	__global
 		; Setup screen header (position and "Backtrace:" text)
 		lea		Str_ScreenHeader(pc), a0
 @_inj0:	jsr		Console_Write(pc)
@@ -118,21 +119,19 @@ Str_ScreenHeader:
 		dc.b	_pal1, 'Backtrace:', _newl, _newl, 0
 		even
 
+	if def(_LINKABLE_)
 __blob_end:
+	endc
 
 ; =============================================================================
 ; -----------------------------------------------------------------------------
 ; Injectable routines for a stand-alone build
 ; -----------------------------------------------------------------------------
 ; NOTE:
-;	Those point to illegal instruction just to make the code compile.
 ;	Each invocation of them marked with @_injX or __injX symbol will be
 ;	manually linked by BLOBTOASM utility using the injection map.
 ; -----------------------------------------------------------------------------
 
-Console_Write:				equ		__ILLEGAL__
-Error_MaskStackBoundaries:	equ		__ILLEGAL__
-Error_DrawOffsetLocation2:	equ		__ILLEGAL__
-
-__ILLEGAL__:
-		illegal
+Console_Write:	__injectable
+Error_MaskStackBoundaries:	__injectable
+Error_DrawOffsetLocation2:	__injectable

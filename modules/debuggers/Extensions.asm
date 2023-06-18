@@ -34,12 +34,9 @@ ErrorHandler_ConsoleOnly:	__global
 @_inj0:	jsr		ErrorHandler_SetupVDP(pc)
 @_inj1:	jsr		Error_InitConsole(pc)
 		movem.l	(sp)+, d0-a6
-		pea		@IdleLoop(pc)
+@_inj2:	pea		Error_IdleLoop(pc)
 		move.l	Console_RAM.size+4(sp), -(sp)	; retrieve return address
 		rts										; jump to return address
-
-@IdleLoop:
-		bra.s	@IdleLoop
 
 
 ; =============================================================================
@@ -148,16 +145,15 @@ ReadJoypad:
 
 ; -----------------------------------------------------------------------------
 
+	if def(_LINKABLE_)
 __blob_end:
+	endc
 
 ; -----------------------------------------------------------------------------
 ; This list must be manually inserted *AFTER* the BLOB
 ; -----------------------------------------------------------------------------
 
-ErrorHandler_ExtraDebuggerList:
-		dc.l	0					; button A debugger
-		dc.l	0					; button C debugger
-		dc.l	0					; button B debugger
+ErrorHandler_ExtraDebuggerList:	__injectable
 
 
 ; =============================================================================
@@ -165,20 +161,13 @@ ErrorHandler_ExtraDebuggerList:
 ; Injectable routines for a stand-alone build
 ; -----------------------------------------------------------------------------
 ; NOTE:
-;	Those point to illegal instruction just to make the code compile.
 ;	Each invocation of them marked with @_injX or __injX symbol will be
 ;	manually linked by BLOBTOASM utility using the injection map.
 ; -----------------------------------------------------------------------------
 
-ErrorHandler_SetupVDP:				equ		__ILLEGAL__
-Error_InitConsole:					equ		__ILLEGAL__
-Console_InitShared:					equ		__ILLEGAL__
-
-__ILLEGAL__:
-		illegal
-
-ErrorHandler_ConsoleConfig_Shared:	equ		__NULL__
-ErrorHandler_VDPConfig_Nametables:	equ		__NULL__
-
-__NULL__:
-		dc.l	0
+ErrorHandler_SetupVDP:	__injectable
+Error_InitConsole:	__injectable
+Error_IdleLoop:	__injectable
+Console_InitShared:	__injectable
+ErrorHandler_ConsoleConfig_Shared:	__injectable
+ErrorHandler_VDPConfig_Nametables:	__injectable

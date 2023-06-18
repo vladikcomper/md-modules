@@ -6,7 +6,7 @@ BUILD_DIR ?= ../../build/modules/debuggers
 SRC_DIR ?= .
 
 ASM68K ?= wine ../exec/asm68k.exe
-ASFLAGS = /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o v+ /p /o ae-
+ASFLAGS = /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o v+ /p /o ae- /e _LINKABLE_=1
 
 .PHONY:	all backtrace clean
 
