@@ -45,7 +45,7 @@ flow-test:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM) $(CBUNDLE)
 
 
 $(MDSHELL_HEADLESS):
-	$(MAKE)-C  ../../mdshell headless
+	$(MAKE) -C  ../../mdshell headless
 
 
 $(TEST_BUILD_DIR):
