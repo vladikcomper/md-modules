@@ -43,7 +43,7 @@ $(BUILD_DIR)/MDShell.Blob.asm:	$(BUILD_DIR)/MDShell.bin $(BUILD_DIR)/MDShell.Sym
 	$(BLOBTOASM) $(BUILD_DIR)/MDShell.bin $@ -t $(BUILD_DIR)/MDShell.SymbolTable.log -m $(SRC_DIR)/inject-tables/MDShell.txt
 
 $(BUILD_DIR)/MDShell.Headless.Blob.asm:	$(BUILD_DIR)/MDShell.Headless.bin $(BUILD_DIR)/MDShell.Headless.SymbolTable.log $(SRC_DIR)/inject-tables/MDShell.txt | $(BUILD_DIR)
-	$(BLOBTOASM) $(BUILD_DIR)/MDShell.bin $@ -t $(BUILD_DIR)/MDShell.Headless.SymbolTable.log -m $(SRC_DIR)/inject-tables/MDShell.Headless.txt
+	$(BLOBTOASM) $(BUILD_DIR)/MDShell.Headless.bin $@ -t $(BUILD_DIR)/MDShell.Headless.SymbolTable.log -m $(SRC_DIR)/inject-tables/MDShell.Headless.txt
 
 
 
