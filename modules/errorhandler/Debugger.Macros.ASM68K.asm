@@ -70,7 +70,9 @@ RaiseError &
 ; Console interface
 ; ---------------------------------------------------------------
 ; EXAMPLES:
+#ifndef MD-SHELL
 ;	Console.Run	YourConsoleProgram
+#endif
 ;	Console.Write "Hello "
 ;	Console.WriteLine "...world!"
 ;	Console.SetXY #1, #4
@@ -103,11 +105,13 @@ Console &
 		even
 	@instr_end\@:
 
+#ifndef MD-SHELL
 	elseif strcmp("\0","run")|strcmp("\0","Run")
-		jsr		DebuggerExtensions___global__ErrorHandler_ConsoleOnly
+		jsr		__global__ErrorHandler_ConsoleOnly
 		jsr		\1
 		bra.s	*
 
+#endif
 	elseif strcmp("\0","setxy")|strcmp("\0","SetXY")
 		move.w	sr, -(sp)
 		movem.l	d0-d1, -(sp)

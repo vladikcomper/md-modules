@@ -123,7 +123,9 @@ RaiseError	macro	string, consoleprogram, opts
 ; Console interface
 ; ---------------------------------------------------------------
 ; EXAMPLES:
+#ifndef MD-SHELL
 ;	Console.Run	YourConsoleProgram
+#endif
 ;	Console.Write "Hello "
 ;	Console.WriteLine "...world!"
 ;	Console.SetXY #1, #4
@@ -174,11 +176,13 @@ Console	macro	argument1, argument2
 		align	2
 	__leave:
 
+#ifndef MD-SHELL
 	case "run"
-		jsr		DebuggerExtensions___global__ErrorHandler_ConsoleOnly
+		jsr		__global__ErrorHandler_ConsoleOnly
 		jsr		argument1
 		bra.s	*
 
+#endif
 	case "setxy"
 		move.w	sr, -(sp)
 		movem.l	d0-d1, -(sp)
