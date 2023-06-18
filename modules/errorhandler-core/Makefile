@@ -1,6 +1,7 @@
 
 include ../../utils/.Makefile # For $(CONVSYM), $(CBUNDLE) etc
 
+
 BUILD_DIR ?= ../../build/modules/errorhandler-core
 SRC_DIR ?= .
 CORE_DIR ?= ../core
@@ -18,6 +19,7 @@ debug:	$(BUILD_DIR)/ErrorHandler.Debug.bin $(BUILD_DIR)/ErrorHandler.Debug.Blob.
 
 # "extsym" build is usuable in assembly blob form only, because it requires additional linkage
 extsym:	$(BUILD_DIR)/ErrorHandler.ExtSymbols.Blob.asm $(BUILD_DIR)/ErrorHandler.ExtSymbols.Globals.asm
+
 
 tests:	release	debug extsym
 	$(MAKE) -C ../mdshell

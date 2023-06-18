@@ -10,7 +10,7 @@ SRC_FILES ?= $(wildcard $(SRC_DIR)/*.asm) $(wildcard ../errorhandler-core/*.asm)
 ASM68K ?= wine ../exec/asm68k.exe
 ASFLAGS = /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae-
 
-.PHONY:	all release Headless clean
+.PHONY:	all release headless clean
 
 all:	release headless
 

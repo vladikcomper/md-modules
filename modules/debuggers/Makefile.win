@@ -6,7 +6,7 @@ BUILD_DIR ?= ..\..\build\modules\debuggers
 SRC_DIR ?= .
 
 ASM68K ?= ..\exec\asm68k.exe
-ASFLAGS = /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o v+ /p /o ae-
+ASFLAGS = /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o v+ /p /o ae- /e _LINKABLE_=1
 
 .PHONY:	all backtrace clean
 
@@ -20,7 +20,7 @@ clean:
 	del /q /f $(BUILD_DIR)\*.*
 
 $(BUILD_DIR)\Extensions.Globals.asm: $(BUILD_DIR)\Extensions.sym | $(CONVSYM)
-	$(CONVSYM) $^ $@ -output asm -outopt "DebuggerExtensions_%s: equ DebuggerExtensions+$$%X" -inopt "/processLocals-" -filter "__global_.+"
+	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ DebuggerExtensions+$$%X" -inopt "/processLocals-" -filter "__global_.+"
 
 $(BUILD_DIR)\Extensions.Blob.asm: $(BUILD_DIR)\Extensions.bin $(BUILD_DIR)\Extensions.SymbolTable.log $(SRC_DIR)\inject-tables\Extensions.txt | $(BLOBTOASM)
 	$(BLOBTOASM) $(BUILD_DIR)\Extensions.bin $@ -t $(BUILD_DIR)\Extensions.SymbolTable.log -m $(SRC_DIR)\inject-tables\Extensions.txt
