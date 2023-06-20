@@ -112,6 +112,27 @@ Console &
 		bra.s	*
 
 #endif
+	elseif strcmp("\0","clear")|strcmp("\0","Clear")
+		move.w	sr, -(sp)
+		jsr		__global__ErrorHandler_ClearConsole
+		move.w	(sp)+, sr
+
+	elseif strcmp("\0","sleep")|strcmp("\0","Sleep")
+		move.w	sr, -(sp)
+		move.w	d0, -(sp)
+		move.l	a0, -(sp)
+		move.w	\1, d0
+		subq.w	#1, d0
+		bcs.s	@sleep_done\@
+		@sleep_loop\@:
+			jsr		__global__VSync
+			dbf		d0, @sleep_loop\@
+
+	@sleep_done\@:
+		move.l	(sp)+, a0
+		move.w	(sp)+, d0
+		move.w	(sp)+, sr
+
 	elseif strcmp("\0","setxy")|strcmp("\0","SetXY")
 		move.w	sr, -(sp)
 		movem.l	d0-d1, -(sp)

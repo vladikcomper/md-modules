@@ -183,6 +183,27 @@ Console	macro	argument1, argument2
 		bra.s	*
 
 #endif
+	case "clear"
+		move.w	sr, -(sp)
+		jsr		__global__ErrorHandler_ClearConsole
+		move.w	(sp)+, sr
+
+	case "sleep"
+		move.w	sr, -(sp)
+		move.w	d0, -(sp)
+		move.l	a0, -(sp)
+		move.w	argument1, d0
+		subq.w	#1, d0
+		bcs.s	.__sleep_done
+		.__sleep_loop:
+			jsr		__global__VSync
+			dbf		d0, .__sleep_loop
+
+	.__sleep_done:
+		move.l	(sp)+, a0
+		move.w	(sp)+, d0
+		move.w	(sp)+, sr
+
 	case "setxy"
 		move.w	sr, -(sp)
 		movem.l	d0-d1, -(sp)

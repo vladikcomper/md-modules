@@ -41,6 +41,28 @@ ErrorHandler_ConsoleOnly:	__global
 
 ; =============================================================================
 ; -----------------------------------------------------------------------------
+; Clears currently used console
+; -----------------------------------------------------------------------------
+
+ErrorHandler_ClearConsole:	__global
+		move.l	a3, -(sp)
+		move.l	usp, a3
+		cmp.b	#_ConsoleMagic, Console.Magic(a3)
+		bne.s	@quit
+
+		movem.l	d0-d1/d5/a1/a5-a6, -(sp)
+		lea		VDP_Ctrl, a5				; a5 = VDP_Ctrl
+		lea		-4(a5), a6					; a6 = VDP_Data
+@_inj0:	lea		ErrorHandler_ConsoleConfig_Initial(pc), a1
+@_inj1:	jsr		Console_Reset(pc)
+		movem.l	(sp)+, d0-d1/d5/a1/a5-a6
+@quit:
+		move.l	(sp)+, a3
+		rts
+
+
+; =============================================================================
+; -----------------------------------------------------------------------------
 ; A simple controller that allows switching between Debuggers
 ; -----------------------------------------------------------------------------
 
@@ -104,7 +126,7 @@ ErrorHandler_PagesController:	__global
 ; Performs VSync
 ; -----------------------------------------------------------------------------
 
-VSync:
+VSync:	__global
 		lea		VDP_Ctrl, a0
 
 	@loop0:
@@ -168,6 +190,8 @@ ErrorHandler_ExtraDebuggerList:	__injectable
 ErrorHandler_SetupVDP:	__injectable
 Error_InitConsole:	__injectable
 Error_IdleLoop:	__injectable
+Console_Reset: __injectable
 Console_InitShared:	__injectable
+ErrorHandler_ConsoleConfig_Initial:	__injectable
 ErrorHandler_ConsoleConfig_Shared:	__injectable
 ErrorHandler_VDPConfig_Nametables:	__injectable

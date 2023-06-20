@@ -58,7 +58,25 @@ Console_Init:	__global
 		moveq	#0, d1
 		jsr		$10(a0,d2)			; fill the rest of cram by a clever jump (WARNING! Precision required!)
 		dbf		d3, @fill_palette_line
+	; fallthrough
 
+; ---------------------------------------------------------------
+; Clears and resets console to the initial config
+; ---------------------------------------------------------------
+; INPUT:
+;		a1		Initial console config
+;		a3		Console RAM pointer
+;		a5		VDP Control Port ($C00004)
+;		a6		VDP Data Port ($C00000)
+;
+; OUTPUT:
+;		d5	.l	Current on-screen position
+;
+; USES:
+;		d0-d1, a1, a3
+; ---------------------------------------------------------------
+
+Console_Reset:	__global
 	move.l	(a1)+, d5				; d5 = VDP command with start on-screen position
 	; fallthrough
 
@@ -77,7 +95,7 @@ Console_Init:	__global
 ;		d5	.l	Current on-screen position
 ;
 ; USES:
-;		d0-d4, a5-a6
+;		d0-d1, a1, a3
 ; ---------------------------------------------------------------
 
 Console_InitShared:	__global

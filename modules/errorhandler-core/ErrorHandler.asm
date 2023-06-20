@@ -563,11 +563,13 @@ ErrorHandler_ConsoleConfig:
 	dc.w	$00CE, -7*2					; line 1: yellow text
 	dc.w	$0EEA, -7*2					; line 2: lighter blue text
 	dc.w	$0E86, -7*2					; line 3: darker blue text
+	; fallthrough
 
 	; ---------------------------------------------------------------
 	; Console RAM initial config
 	; ---------------------------------------------------------------
 
+ErrorHandler_ConsoleConfig_Initial:	__global
 	dcvram	VRAM_ErrorScreen			; screen start address / plane nametable pointer
 	; fallthrough
 
