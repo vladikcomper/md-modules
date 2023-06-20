@@ -36,12 +36,9 @@ Main:
 	; found at "RegisterData" byte-array (see below)
 	movem.l	RegisterData, d0-a6
 
-	; First off, check registers after issuing "Console.Run" ...
-	jsr		CheckRegisterIntergity
-
 ; --------------------------------------------------------------
 Test_BasicString:
-	; Using Console.Write with Console with plain string ...
+	; Using Console.Write with a plain string ...
 	Console.Write "Starting flow tests within console program..."
 	jsr		CheckRegisterIntergity
 

@@ -6,7 +6,7 @@
 ; (c) 2023, Vladikcomper
 ; -----------------------------------------------------------------------------
 
-		include	"..\core\Macros.asm"
+		include	"..\core\Macros.asm"			; for "__global", "__injectable"
 		include	"..\core\Console.defs.asm"		; for "_pal0", "_newl" etc
 
 ; -----------------------------------------------------------------------------
