@@ -2,6 +2,9 @@
 ; Built-in debuggers
 ; ---------------------------------------------------------------
 
+Debugger_AddressRegisters:
+#include ../../build/modules/debuggers/AddressRegisters.Blob.asm
+
 Debugger_Backtrace:
 #include ../../build/modules/debuggers/Backtrace.Blob.asm
 

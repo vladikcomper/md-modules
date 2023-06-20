@@ -8,11 +8,13 @@ SRC_DIR ?= .
 ASM68K ?= wine ../exec/asm68k.exe
 ASFLAGS = /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o v+ /p /o ae- /e _LINKABLE_=1
 
-.PHONY:	all backtrace clean
+.PHONY:	all backtrace address extensions clean
 
-all:	backtrace extensions
+all:	backtrace address extensions
 
 backtrace:	$(BUILD_DIR)/Backtrace.Blob.asm
+
+address:	$(BUILD_DIR)/AddressRegisters.Blob.asm
 
 extensions:	$(BUILD_DIR)/Extensions.Blob.asm $(BUILD_DIR)/Extensions.Globals.asm
 
@@ -36,6 +38,14 @@ $(BUILD_DIR)/Backtrace.Blob.asm: $(BUILD_DIR)/Backtrace.bin $(BUILD_DIR)/Backtra
 $(BUILD_DIR)/Backtrace.bin $(BUILD_DIR)/Backtrace.SymbolTable.log &: $(SRC_DIR)/Backtrace.asm | $(BUILD_DIR) $(CONVSYM)
 	$(ASM68K) $(ASFLAGS) $(SRC_DIR)/Backtrace.asm, $(BUILD_DIR)/Backtrace.bin, $(BUILD_DIR)/Backtrace.sym, $(BUILD_DIR)/Backtrace.lst
 	$(CONVSYM) $(BUILD_DIR)/Backtrace.sym $(BUILD_DIR)/Backtrace.SymbolTable.log -output asm -outopt "%s: %X"
+
+
+$(BUILD_DIR)/AddressRegisters.Blob.asm: $(BUILD_DIR)/AddressRegisters.bin $(BUILD_DIR)/AddressRegisters.SymbolTable.log $(SRC_DIR)/inject-tables/AddressRegisters.txt
+	$(BLOBTOASM) $(BUILD_DIR)/AddressRegisters.bin $@ -t $(BUILD_DIR)/AddressRegisters.SymbolTable.log -m $(SRC_DIR)/inject-tables/AddressRegisters.txt
+
+$(BUILD_DIR)/AddressRegisters.bin $(BUILD_DIR)/AddressRegisters.SymbolTable.log &: $(SRC_DIR)/AddressRegisters.asm | $(BUILD_DIR) $(CONVSYM)
+	$(ASM68K) $(ASFLAGS) $(SRC_DIR)/AddressRegisters.asm, $(BUILD_DIR)/AddressRegisters.bin, $(BUILD_DIR)/AddressRegisters.sym, $(BUILD_DIR)/AddressRegisters.lst
+	$(CONVSYM) $(BUILD_DIR)/AddressRegisters.sym $(BUILD_DIR)/AddressRegisters.SymbolTable.log -output asm -outopt "%s: %X"
 
 
 $(BUILD_DIR):
