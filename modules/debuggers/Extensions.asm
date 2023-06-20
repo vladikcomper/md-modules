@@ -9,7 +9,7 @@
 ; (c) 2023, Vladikcomper
 ; -----------------------------------------------------------------------------
 
-		include	"..\core\Macros.asm"		; for "VDP_Ctrl"
+		include	"..\core\Macros.asm"		; for "__global", "__injectable", "VDP_Ctrl"
 		include	"..\core\Console.defs.asm"	; for "Console_RAM"
 
 
@@ -67,6 +67,7 @@ ErrorHandler_ClearConsole:	__global
 ; -----------------------------------------------------------------------------
 
 ErrorHandler_PagesController:	__global
+		movem.l	d0-a6, -(sp)				; back up all the registers ...
 		move.w	#0, -(sp)					; allocate joypad memory
 
 	@MainLoop:
@@ -108,7 +109,9 @@ ErrorHandler_PagesController:	__global
 
 			; Execute the debugger
 			pea		@DestroyDebugger(pc)
-			jmp		(a0)						; avoid JSR here so backtrace won't detect it
+			pea		(a0)						; use debbuger's context upon return
+			movem.l	Console_RAM.size+2+4(sp), d0-a6	; switch to original registers ...
+			rts									; switch to debugger's context ...
 
 	; -----------------------------------------------------------------------------
 	@DestroyDebugger:
@@ -117,6 +120,7 @@ ErrorHandler_PagesController:	__global
 
 	; -----------------------------------------------------------------------------
 	@ShowMainErrorScreen:
+			; WARNING! Make sure a5 is "VDP_Ctrl"!
 @_inj2:		move.l	ErrorHandler_VDPConfig_Nametables(pc), (a5)
 			bra.s	@MainLoop
 
