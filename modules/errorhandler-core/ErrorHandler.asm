@@ -98,14 +98,14 @@ ErrorHandler:	__global
 	btst	#0, d6							; does error has extended stack frame (Address Error and Bus Error only)?
 	beq.s	@skip							; if not, branch
 
-	lea 	Str_Address(pc), a1				; a1 = formatted string
+	lea 	Str_Address(pc), a0				; a0 = label string
 	move.l	2(a4), d1						; d1 = address error offset
 	jsr		Error_DrawOffsetLocation(pc)
 	addq.w	#8, a4							; skip extension part of the stack frame
 @skip:
 
 	; Print module name error occured in
-	lea 	Str_Module(pc), a1				; a1 = formatted string
+	lea 	Str_Module(pc), a0				; a0 = label string
 	move.l	2(a4), d1						; d1 = last return offset
 	jsr		Error_DrawOffsetLocation(pc)
 
@@ -113,7 +113,7 @@ ErrorHandler:	__global
 	movea.l	0.w, a1							; a1 = stack top boundary
 	lea		6(a4), a2						; a2 = call stack (after exception stack frame)
 	jsr		Error_GuessCaller(pc)			; d1 = caller
-	lea 	Str_Caller(pc), a1				; a1 = formatted string
+	lea 	Str_Caller(pc), a0				; a0 = label string
 	jsr		Error_DrawOffsetLocation(pc)
 
 	jsr		Console_StartNewLine(pc)
@@ -181,11 +181,11 @@ ErrorHandler:	__global
 
 	; Print vertical and horizontal interrupt handlers, if available
 	move.l	$78.w, d0						; d0 = VInt vector address
-	lea		Str_VInt(pc), a1
+	lea		Str_VInt(pc), a0
 	jsr		Error_DrawInterruptHandler(pc)
 
 	move.l	$70.w, d0						; d0 = HInt vector address
-	lea		Str_HInt(pc), a1
+	lea		Str_HInt(pc), a0
 	jsr		Error_DrawInterruptHandler(pc)
 
 	jsr		Console_StartNewLine(pc)		; newline
@@ -328,11 +328,11 @@ Error_DrawStackRow_Continue:
 ; ---------------------------------------------------------------
 ; INPUT:
 ;		d1	.l	Exception offset
-;		a1		Exception string (should include 2 arguments)
+;		a0		Label
 ; ---------------------------------------------------------------
 
 Error_DrawOffsetLocation:	__global
-	jsr		Console_Write_Formatted(pc)		; display label
+	jsr		Console_Write(pc)				; display label
 	; fallthrough
 
 Error_DrawOffsetLocation2:	__global
@@ -387,7 +387,7 @@ Error_Return:
 ; ---------------------------------------------------------------
 ; INPUT:
 ;		d0	.l	Interrupt handler address
-;		a1		Handler name string
+;		a0		Handler name string
 ; ---------------------------------------------------------------
 
 Error_DrawInterruptHandler:
