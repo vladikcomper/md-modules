@@ -88,7 +88,7 @@ Console_InitShared:	__global
 	move.l	d5,	(a3)+				; Console RAM => copy screen position (long)
 	move.l	(a1)+, (a3)+			; Console RAM => copy number of characters per line (word) + characters remaining for the current line (word)
 	move.l	(a1)+, (a3)+			; Console RAM => copy base pattern (word) + screen row size (word)
-	move.w	#_ConsoleMagic, (a3)+ 	; Console RAM => set magic string
+	move.w	#_ConsoleMagic<<8, (a3)+; Console RAM => set magic number, clear reserved byte
 
 	; Clear screen
 	move.l	d5, (a5)				; VDP => Setup VRAM for screen namespace
@@ -130,7 +130,7 @@ Console_SetPosAsXY_Stack: __global
 Console_SetPosAsXY: __global
 	movem.l	d1-d2/a3, -(sp)
 	move.l	usp, a3
-	cmp.w	#_ConsoleMagic, Console.Magic(a3)
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 
 	move.w	(a3), d2
@@ -161,7 +161,7 @@ Console_SetPosAsXY: __global
 Console_GetPosAsXY: __global
 	move.l	a3, -(sp)
 	move.l	usp, a3
-	cmp.w	#_ConsoleMagic, Console.Magic(a3)
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 	moveq	#0, d1
 	move.w	(a3), d1
@@ -182,7 +182,7 @@ Console_GetPosAsXY: __global
 Console_StartNewLine: __global
 	move.l	a3, -(sp)
 	move.l	usp, a3
-	cmp.w	#_ConsoleMagic, Console.Magic(a3)
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 
 	move.w	d0, -(sp)
@@ -211,7 +211,7 @@ Console_StartNewLine: __global
 Console_SetBasePattern: __global
 	move.l	a3, -(sp)
 	move.l	usp, a3
-	cmp.w	#_ConsoleMagic, Console.Magic(a3)
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 	move.w	d1, Console.BasePattern(a3)
 	
@@ -230,7 +230,7 @@ Console_SetBasePattern: __global
 Console_SetWidth: __global
 	move.l	a3, -(sp)
 	move.l	usp, a3
-	cmp.w	#_ConsoleMagic, Console.Magic(a3)
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 	addq.w	#4, a3
 	move.w	d1, (a3)+
@@ -266,7 +266,7 @@ Console_WriteLine: __global
 Console_Write: __global
 	movem.l	d1-d6/a3/a6, -(sp)
 	move.l	usp, a3
-	cmp.w	#_ConsoleMagic, Console.Magic(a3)
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 
 	; Load console variables

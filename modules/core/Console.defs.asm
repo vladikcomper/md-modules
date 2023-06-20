@@ -21,7 +21,8 @@ Console.CharsPerLine	rs.w	1				; d2	number of characters per line
 Console.CharsRemaining	rs.w	1				; d3	remaining number of characters
 Console.BasePattern		rs.w	1				; d4	base pattern
 Console.ScreenRowSz		rs.w	1				; d6	row size within screen position
-Console.Magic			rs.w	1				;		should contain a magic string to ensure this is valid console memory area
+Console.Magic			rs.b	1				;		should contain a magic number to ensure this is valid console memory area
+						rs.b	1				;		<Reserved>
 Console_RAM.size		equ		__rs-Console_RAM
 
 ; ---------------------------------------------------------------
@@ -41,6 +42,6 @@ _setoff	equ		$F4
 _setpat	equ		$F8
 _setx	equ		$FA
 
-_ConsoleMagic	equ	'CO'
+_ConsoleMagic	equ	$5D
 
 	endc	; _CONSOLE_DEFS
