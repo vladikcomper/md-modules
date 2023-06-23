@@ -248,7 +248,26 @@ __ErrorMessage  macro string, opts
 
 __FSTRING_PushArgument macro OPERAND,DEST
 
-	switch lowstring(OPERAND)
+	.__operand:		set	OPERAND
+	.__dval:		set	0
+
+	; If OPERAND starts with "#", simulate "#immediate" mode by splitting OPERAND string
+	if (substr(OPERAND, 0, 1)="#")
+		.__dval:	set	VAL(substr(OPERAND, 1, 0))
+		.__operand:	set	"#"
+
+	; If OPERAND ends with "(pc)", simulate "d16(pc)" mode by splitting OPERAND string
+	elseif (strlen(OPERAND)>4)&&(substr(OPERAND, strlen(OPERAND)-4, 4)="(pc)")
+		.__dval:	set	VAL(substr(OPERAND, 0, strlen(OPERAND)-4))
+		.__operand:	set substr(OPERAND, strlen(OPERAND)-4, 0)
+
+	; If OPERAND ends with "(an)", simulate "d16(an)" mode by splitting OPERAND string
+	elseif (strlen(OPERAND)>4)&&(substr(OPERAND, strlen(OPERAND)-4, 2)="(a")&&(substr(OPERAND, strlen(OPERAND)-1, 1)=")")
+		.__dval:	set	VAL(substr(OPERAND, 0, strlen(OPERAND)-4))
+		.__operand:	set substr(OPERAND, strlen(OPERAND)-4, 0)
+	endif
+
+	switch lowstring(.__operand)
 	case "d0"
 		move.ATTRIBUTE	d0,DEST
 	case "d1"
@@ -282,19 +301,25 @@ __FSTRING_PushArgument macro OPERAND,DEST
 		move.ATTRIBUTE	a6,DEST
 
 	case "(a0)"
-		move.ATTRIBUTE	(a0),DEST
+		move.ATTRIBUTE	.__dval(a0),DEST
 	case "(a1)"
-		move.ATTRIBUTE	(a1),DEST
+		move.ATTRIBUTE	.__dval(a1),DEST
 	case "(a2)"
-		move.ATTRIBUTE	(a2),DEST
+		move.ATTRIBUTE	.__dval(a2),DEST
 	case "(a3)"
-		move.ATTRIBUTE	(a3),DEST
+		move.ATTRIBUTE	.__dval(a3),DEST
 	case "(a4)"
-		move.ATTRIBUTE	(a4),DEST
+		move.ATTRIBUTE	.__dval(a4),DEST
 	case "(a5)"
-		move.ATTRIBUTE	(a5),DEST
+		move.ATTRIBUTE	.__dval(a5),DEST
 	case "(a6)"
-		move.ATTRIBUTE	(a6),DEST
+		move.ATTRIBUTE	.__dval(a6),DEST
+
+	case "(pc)"
+		move.ATTRIBUTE	.__dval(pc),DEST
+
+	case "#"
+		move.ATTRIBUTE	#.__dval,DEST
 
 	elsecase
 	.__evaluated_operand: set VAL(OPERAND)

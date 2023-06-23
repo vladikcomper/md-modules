@@ -109,6 +109,8 @@ Test_ConsoleWriteExtended:
 	Console.WriteLine "%<pal1>EntryPoint: %<pal0>%<.l 4 sym>"
 	Console.WriteLine "%<pal1>Main+0000: %<pal0>%<.l Main>"
 	Console.WriteLine "%<pal1>Main+0004: %<pal0>%<.l Main+4>"
+	Console.WriteLine "%<pal1>#Main+0000: %<pal0>%<.l #Main>"
+	Console.WriteLine "%<pal1>#Main+0004: %<pal0>%<.l #Main+4>"
 	Console.WriteLine "%<pal1>Test_MiscCommands+0000: %<pal0>%<.l Test_MiscCommands>"
 
 	jsr		CheckRegisterIntergity
