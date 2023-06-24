@@ -13,7 +13,3 @@ Currently, the *Advanced Error Handler and Debugger 2.0* supports integration wi
 > **Warning**
 >
 > The AS Macroassembler version has limited support for some features!
-
-# Working with Error Handler bundles
-
-To keep maintaining different versions of bundles easier, they are mostly built from the "shared" pieces of code using `cbundle` utility (source code is available in the same repository).

@@ -1,0 +1,3 @@
+__global__Debugger_Backtrace._inj0+0:long:line:		jsr		__global__Console_Write(pc)
+__global__Debugger_Backtrace._inj1+0:long:line:		jsr		__global__Error_MaskStackBoundaries(pc)
+__global__Debugger_Backtrace._inj2+0:long:line:		jsr		__global__Error_DrawOffsetLocation2(pc)

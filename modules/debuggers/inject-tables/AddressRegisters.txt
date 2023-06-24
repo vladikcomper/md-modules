@@ -1,0 +1,2 @@
+__global__Debugger_AddressRegisters._inj0+0:long:line:		jsr		__global__Console_Write(pc)
+__global__Debugger_AddressRegisters._inj1+0:long:line:		jsr		__global__Error_DrawOffsetLocation(pc)

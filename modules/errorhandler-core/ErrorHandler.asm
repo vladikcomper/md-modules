@@ -8,19 +8,20 @@
 ; ---------------------------------------------------------------
 
 	include	'..\core\Macros.asm'
+	include	'..\core\Console.defs.asm'
+	include	'..\core\Format_String.defs.asm'
 
 ; ---------------------------------------------------------------
 ; Constants
 ; ---------------------------------------------------------------
 
-VRAM_Font		equ 	(('!'-1)*$20)
-VRAM_PlaneA 	equ		$8000
-VRAM_PlaneB 	equ		VRAM_PlaneA
+VRAM_Font:			equ 	(('!'-1)*$20)
+VRAM_ErrorScreen:	equ		$8000
 
-_white			equ 	0
-_yellow 		equ 	1<<13
-_blue			equ 	2<<13
-_blue2			equ 	3<<13
+_white:			equ 	0
+_yellow: 		equ 	1<<13
+_blue:			equ 	2<<13
+_blue2:			equ 	3<<13
 
 
 ; ===============================================================
@@ -56,7 +57,7 @@ _blue2			equ 	3<<13
 ;				jmp <ConsoleProgram> is word-aligned.
 ; ---------------------------------------------------------------
 
-ErrorHandler:
+ErrorHandler:	__global
 	move	#$2700, sr						; disable interrupts for good
 	lea		-Console_RAM.size(sp), sp		; STACK => allocate memory for console
 	movem.l d0-a6, -(sp) 					; STACK => dump registers ($3C bytes)
@@ -97,24 +98,22 @@ ErrorHandler:
 	btst	#0, d6							; does error has extended stack frame (Address Error and Bus Error only)?
 	beq.s	@skip							; if not, branch
 
-	lea 	Str_Address(pc), a1				; a1 = formatted string
+	lea 	Str_Address(pc), a0				; a0 = label string
 	move.l	2(a4), d1						; d1 = address error offset
 	jsr		Error_DrawOffsetLocation(pc)
 	addq.w	#8, a4							; skip extension part of the stack frame
 @skip:
 
 	; Print module name error occured in
-	lea 	Str_Module(pc), a1				; a1 = formatted string
+	lea 	Str_Module(pc), a0				; a0 = label string
 	move.l	2(a4), d1						; d1 = last return offset
 	jsr		Error_DrawOffsetLocation(pc)
 
 	; Print caller
 	movea.l	0.w, a1							; a1 = stack top boundary
 	lea		6(a4), a2						; a2 = call stack (after exception stack frame)
-	jsr		Error_MaskStackBoundaries(pc)
-
 	jsr		Error_GuessCaller(pc)			; d1 = caller
-	lea 	Str_Caller(pc), a1				; a1 = formatted string
+	lea 	Str_Caller(pc), a0				; a0 = label string
 	jsr		Error_DrawOffsetLocation(pc)
 
 	jsr		Console_StartNewLine(pc)
@@ -182,11 +181,11 @@ ErrorHandler:
 
 	; Print vertical and horizontal interrupt handlers, if available
 	move.l	$78.w, d0						; d0 = VInt vector address
-	lea		Str_VInt(pc), a1
+	lea		Str_VInt(pc), a0
 	jsr		Error_DrawInterruptHandler(pc)
 
 	move.l	$70.w, d0						; d0 = HInt vector address
-	lea		Str_HInt(pc), a1
+	lea		Str_HInt(pc), a0
 	jsr		Error_DrawInterruptHandler(pc)
 
 	jsr		Console_StartNewLine(pc)		; newline
@@ -217,7 +216,7 @@ ErrorHandler:
 	bne.s	Error_RunConsoleProgram
 
 ; ---------------------------------------------------------------
-Error_IdleLoop:
+Error_IdleLoop:	__global
 	nop
 	bra.s	Error_IdleLoop
 
@@ -255,7 +254,7 @@ Error_InitConsole:	__global
 ;		d1, d2
 ; ---------------------------------------------------------------
 
-Error_MaskStackBoundaries:
+Error_MaskStackBoundaries:	__global
 	move.l 	#$FFFFFF, d1
 
 	move.l	a1, d2
@@ -329,11 +328,14 @@ Error_DrawStackRow_Continue:
 ; ---------------------------------------------------------------
 ; INPUT:
 ;		d1	.l	Exception offset
-;		a1		Exception string (should include 2 arguments)
+;		a0		Label
 ; ---------------------------------------------------------------
 
-Error_DrawOffsetLocation:
-	jsr		Console_Write_Formatted(pc)		; display label
+Error_DrawOffsetLocation:	__global
+	jsr		Console_Write(pc)				; display label
+	; fallthrough
+
+Error_DrawOffsetLocation2:	__global
 	move.l	d1, -(sp)
 	move.l	d1, -(sp)
 	lea		(sp), a2						; a2 = arguments buffer
@@ -385,7 +387,7 @@ Error_Return:
 ; ---------------------------------------------------------------
 ; INPUT:
 ;		d0	.l	Interrupt handler address
-;		a1		Handler name string
+;		a0		Handler name string
 ; ---------------------------------------------------------------
 
 Error_DrawInterruptHandler:
@@ -424,6 +426,7 @@ Error_DrawInterruptHandler:
 
 Error_GuessCaller:
 	subq.l	#4, a1					; set a final longword to read
+	jsr		Error_MaskStackBoundaries(pc)
 	cmpa.l	a2, a1
 	blo.s	@nocaller
 
@@ -467,7 +470,7 @@ ErrorHandler_SetupVDP:	__global
 		bvs.s	@wait_dma				; wait until it's finished
 
 	; Setup VDP registers for Error Handler screen
-	lea 	@VDPConfig(pc), a0
+	lea 	ErrorHandler_VDPConfig(pc), a0
 
 	@setup_regs:
 		move.w	(a0)+, d0
@@ -494,11 +497,9 @@ ErrorHandler_SetupVDP:	__global
 ; Error screen's VDP configuration
 ; ---------------------------------------------------------------
 
-@VDPConfig:
+ErrorHandler_VDPConfig:	__global
 	dc.w	$8004							; $00, disable HInts
 	dc.w	$8134							; $01, disable DISP
-	dc.w	$8200+VRAM_PlaneA/$400			; $02, set Plane A nametable offset in VRAM
-	dc.w	$8400+VRAM_PlaneB/$2000 		; $04, set Plane B nametable offset in VRAM
 	dc.w	$8500							; $05, set Sprites offset to $0000
 	dc.w	$8700							; $07, set backdrop color
 	dc.w	$8B00							; $0B, set VScroll=full, HScroll=full
@@ -508,7 +509,12 @@ ErrorHandler_SetupVDP:	__global
 	dc.w	$9011							; $10, use 512x512 plane resolution
 	dc.w	$9100							; $11, reset Window X-position
 	dc.w	$9200							; $12, reset Window Y-position
-	dc.w	0								; WARNING! Make sure the next word is positive!
+	; fallthrough
+
+ErrorHandler_VDPConfig_Nametables:	__global
+	dc.w	$8200+VRAM_ErrorScreen/$400		; $02, set Plane A nametable offset in VRAM
+	dc.w	$8400+VRAM_ErrorScreen/$2000	; $04, set Plane B nametable offset in VRAM
+	dc.w	0
 
 
 ; ===============================================================
@@ -535,18 +541,6 @@ ErrorHandler_ConsoleConfig:
 	dc.w	-1							; end marker
 
 	; ---------------------------------------------------------------
-	; Console RAM initial config
-	; ---------------------------------------------------------------
-
-	dcvram	VRAM_PlaneA					; screen start address / plane nametable pointer
-	dc.w	40							; number of characters per line
-	dc.w	40							; number of charasters on the first line (meant to be the same as the above)
-	dc.w	0							; base font pattern (tile id for ASCII $00 + palette flags)
-	dc.w	$80							; size of screen row (in bytes)
-
-	dc.w	$2000/$20-1					; size of screen (in tiles - 1)
-
-	; ---------------------------------------------------------------
 	; CRAM data
 	; ---------------------------------------------------------------
 	; FORMAT:
@@ -569,6 +563,24 @@ ErrorHandler_ConsoleConfig:
 	dc.w	$00CE, -7*2					; line 1: yellow text
 	dc.w	$0EEA, -7*2					; line 2: lighter blue text
 	dc.w	$0E86, -7*2					; line 3: darker blue text
+	; fallthrough
+
+	; ---------------------------------------------------------------
+	; Console RAM initial config
+	; ---------------------------------------------------------------
+
+ErrorHandler_ConsoleConfig_Initial:	__global
+	dcvram	VRAM_ErrorScreen			; screen start address / plane nametable pointer
+	; fallthrough
+
+ErrorHandler_ConsoleConfig_Shared:	__global
+	dc.w	40							; number of characters per line
+	dc.w	40							; number of charasters on the first line (meant to be the same as the above)
+	dc.w	0							; base font pattern (tile id for ASCII $00 + palette flags)
+	dc.w	$80							; size of screen row (in bytes)
+
+	dc.w	$2000/$20-1					; size of screen (in tiles - 1)
+
 
 ; ---------------------------------------------------------------
 ; Error Handler interface data

@@ -8,19 +8,25 @@
 ; Debugging macros definitions file
 ; ---------------------------------------------------------------
 
+#include Debugger.Extensions.asm
+
 
 #include Debugger.Constants.asm
 
 
 #ifdef BUNDLE-AS
 ; ---------------------------------------------------------------
-; Import error handler global functions
+; Import global functions
 ; ---------------------------------------------------------------
 
+; Debugger extension functions
+#include ../../build/modules/debuggers/Extensions.Globals.asm
+
+; Error handler & core functions
 #ifdef EXTSYM
-#include ../../build/modules/errorhandler/ErrorHandler.ExtSymbols.Global.AS.asm
+#include ../../build/modules/errorhandler-core/ErrorHandler.ExtSymbols.Globals.asm
 #else
-#include ../../build/modules/errorhandler/ErrorHandler.Global.AS.asm
+#include ../../build/modules/errorhandler-core/ErrorHandler.Globals.asm
 #endif
 #endif
 

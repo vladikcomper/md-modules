@@ -1,5 +1,5 @@
 
-.PHONY:	all utils modules clean
+.PHONY:	all utils modules test clean
 
 all:	utils modules
 
@@ -11,5 +11,11 @@ modules:
 	make -C modules\mdshell -f Makefile.win
 	make -C modules\errorhandler -f Makefile.win
 
+test:	all
+	make -C utils/convsym -f Makefile.win test
+	make -C utils/cbundle -f Makefile.win test
+	make -C modules/mdshell -f Makefile.win tests
+	make -C modules/errorhandler -f Makefile.win tests
+
 clean:
-	del /q /f build\modules build\utils
+	rd /s /q build\modules build\utils

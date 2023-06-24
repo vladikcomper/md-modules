@@ -12,9 +12,9 @@ TEST_BUILD_DIR ?= ../../../build/modules/mdshell/tests
 
 
 
-.PHONY:	all hello-world flow-test clean
+.PHONY:	all hello-world flow-test raise-error clean
 
-all:	hello-world flow-test
+all:	hello-world flow-test raise-error
 
 clean:
 	rm -f $(TEST_BUILD_DIR)/*
@@ -23,6 +23,11 @@ clean:
 hello-world:	| $(TEST_BUILD_DIR) $(CONVSYM)
 	$(ASM68K) /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- hello-world.asm, $(TEST_BUILD_DIR)/hello-world.gen, $(TEST_BUILD_DIR)/hello-world.sym, $(TEST_BUILD_DIR)/hello-world.lst
 	$(CONVSYM) $(TEST_BUILD_DIR)/hello-world.sym $(TEST_BUILD_DIR)/hello-world.gen -a -ref 200 -debug
+
+
+raise-error:	| $(TEST_BUILD_DIR) $(CONVSYM)
+	$(ASM68K) /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- raise-error.asm, $(TEST_BUILD_DIR)/raise-error.gen, $(TEST_BUILD_DIR)/raise-error.sym, $(TEST_BUILD_DIR)/raise-error.lst
+	$(CONVSYM) $(TEST_BUILD_DIR)/raise-error.sym $(TEST_BUILD_DIR)/raise-error.gen -a -ref 200 -debug
 
 
 flow-test:	| $(TEST_BUILD_DIR) $(CONVSYM) $(CBUNDLE)

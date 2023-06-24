@@ -1,14 +1,15 @@
 
 ; ===============================================================
 ; ---------------------------------------------------------------
-; MD-Shell 2.0
+; MD-Shell 2.5
 ; A custom shell for running M68K code as Mega-Drive ROM
 ; ---------------------------------------------------------------
 ; (c) 2023, Vladikcomper
 ; ---------------------------------------------------------------
 
-__blob_start:
+	include	"..\core\Macros.asm"
 
+; ---------------------------------------------------------------
 Vectors:
 	dc.l	$FFFFF0,		EntryPoint,		BusError,		AddressError
 	dc.l	IllegalInstr,	ZeroDivide,		ChkInstr,		TrapvInstr
@@ -206,9 +207,10 @@ EntryPoint:
 ; ---------------------------------------------------------------
 
 ProgramStart:
+	movea.l	0.w, sp
 
 	; Init joypad ports
-	moveq	#$40,d0
+	moveq	#$40, d0
 	move.b	d0, $A10009	; init port 1 (joypad 1)
 	move.b	d0, $A1000B	; init port 2 (joypad 2)
 	move.b	d0, $A1000D	; init port 3 (extra)
@@ -253,7 +255,6 @@ ErrorTrap:
 IdleInt:
 	rte
 
-
 ; ---------------------------------------------------------------
 ; Error Handler bundle
 ; ---------------------------------------------------------------
@@ -261,11 +262,25 @@ IdleInt:
 ; Tell error handler that we want to inject Symbol table pointer from outside
 _USE_SYMBOL_DATA_REF_: equ 1
 
-	include	'ErrorHandler.asm'
+	include	'..\errorhandler-core\ErrorHandler.asm'
 
-; Anything after this symbol won't be included in blob
-
+; ---------------------------------------------------------------
+; Non-headless builds end here and override data below
+	if def(_HEADLESS_)=0
 __blob_end:
+	endc
+
+; ---------------------------------------------------------------
+; Error routines
+; ---------------------------------------------------------------
+
+	include	"Exceptions.asm"
+
+; ---------------------------------------------------------------
+; Headless builds end here
+	if def(_HEADLESS_)
+__blob_end:
+	endc
 
 ; ---------------------------------------------------------------
 ; Self-check routine

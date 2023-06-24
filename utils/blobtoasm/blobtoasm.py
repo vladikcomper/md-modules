@@ -102,7 +102,7 @@ def getInjectData(injectMapPath: str, symbolTable: Dict[str, int]) -> Dict[int, 
 
 			symbolOffset = symbolTable.get(symbol)
 
-			if not symbolOffset:
+			if symbolOffset is None:
 				raise Exception(f'Symbol not found: {symbol}')
 
 			offset = symbolOffset + int(disp, 16)

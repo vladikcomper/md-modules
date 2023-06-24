@@ -1,3 +1,5 @@
+	if def(_MACRO_DEFS)=0
+_MACRO_DEFS:	equ	1
 
 ; ===============================================================
 ; ---------------------------------------------------------------
@@ -35,8 +37,18 @@ cram	macro	offset,operand
 		endc
 		endm
 		
-; Special macro do define externally visible symbols
+; A special macro to define externally visible symbols
 __global macro	*
 __global__\*:
 \*:
 		endm
+
+; A special macro to define injectables in linkable builds
+__injectable	macro	*
+	if def(_LINKABLE_)
+; Fallback to illegal instruction unless injection is successful
+\*:		illegal
+	endc
+		endm
+
+	endc	; _MACRO_DEFS

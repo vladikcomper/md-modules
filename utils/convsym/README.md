@@ -174,7 +174,7 @@ It also supports local symbols, if produced by the assembler.
 
 > **Note**
 > 
-> In order to include local labels in the symbol file, `/v+` assembly option should be used.
+> In order to include local labels in the symbol file, `/o v+` assembly option should be used.
 
 **Options:**
 
@@ -402,7 +402,7 @@ Default parser options can be expressed as follows:
 
 ### Version 2.9 (2023-01-05)
 
-* When appending symbol data to the of ROM (when using `-a` flag), ConvSym now auto-aligns it on the even offset;
+* When appending symbol data to the end of ROM (when using `-a` flag), ConvSym now auto-aligns it on the even offset;
 * `-noalign` option was added to force the old behavior (don't align on append).
 
 * `asm68k_lst` parser:

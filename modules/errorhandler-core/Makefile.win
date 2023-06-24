@@ -1,4 +1,7 @@
 
+include ..\..\utils\.Makefile.win # For $(CONVSYM), $(CBUNDLE) etc
+
+
 BUILD_DIR ?= ..\..\build\modules\errorhandler-core
 SRC_DIR ?= .
 CORE_DIR ?= ..\core
@@ -10,11 +13,13 @@ ASFLAGS = /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+
 
 all:	release	debug extsym
 
-release:	$(BUILD_DIR)\ErrorHandler.bin $(BUILD_DIR)\ErrorHandler.sym
+release:	$(BUILD_DIR)\ErrorHandler.bin $(BUILD_DIR)\ErrorHandler.Blob.asm $(BUILD_DIR)\ErrorHandler.Globals.asm
 
-debug:	$(BUILD_DIR)\ErrorHandler.Debug.bin $(BUILD_DIR)\ErrorHandler.Debug.sym
+debug:	$(BUILD_DIR)\ErrorHandler.Debug.bin $(BUILD_DIR)\ErrorHandler.Debug.Blob.asm $(BUILD_DIR)\ErrorHandler.Debug.Globals.asm
 
-extsym:	$(BUILD_DIR)\ErrorHandler.ExtSymbols.bin $(BUILD_DIR)\ErrorHandler.ExtSymbols.sym
+# "extsym" build is usuable in assembly blob form only, because it requires additional linkage
+extsym:	$(BUILD_DIR)\ErrorHandler.ExtSymbols.Blob.asm $(BUILD_DIR)\ErrorHandler.ExtSymbols.Globals.asm
+
 
 tests:	release	debug extsym
 	make -C ..\mdshell -f Makefile.win
@@ -22,6 +27,9 @@ tests:	release	debug extsym
 
 clean:
 	del /q /f $(BUILD_DIR)\*.*
+
+
+# Raw unlinked binaries
 
 $(BUILD_DIR)\ErrorHandler.bin $(BUILD_DIR)\ErrorHandler.sym &:	$(SRC_DIR)\ErrorHandler.asm $(wildcard $(CORE_DIR)\*.asm) | $(BUILD_DIR)
 	$(ASM68K) $(ASFLAGS) $(SRC_DIR)\ErrorHandler.asm, $(BUILD_DIR)\ErrorHandler.bin, $(BUILD_DIR)\ErrorHandler.sym, $(BUILD_DIR)\ErrorHandler.lst
@@ -31,6 +39,35 @@ $(BUILD_DIR)\ErrorHandler.Debug.bin $(BUILD_DIR)\ErrorHandler.Debug.sym &:	$(SRC
 
 $(BUILD_DIR)\ErrorHandler.ExtSymbols.bin $(BUILD_DIR)\ErrorHandler.ExtSymbols.sym &:	$(SRC_DIR)\ErrorHandler.asm $(wildcard $(CORE_DIR)\*.asm) | $(BUILD_DIR)
 	$(ASM68K) $(ASFLAGS) /e _USE_SYMBOL_DATA_REF_=1 /e SymbolData_Ptr=0 $(SRC_DIR)\ErrorHandler.asm, $(BUILD_DIR)\ErrorHandler.ExtSymbols.bin, $(BUILD_DIR)\ErrorHandler.ExtSymbols.sym, $(BUILD_DIR)\ErrorHandler.ExtSymbols.lst
+
+
+# Global symbol tables
+
+$(BUILD_DIR)\ErrorHandler.Globals.asm:	$(BUILD_DIR)\ErrorHandler.sym | $(BUILD_DIR) $(CONVSYM)
+	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
+
+$(BUILD_DIR)\ErrorHandler.Debug.Globals.asm:	$(BUILD_DIR)\ErrorHandler.Debug.sym | $(BUILD_DIR) $(CONVSYM)
+	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
+
+$(BUILD_DIR)\ErrorHandler.ExtSymbols.Globals.asm:	$(BUILD_DIR)\ErrorHandler.ExtSymbols.sym | $(BUILD_DIR) $(CONVSYM)
+	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
+
+
+# Linkable blobs in assembly format
+
+$(BUILD_DIR)\ErrorHandler.Blob.asm:	$(BUILD_DIR)\ErrorHandler.bin | $(BUILD_DIR)
+	$(BLOBTOASM) $^ $@
+
+$(BUILD_DIR)\ErrorHandler.Debug.Blob.asm:	$(BUILD_DIR)\ErrorHandler.Debug.bin | $(BUILD_DIR)
+	$(BLOBTOASM) $^ $@
+
+$(BUILD_DIR)\ErrorHandler.ExtSymbols.Blob.asm:	$(BUILD_DIR)\ErrorHandler.ExtSymbols.bin $(BUILD_DIR)\ErrorHandler.ExtSymbols.InjectTable.log | $(BUILD_DIR)
+	$(BLOBTOASM) $(BUILD_DIR)\ErrorHandler.ExtSymbols.bin $@ -m $(SRC_DIR)\inject-tables\ErrorHandler.ExtSymbols.Blob.txt -t $(BUILD_DIR)\ErrorHandler.ExtSymbols.InjectTable.log
+
+
+$(BUILD_DIR)\ErrorHandler.ExtSymbols.InjectTable.log:	$(BUILD_DIR)\ErrorHandler.ExtSymbols.sym | $(CONVSYM)
+	$(CONVSYM) $^ $@ -output asm -inopt "/processLocals-" -outopt "%s: %X" -filter '__inject_.+'
+
 
 $(BUILD_DIR):
 	-md $(BUILD_DIR)

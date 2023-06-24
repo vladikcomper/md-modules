@@ -1,0 +1,8 @@
+__global__ErrorHandler_ConsoleOnly._inj0+0:long:line:		jsr		__global__ErrorHandler_SetupVDP(pc)
+__global__ErrorHandler_ConsoleOnly._inj1+0:long:line:		jsr		__global__Error_InitConsole(pc)
+__global__ErrorHandler_ConsoleOnly._inj2+0:long:line:		pea		__global__Error_IdleLoop(pc)
+__global__ErrorHandler_ClearConsole._inj0+0:long:line:		lea		__global__ErrorHandler_ConsoleConfig_Initial(pc), a1
+__global__ErrorHandler_ClearConsole._inj1+0:long:line:		jsr		__global__Console_Reset(pc)
+__global__ErrorHandler_PagesController._inj0+0:long:line:		lea		__global__ErrorHandler_ConsoleConfig_Shared(pc), a1
+__global__ErrorHandler_PagesController._inj1+0:long:line:		jsr		__global__Console_InitShared(pc)
+__global__ErrorHandler_PagesController._inj2+0:long:line:		move.l	__global__ErrorHandler_VDPConfig_Nametables(pc), (a5)

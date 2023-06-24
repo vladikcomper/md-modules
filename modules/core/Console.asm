@@ -8,35 +8,6 @@
 ; Console Module
 ; ---------------------------------------------------------------
 
-; ---------------------------------------------------------------
-; RAM structure
-; ---------------------------------------------------------------
-
-			rsreset
-Console_RAM				equ		__rs
-Console.ScreenPosReq	rs.l	1				;		screen position request for VDP
-Console.CharsPerLine	rs.w	1				; d2	number of characters per line
-Console.CharsRemaining	rs.w	1				; d3	remaining number of characters
-Console.BasePattern		rs.w	1				; d4	base pattern
-Console.ScreenRowSz		rs.w	1				; d6	row size within screen position
-Console.Magic			rs.w	1				;		should contain a magic string to ensure this is valid console memory area
-Console_RAM.size		equ		__rs-Console_RAM
-
-; Drawing flags supported in strings
-_newl	equ		$E0
-_cr		equ		$E6
-_pal0	equ		$E8
-_pal1	equ		$EA
-_pal2	equ		$EC
-_pal3	equ		$EE
-
-_setw	equ		$F0
-_setoff	equ		$F4
-_setpat	equ		$F8
-_setx	equ		$FA
-
-_ConsoleMagic	equ	'CO'
-
 ; ===============================================================
 ; ---------------------------------------------------------------
 ; Initialize console module
@@ -50,10 +21,10 @@ _ConsoleMagic	equ	'CO'
 ;		d5	.l	Current on-screen position
 ;
 ; USES:
-;		d0-d4, a5-a6
+;		d0-d4, a0, a5-a6
 ; ---------------------------------------------------------------
 
-Console_Init:
+Console_Init:	__global
 	lea		VDP_Ctrl, a5
 	lea		-4(a5), a6
 
@@ -71,30 +42,8 @@ Console_Init:
 @font_done:
 	addq.w	#2, a1					; skip end marker
 
-	; Init Console RAM
-	move.l	a3, usp					; remember Console RAM pointer in USP to restore it in later calls
-	move.l	(a1)+, d5				; d4 = start VRAM pos
-	move.l	d5,	(a3)+				; Console RAM => copy screen position (long)
-	move.l	(a1)+, (a3)+			; Console RAM => copy number of characters per line (word) + characters remaining for the current line (word)
-	move.l	(a1)+, (a3)+			; Console RAM => copy base pattern (word) + screen row size (word)
-	move.w	#_ConsoleMagic, (a3)+ 	; Console RAM => set magic string
-
-	; WARNING! Don't touch d5 from now on
-
-	; Clear screen
-	lea		Console_FillTile(pc), a3
-	move.l	d5, (a5)				; VDP => Setup VRAM for screen namespace
-	moveq	#0, d0					; d0 = fill pattern
-	move.w	(a1)+, d1				; d1 = size of screen in tiles - 1
-	jsr		(a3)					; fill screen
-	vram	$0000, (a5)				; VDP => Setup VRAM at tile 0
-	moveq	#0, d1					; d1 = number of tiles to fill - 1
-	jsr		(a3)					; clear first tile
-
-
-Console_LoadPalette: __global
-
 	; Load palette
+	lea		Console_FillTile(pc), a0
 	cram	$00, (a5)				; VDP => Setup CRAM write at offset $00
 	moveq	#0, d0					; d0 = black color
 	moveq	#4-1, d3				; d3 = number of palette lines - 1
@@ -107,8 +56,68 @@ Console_LoadPalette: __global
 		bpl.s	@0					; if color, branch
 
 		moveq	#0, d1
-		jsr		$10(a3,d2)			; fill the rest of cram by a clever jump (WARNING! Precision required!)
+		jsr		$10(a0,d2)			; fill the rest of cram by a clever jump (WARNING! Precision required!)
 		dbf		d3, @fill_palette_line
+	; fallthrough
+
+; ---------------------------------------------------------------
+; Clears and resets console to the initial config
+; ---------------------------------------------------------------
+; INPUT:
+;		a1		Initial console config
+;		a3		Console RAM pointer
+;		a5		VDP Control Port ($C00004)
+;		a6		VDP Data Port ($C00000)
+;
+; OUTPUT:
+;		d5	.l	Current on-screen position
+;
+; USES:
+;		d0-d1, a1, a3
+; ---------------------------------------------------------------
+
+Console_Reset:	__global
+	move.l	(a1)+, d5				; d5 = VDP command with start on-screen position
+	; fallthrough
+
+; ---------------------------------------------------------------
+; A shorter initialization sequence used by sub-consoles sharing
+; the same palette and graphics, but using a different nametable
+; ---------------------------------------------------------------
+; INPUT:
+;		a1		Shared console config
+;		a3		Console RAM pointer
+;		a5		VDP Control Port ($C00004)
+;		a6		VDP Data Port ($C00000)
+;		d5	.l	VDP command with start on-screen position
+;
+; OUTPUT:
+;		d5	.l	Current on-screen position
+;
+; USES:
+;		d0-d1, a1, a3
+; ---------------------------------------------------------------
+
+Console_InitShared:	__global
+	; WARNING! Make sure a5 and a6 are properly set when calling this fragment separately
+
+	; Init Console RAM
+	move.l	a3, usp					; remember Console RAM pointer in USP to restore it in later calls
+	move.l	d5,	(a3)+				; Console RAM => copy screen position (long)
+	move.l	(a1)+, (a3)+			; Console RAM => copy number of characters per line (word) + characters remaining for the current line (word)
+	move.l	(a1)+, (a3)+			; Console RAM => copy base pattern (word) + screen row size (word)
+	move.w	#_ConsoleMagic<<8, (a3)+; Console RAM => set magic number, clear reserved byte
+
+	; Clear screen
+	move.l	d5, (a5)				; VDP => Setup VRAM for screen namespace
+	moveq	#0, d0					; d0 = fill pattern
+	move.w	(a1)+, d1				; d1 = size of screen in tiles - 1
+	bsr.s	Console_FillTile		; fill screen
+
+	vram	$0000, (a5)				; VDP => Setup VRAM at tile 0
+	;moveq	#0, d0					; d0 = fill pattern		-- OPTIMIZED OUT
+	moveq	#0, d1					; d1 = number of tiles to fill - 1
+	bsr.s	Console_FillTile		; clear first tile
 
 	; Finalize
 	move.w	#$8174, (a5)			; VDP => Enable display
@@ -139,7 +148,7 @@ Console_SetPosAsXY_Stack: __global
 Console_SetPosAsXY: __global
 	movem.l	d1-d2/a3, -(sp)
 	move.l	usp, a3
-	cmp.w	#_ConsoleMagic, Console.Magic(a3)
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 
 	move.w	(a3), d2
@@ -170,7 +179,7 @@ Console_SetPosAsXY: __global
 Console_GetPosAsXY: __global
 	move.l	a3, -(sp)
 	move.l	usp, a3
-	cmp.w	#_ConsoleMagic, Console.Magic(a3)
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 	moveq	#0, d1
 	move.w	(a3), d1
@@ -191,7 +200,7 @@ Console_GetPosAsXY: __global
 Console_StartNewLine: __global
 	move.l	a3, -(sp)
 	move.l	usp, a3
-	cmp.w	#_ConsoleMagic, Console.Magic(a3)
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 
 	move.w	d0, -(sp)
@@ -220,7 +229,7 @@ Console_StartNewLine: __global
 Console_SetBasePattern: __global
 	move.l	a3, -(sp)
 	move.l	usp, a3
-	cmp.w	#_ConsoleMagic, Console.Magic(a3)
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 	move.w	d1, Console.BasePattern(a3)
 	
@@ -239,7 +248,7 @@ Console_SetBasePattern: __global
 Console_SetWidth: __global
 	move.l	a3, -(sp)
 	move.l	usp, a3
-	cmp.w	#_ConsoleMagic, Console.Magic(a3)
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 	addq.w	#4, a3
 	move.w	d1, (a3)+
@@ -275,7 +284,7 @@ Console_WriteLine: __global
 Console_Write: __global
 	movem.l	d1-d6/a3/a6, -(sp)
 	move.l	usp, a3
-	cmp.w	#_ConsoleMagic, Console.Magic(a3)
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 
 	; Load console variables

@@ -12,6 +12,8 @@
 ; ---------------------------------------------------------------
 
 	include	"..\..\core\Macros.asm"
+	include	"..\..\core\Format_String.defs.asm"
+
 	include	"..\..\core\Symbols.asm"
 	include	"..\..\core\Formatter_Sym.asm"
 	include	"..\..\core\Formatter_Bin.asm"
