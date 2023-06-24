@@ -100,8 +100,8 @@ Since `x` and `y` are _operands_, all M68K addressing modes may be used to pass 
 
 **Arguments:**
 
-* `x` - operand (register, memory or immediate value), represents x position in tiles
-* `y` - operand (register, memory or immediate value), represents y position in tiles
+* `x` - a word-sized operand (register, memory or immediate value), represents x position in tiles
+* `y` - a word-sized operand (register, memory or immediate value), represents y position in tiles
 
 
 ### `Console.BreakLine`
@@ -117,6 +117,49 @@ Adds a newline.
 **Alternative:**
 
         Console.Write "%<endl>"
+
+
+### `Console.Clear`
+
+**Syntax:**
+
+        Console.Clear
+
+**Description:**
+
+Clears the entire console screen and resets the cursor back to the top-left corner (coordinate `#0, #0`).
+
+
+### `Console.Sleep`
+
+**Syntax:**
+
+        Console.Sleep  frames
+
+**Description:**
+
+Pauses program execution for the given number of frames. The following example pauses for 60 frames (1 second in NTSC mode):
+
+        Console.Sleep  #60
+
+Since `frames` argument is an operand, it can use all M68K addressing mode, not just _immediate value_ (i.e. `#<Number>`), for instance:
+
+        Console.Sleep  d0   ; sleep for the number of frames specified in the d0 register
+
+**Arguments:**
+
+* `frames` - a word-sized operand (register, memory or immediate value), number of frames to sleep.
+
+
+### `Console.Pause`
+
+**Syntax:**
+
+        Console.Pause
+
+**Description:**
+
+Pauses console program execution until A, B, C or Start button is pressed on the joypad.
 
 
 ## Formatted string reference
