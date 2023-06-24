@@ -36,6 +36,20 @@ TestProgram:
 	Console.Sleep #0
 	Console.WriteLine "Printed a line without a delay!"
 
+	Console.Sleep #30
+	Console.WriteLine "Minimal sleep... #1"
+	Console.Sleep #30
+	Console.WriteLine "Minimal sleep... #2"
+	Console.Sleep #30
+	Console.WriteLine "Minimal sleep... #3"
+	Console.Sleep #30
+
+	jsr		CheckRegisterIntergity
+
+	Console.WriteLine "Paused. Press A/B/C/Start to continue."
+	Console.Pause
+	Console.WriteLine "WELL PRESSED!"
+
 	jmp		CheckRegisterIntergity
 
 
@@ -67,11 +81,11 @@ __corrupted:
 	lea		$3C(sp), a3
 
 #ifdef ASM68K
-	Console.Write "%<endl,pal1>@%<.l (a3) sym|split>: %<endl,pal0> Register %<pal1>%<.l a2 hex>%<pal0> corrupted!%<endl> Got %<pal2>%<.l (a0)>%<pal0>, expected %<pal2>%<.l (a1)>%<pal0,endl>"
+	Console.Write "%<endl,pal1>@%<.l (a3) sym|split>: %<endl,pal0> Register %<pal1>%<.l a2 str>%<pal0> corrupted!%<endl> Got %<pal2>%<.l (a0)>%<pal0>, expected %<pal2>%<.l (a1)>%<pal0,endl>"
 #else
 ##	; AS assembler implementation has limitations on formatting capabilities
 ##	; Moreover, AS is incapable of parsing stings that include more than 160 characters
-	Console.Write "%<endl>%<pal1>@%<.l (a3) sym|split>: %<endl>%<pal0> Register %<pal1>%<.l a2 hex>%<pal0> corrupted!"
+	Console.Write "%<endl>%<pal1>@%<.l (a3) sym|split>: %<endl>%<pal0> Register %<pal1>%<.l a2 str>%<pal0> corrupted!"
 	Console.Write "%<endl> Got %<pal2>%<.l (a0)>%<pal0>, expected %<pal2>%<.l (a1)>%<pal0>%<endl>"
 #endif
 	bra	*

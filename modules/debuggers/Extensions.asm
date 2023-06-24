@@ -63,6 +63,52 @@ ErrorHandler_ClearConsole:	__global
 
 ; =============================================================================
 ; -----------------------------------------------------------------------------
+; Pause console program executions until A/B/C are pressed
+; -----------------------------------------------------------------------------
+
+ErrorHandler_PauseConsole:	__global
+		movem.l	d0-d1/a0-a1/a3, -(sp)
+		move.l	usp, a3
+		cmp.b	#_ConsoleMagic, Console.Magic(a3)
+		bne.s	@quit
+
+		move.w	#0, -(sp)					; allocate joypad memory
+@loop:
+		bsr.s	Joypad_Wait_ABCStart		; is A/B/C pressed?
+		beq.s	@loop						; if not, branch
+
+		addq.w	#2, sp
+
+@quit:
+		movem.l	(sp)+, d0-d1/a0-a1/a3
+		rts
+
+
+; -----------------------------------------------------------------------------
+; Pause console program executions until A/B/C or Start are pressed
+; -----------------------------------------------------------------------------
+; INPUT:
+;		4(sp)	Pointer to a word that stores pressed/held buttons
+;
+; OUTPUT:
+;		d0	.b	Pressed A/B/C/Start state; Format: %SACB0000
+;
+; USES:
+;		d0-d1 / a0-a1
+; -----------------------------------------------------------------------------
+
+Joypad_Wait_ABCStart:
+		bsr.s	VSync
+		lea		4(sp), a0					; a0 = Joypad memory
+		lea		$A10003, a1					; a1 = Joypad 1 Port
+		bsr.s	ReadJoypad
+		moveq	#$FFFFFFF0, d0
+		and.b	5(sp), d0					; Start/A/B/C pressed?
+		rts									; return Z=0 if pressed
+
+
+; =============================================================================
+; -----------------------------------------------------------------------------
 ; A simple controller that allows switching between Debuggers
 ; -----------------------------------------------------------------------------
 
@@ -74,14 +120,7 @@ ErrorHandler_PagesController:	__global
 			lea		VDP_Ctrl, a5				; a5 = VDP_Ctrl
 			lea		-4(a5), a6					; a6 = VDP_Data
 
-			; Read joypads
-			jsr		VSync(pc)
-			lea		(sp), a0					; a0 = Joypad memory
-			lea		$A10003, a1					; a1 = Joypad 1 Port
-			jsr		ReadJoypad(pc)
-
-			moveq	#$FFFFFFF0, d0
-			and.b	1(sp), d0					; Start/A/B/C pressed?
+			bsr.s	Joypad_Wait_ABCStart		; Start/A/B/C pressed?
 			beq.s	@MainLoop					; if not, branch
 			bmi.s	@ShowMainErrorScreen		; if Start pressed, branch
 

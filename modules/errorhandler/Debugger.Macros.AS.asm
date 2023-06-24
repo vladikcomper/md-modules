@@ -188,6 +188,11 @@ Console	macro	argument1, argument2
 		jsr		__global__ErrorHandler_ClearConsole
 		move.w	(sp)+, sr
 
+	case "pause"
+		move.w	sr, -(sp)
+		jsr		__global__ErrorHandler_PauseConsole
+		move.w	(sp)+, sr
+
 	case "sleep"
 		move.w	sr, -(sp)
 		move.w	d0, -(sp)

@@ -117,6 +117,11 @@ Console &
 		jsr		__global__ErrorHandler_ClearConsole
 		move.w	(sp)+, sr
 
+	elseif strcmp("\0","pause")|strcmp("\0","Pause")
+		move.w	sr, -(sp)
+		jsr		__global__ErrorHandler_PauseConsole
+		move.w	(sp)+, sr
+
 	elseif strcmp("\0","sleep")|strcmp("\0","Sleep")
 		move.w	sr, -(sp)
 		move.w	d0, -(sp)
