@@ -19,15 +19,13 @@ The base disassembly used for this installation is available here: https://githu
 
 ## Step 2. Include debugger macros in your disassembly
 
-1. Open `sonic.asm` file in your favorite text editor and add the following like at the beginning to include Error Handler's main definitions:
+Open `sonic.asm` file in your favorite text editor and add the following like at the beginning to include Error Handler's main definitions:
 
-	```m68k
-		include	"Debugger.asm"
-	```
+```m68k
+	include	"Debugger.asm"
+```
 
-2. Run `build.lua` (or `build.bat` on Windows if Lua globally available in your environment) to make sure your disassembly builds properly and there are no conflicting labels.
-
-If everything is ok, time to install the Error Handler itself!
+Don't try to build the ROM just yet. We're still missing one important component: the Error Handler itself!
 
 ## Step 3. Install the Error Handler
 
@@ -60,7 +58,7 @@ The `Debugger.asm` file you've included earlier is just a set of macros definiti
 
 	The "WARNING!" comment in the snippet is just so you don't forget that _you cannot put anything_ after `include "ErrorHandler.asm"`, otherwise debug symbols cannot be used, because they will be appended just after the end of the ROM by ConvSym utility.
 
-2. If you try to run `build.lua` (or `build.bat` on Windows) now, you'll find quite a few errors related to multiply-defined labels. This is because the new error handler now conflicts with Sonic 1's native one. Fixing this is pretty straight-forward. Just remove the old code.
+2. If you try to run `build.lua` (or `build.bat` on Windows if Lua isn't globally available in your environment) now, you'll find quite a few errors related to multiply-defined labels. This is because the new error handler now conflicts with Sonic 1's native one. Fixing this is pretty straight-forward. Just remove the old code.
 
 	In `sonic.asm`, find `BusError:`, which is the very first native exception handler.
 
@@ -69,7 +67,6 @@ The `Debugger.asm` file you've included earlier is just a set of macros definiti
 3. After removing the old exceptions code, run `build.lua`/`build.bat` and make sure your ROM builds properly.
 
 Once everything's done, congratulations, the Error Handler is installed, you're almost there!
-
 
 ## Step 4. Install ConvSym to generate debug symbols
 
@@ -130,7 +127,7 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 	common.fix_header("s1built.debug.bin")
 	```
 <details>
-<summary>Verifying that you've modified `build.lua` correctly</summary>
+<summary>Verifying that you've modified "build.lua" correctly</summary>
 
 If you're having issues with insertions listed above or want to double-check, here's a full diff:
 
