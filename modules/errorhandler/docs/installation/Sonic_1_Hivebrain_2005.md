@@ -19,7 +19,7 @@ The base disassembly used for this installation is available here: https://info.
 
 Open `sonic1.asm` file in your favorite text editor and add the following like at the beginning to include Error Handler's main definitions:
 
-```68k
+```m68k
 	include	"Debugger.asm"
 ```
 
@@ -35,8 +35,8 @@ This is because debugger definitions use Console as a namespace for new set of c
 To fix this, search for "Console:" in `sonic1.asm`. You should find the conflicting line. Just remove "Console:" part (it's not used anyways) like so:
 
 ```diff
-+Console:	dc.b 'SEGA MEGA DRIVE ' ; Hardware system ID
--			dc.b 'SEGA MEGA DRIVE ' ; Hardware system ID
+-Console:	dc.b 'SEGA MEGA DRIVE ' ; Hardware system ID
++		dc.b 'SEGA MEGA DRIVE ' ; Hardware system ID
 ```
 
 Your project should now build fine, so it's time to install Error Handler itself!
@@ -51,7 +51,7 @@ Your project should now build fine, so it's time to install Error Handler itself
 
 At the very bottom of `sonic1.asm`, just before "EndOfRom:", add the following snippet:
 
-```68k
+```m68k
 ; ==============================================================
 ; --------------------------------------------------------------
 ; Debugging modules
@@ -84,13 +84,13 @@ If you're using a vanilla disassembly with the native DAC driver, you may now he
 
 In `sonic1.asm`, search for `Kos_Z80:` and you'll see these lines:
 
-```68k
+```m68k
 Kos_Z80:	incbin	sound\z80_1.bin
-			dc.w ((SegaPCM&$FF)<<8)+((SegaPCM&$FF00)>>8)
-			dc.b $21
-			dc.w (((EndOfRom-SegaPCM)&$FF)<<8)+(((EndOfRom-SegaPCM)&$FF00)>>8)
-			incbin	sound\z80_2.bin
-			even
+		dc.w ((SegaPCM&$FF)<<8)+((SegaPCM&$FF00)>>8)
+		dc.b $21
+		dc.w (((EndOfRom-SegaPCM)&$FF)<<8)+(((EndOfRom-SegaPCM)&$FF00)>>8)
+		incbin	sound\z80_2.bin
+		even
 ```
 
 As you see it references to `EndOfRom` label to determine the lengths of `SegaPCM`, but we've just included the Error Handler before it! So the glitch you hear is the DAC driver trying to play Error Handler's code as a sound, which happens to be follow the real PCM data.
@@ -102,19 +102,19 @@ In `sonic1.asm`, find `SegaPCM:` and insert `SegaPCM_End:` just after the `incbi
 ```diff
  SegaPCM:	incbin	sound\segapcm.bin
 +SegaPCM_End:
- 			even
+ 		even
 ```
 
 Now, go back to `Kos_Z80:` and on the next few lines replace `EndOfRom` with `SegaPCM_End`:
 
 ```diff
  Kos_Z80:	incbin	sound\z80_1.bin
-			dc.w ((SegaPCM&$FF)<<8)+((SegaPCM&$FF00)>>8)
-			dc.b $21
--			dc.w (((EndOfRom-SegaPCM)&$FF)<<8)+(((EndOfRom-SegaPCM)&$FF00)>>8)
-+			dc.w (((SegaPCM_End-SegaPCM)&$FF)<<8)+(((SegaPCM_End-SegaPCM)&$FF00)>>8)
-			incbin	sound\z80_2.bin
-			even
+		dc.w ((SegaPCM&$FF)<<8)+((SegaPCM&$FF00)>>8)
+		dc.b $21
+-		dc.w (((EndOfRom-SegaPCM)&$FF)<<8)+(((EndOfRom-SegaPCM)&$FF00)>>8)
++		dc.w (((SegaPCM_End-SegaPCM)&$FF)<<8)+(((SegaPCM_End-SegaPCM)&$FF00)>>8)
+		incbin	sound\z80_2.bin
+		even
 ```
 
 Now run `built.bat` again make sure SEGA sounds clean again.
@@ -148,11 +148,17 @@ rompad.exe s1built.bin 255 0
 fixheadr.exe s1built.bin
 
 rem DEBUG BUILD
-asm68k /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o ae- /o v+ /p /e _DEBUG_=1 sonic1.asm, s1built.debug.bin, s1built.debug.sym, s1built.debug.lst
+asm68k /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o ae- /o v+ /p /e __DEBUG__=1 sonic1.asm, s1built.debug.bin, s1built.debug.sym, s1built.debug.lst
 convsym.exe s1built.debug.sym s1built.debug.bin -a
 rompad.exe s1built.debug.bin 255 0
 fixheadr.exe s1built.debug.bin
 ```
+
+This will produce two builds for you: the RELEASE build (`s1built.bin`) and the DEBUG one (`s1built.debug.bin`). They should be identical for now, but if you start using some of the advanced debugger features, like assertions and `KDebug` interface, these features will be compiled and enabled only in DEBUG builds to avoid performance penalties when not debugging.
+
+> **Note**
+>
+> ASM68K runs compiles code in _case-insensitive mode_ by default. This means all symbols will be converted to lower-case. If you want to preserve case, add `/o c+` to compile flags to enable _case-sensitive mode_. Beware that you may need to fix a lot of labels if their casing differs!
 
 That's it! Save `build.bat` and run it. Make sure the are no errors in the output.
 
@@ -162,12 +168,12 @@ Now, let's try your freshly installed debugger in action. For testing purposes, 
 
 In `sonic1.asm`, find `Obj01_Normal:`. Right below it, add the following lines as shown:
 
-```diff
- Obj01_Normal:
-+	btst	#6, ($FFFFF603).w 	; is A pressed?
-+	beq.s	@skip				; if not, branch
-+	RaiseError "Intentional crash test"
-+@skip:
+```m68k
+Obj01_Normal:
+	btst	#6, ($FFFFF603).w		; is A pressed?
+	beq.s	@skip				; if not, branch
+	RaiseError "Intentional crash test"	;
+@skip:
 ```
 
 Now, build your ROM, start a level and press A at any time. You should see the generic exception screen (same as you get for a normal exception, except for the header). While on this screen, you can press B to display backtrace, A to which symbols are referenced by the address registers. Press Start or C button (if unmapped) to switch to the main exception screen.
@@ -182,7 +188,8 @@ We can display additional information about our exception if needed:
 ```
 
 Now, let's test a sample debugger, shall we? Create a new `SampleDebugger.asm` file in your disassembly's root and paste the following code to it:
-```68k
+
+```m68k
 SampleDebugger:
 	Console.WriteLine "%<pal1>Camera (FG): %<pal0>%<.w $FFFFF700>-%<.w $FFFFF704>"
 	Console.WriteLine "%<pal1>Camera (BG): %<pal0>%<.w $FFFFF708>-%<.w $FFFFF70C>"
@@ -203,7 +210,7 @@ SampleDebugger:
 ```
 
 Include your new file somewhere in `sonic1.asm`. I recommend including it right above the Error Handler (`include "ErrorHandler.asm"`):
-```68k
+```m68k
     include   "SampleDebugger.asm"
 ```
 
@@ -218,5 +225,21 @@ To use this debugger in `RaiseError`, pass its label (`SampleLevelDebugger`) as 
 ```
 
 If you now try to run it, you should see a differently looking exception screen. It now displays camera coordinates and object slots.
+
+You can also use your debugger globally and call it from any exception. To demonstrate, let's map it to the C button of a generic exception screen. Open `Debugger.asm` and locate these lines:
+
+```m68k
+; Debuggers mapped to pressing A/B/C on the exception screen
+; Use 0 to disable button, use debugger's entry point otherwise.
+DEBUGGER__EXTENSIONS__BTN_A_DEBUGGER:	equ		Debugger_AddressRegisters	; display address register symbols
+DEBUGGER__EXTENSIONS__BTN_B_DEBUGGER:	equ		Debugger_Backtrace			; display exception backtrace
+DEBUGGER__EXTENSIONS__BTN_C_DEBUGGER:	equ		0		; disabled
+```
+
+Try to change the value of `DEBUGGER__EXTENSIONS__BTN_C_DEBUGGER` from `0` to `SampleDebugger`. Now pressing any the C button on any exception will call this debugger separately. Press Start to return to the main exception.
+
+> **Note**
+>
+> You may notice that the screen contents are slightly different when `SampleDebugger` is called separately. This is because we don't have an exception header rendered and text itself is aligned differently when a debugger is invoked directly. If you want to aling text the same way exception screen does it, you can add `Console.Write "%<setx,1>%<setw,38>"` at the beginning of the debugger.
 
 
