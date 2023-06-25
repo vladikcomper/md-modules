@@ -575,7 +575,7 @@ ErrorHandler_ConsoleConfig_Initial:	__global
 
 ErrorHandler_ConsoleConfig_Shared:	__global
 	dc.w	40							; number of characters per line
-	dc.w	40							; number of charasters on the first line (meant to be the same as the above)
+	dc.w	40							; number of characters on the first line (meant to be the same as the above)
 	dc.w	0							; base font pattern (tile id for ASCII $00 + palette flags)
 	dc.w	$80							; size of screen row (in bytes)
 
