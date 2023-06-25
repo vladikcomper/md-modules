@@ -37,16 +37,16 @@ TestProgram:
 	Console.WriteLine "Printed a line without a delay!"
 
 	Console.Sleep #30
-	Console.WriteLine "Minimal sleep... #1"
+	Console.Write "Minimal sleep... #1"
 	Console.Sleep #30
-	Console.WriteLine "Minimal sleep... #2"
+	Console.Write "Minimal sleep... #2"
 	Console.Sleep #30
 	Console.WriteLine "Minimal sleep... #3"
 	Console.Sleep #30
 
 	jsr		CheckRegisterIntergity
 
-	Console.WriteLine "Paused. Press A/B/C/Start to continue."
+	Console.Write "Paused. Press A/B/C/Start to continue..."
 	Console.Pause
 	Console.WriteLine "WELL PRESSED!"
 
