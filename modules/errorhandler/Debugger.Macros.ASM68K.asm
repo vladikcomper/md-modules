@@ -192,6 +192,21 @@ KDebug &
 		jsr		__global__KDebug_FlushLine
 		move.w	(sp)+, sr
 
+	elseif strcmp("\0","starttimer")|strcmp("\0","StartTimer")
+		move.w	sr, -(sp)
+		move.w	#$9FC0, ($C00004).l
+		move.w	(sp)+, sr
+
+	elseif strcmp("\0","endtimer")|strcmp("\0","EndTimer")
+		move.w	sr, -(sp)
+		move.w	#$9F00, ($C00004).l
+		move.w	(sp)+, sr
+
+	elseif strcmp("\0","breakpoint")|strcmp("\0","BreakPoint")
+		move.w	sr, -(sp)
+		move.w	#$9D00, ($C00004).l
+		move.w	(sp)+, sr
+
 	else
 		inform	2,"""\0"" isn't a member of ""KDebug"""
 

@@ -80,6 +80,28 @@ TestProgram:
 	move.l	(sp)+, a3
 	addq.w	#4, sp						; free 4 bytes we previously allocated
 
+	KDebug.StartTimer
+	nop
+	nop
+	KDebug.EndTimer
+
+	KDebug.StartTimer
+	nop
+	nop
+	KDebug.EndTimer
+
+	KDebug.StartTimer
+	nop
+	nop
+	KDebug.EndTimer
+
+	KDebug.StartTimer
+	nop
+	nop
+	KDebug.EndTimer
+
+	KDebug.BreakPoint
+
 	Console.BreakLine
 	Console.WriteLine "ALL DONE!"
 

@@ -280,6 +280,21 @@ KDebug	macro	argument1
 		jsr		__global__KDebug_FlushLine
 		move.w	(sp)+, sr
 
+	case "starttimer"
+		move.w	sr, -(sp)
+		move.w	#$9FC0, ($C00004).l
+		move.w	(sp)+, sr
+
+	case "endtimer"
+		move.w	sr, -(sp)
+		move.w	#$9F00, ($C00004).l
+		move.w	(sp)+, sr
+
+	case "breakpoint"
+		move.w	sr, -(sp)
+		move.w	#$9D00, ($C00004).l
+		move.w	(sp)+, sr
+
 	endcase
 	endif
 	endm
