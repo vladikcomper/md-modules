@@ -1,7 +1,7 @@
 
 # Installing MD Debugger in Sonic 1 Hivebrain 2005 Disassembly
 
-> **Note**
+> **Warning**
 >
 > Sonic 1 Hivebrain 2005 Disassembly is outdated and its usage is generally not recommended for newer projects. If you're looking to start a fresh project, consider using modern disassemblies like Sonic 1 GitHub Disassembly instead.
 
@@ -23,27 +23,27 @@ Open `sonic1.asm` file in your favorite text editor and add the following like a
 	include	"Debugger.asm"
 ```
 
-Run `build.bat` to make sure your diassembly builds properly and there are no conflicting labels. For the vanilla disassembly, you'll most likely get the following error:
+Run `build.bat` to make sure your disassembly builds properly and there are no conflicting labels. For the vanilla disassembly, you'll most likely get the following error:
 
 ```
 <...> Error : Label 'console' multiply defined
 console: dc.b 'SEGA MEGA DRIVE '
 ```
 
-This is because debugger definitions use Console as a namespace for new set of console-related commands (`Console.Write`, `Console.Run` etc), which conflicts with ROM header label with the same name.
+This is because debugger definitions use `Console` as a namespace for new set of console-related commands (`Console.Write`, `Console.Run` etc), which conflicts with a ROM header label with the same name.
 
-To fix this, search for "Console:" in `sonic1.asm`. You should find the conflicting line. Just remove "Console:" part (it's not used anyways) like so:
+To fix this, search for `Console:` in `sonic1.asm`. You should find the conflicting line. Just remove the `Console:` part (it's not used anyways) like so:
 
 ```diff
 -Console:	dc.b 'SEGA MEGA DRIVE ' ; Hardware system ID
 +		dc.b 'SEGA MEGA DRIVE ' ; Hardware system ID
 ```
 
-Your project should now build fine, so it's time to install Error Handler itself!
+Your project should now build fine, so it's time to install the Error Handler itself!
 
 ## Step 3. Install the Error Handler 
 
-`Debugger.asm` file you've included earlier is just a set of macros definitions. You cannot actually use them unless there's real code that handles exceptions, debug text rendering etc. So you must now include Error Handler itself (the `ErrorHandler.asm` file that you've also copied).
+The `Debugger.asm` file you've included earlier is just a set of macros definitions. You cannot actually use them unless there's real code that handles exceptions, debug text rendering etc. So you must now include the Error Handler itself (the `ErrorHandler.asm` file that you've also copied).
 
 > **Note**
 >
@@ -70,11 +70,12 @@ At the very bottom of `sonic1.asm`, just before "EndOfRom:", add the following s
 
 This includes entry points for exception vectors (Illegal instruction, Address Error etc), error handler configuration and the blob itself along with extensions (all inlined in the assembly file).
 
-The "WARNING!" comment in the snipped is just so you don't forget that _you cannot put anything_ after `include "ErrorHandler.asm"`, otherwise debug symbols cannot be used, because they will be appended just after the end of the ROM by ConvSym utility.
+The "WARNING!" comment in the snippet is just so you don't forget that _you cannot put anything_ after `include "ErrorHandler.asm"`, otherwise debug symbols cannot be used, because they will be appended just after the end of the ROM by ConvSym utility.
 
 If you try to run `build.bat` now, you'll find a lot more errors related to multiply-defined labels. This is because the new error handler now conflicts with Sonic 1's native one. Fixing this is pretty straight-forward. Just remove the old code:
 
-In `sonic1.asm`, find `BusError:`, which is the very first native exception handler. You need to remove all the code from the `BusError:` line through the end of "ErrorWaitForC:" (look for `; End of function ErrorWaitForC` line). This is approx. 175 lines of code to remove.
+1. In `sonic1.asm`, find `BusError:`, which is the very first native exception handler.
+2. You need to remove all the code from the `BusError:` line through the end of "ErrorWaitForC:" (look for `; End of function ErrorWaitForC` line). This is approx. 175 lines of code to remove.
 
 After removing the old exceptions code, run `build.bat` and make sure your ROM builds properly. If it does, congratulations, the Error Handler is installed, you're almost there!
 
@@ -127,32 +128,34 @@ Now run `built.bat` again make sure SEGA sounds clean again.
 ## Step 5. Install ConvSym for debug symbol generation
 
 1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.0
+
 2. Download the ConvSym utility for Windows (or your current platform, e.g. Linux, FreeBSD, MacOS);
+
 3. Extract `convsym.exe` to your disassembly's root directory.
 
-Now, open `build.bat` and locate the following lines:
+4. Now, open `build.bat` and locate the following lines:
 
-```sh
-asm68k /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- sonic1.asm, s1built.bin
-rompad.exe s1built.bin 255 0
-fixheadr.exe s1built.bin
-```
+	```shell
+	asm68k /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- sonic1.asm, s1built.bin
+	rompad.exe s1built.bin 255 0
+	fixheadr.exe s1built.bin
+	```
 
-Replace all the lines above with the following code:
+5. Replace all the lines above with the following code:
 
-```sh
-rem RELEASE BUILD
-asm68k /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o ae- /o v+ /p sonic1.asm, s1built.bin, s1built.sym, s1built.lst
-convsym.exe s1built.sym s1built.bin -a
-rompad.exe s1built.bin 255 0
-fixheadr.exe s1built.bin
-
-rem DEBUG BUILD
-asm68k /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o ae- /o v+ /p /e __DEBUG__=1 sonic1.asm, s1built.debug.bin, s1built.debug.sym, s1built.debug.lst
-convsym.exe s1built.debug.sym s1built.debug.bin -a
-rompad.exe s1built.debug.bin 255 0
-fixheadr.exe s1built.debug.bin
-```
+	```shell
+	rem RELEASE BUILD
+	asm68k /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o ae- /o v+ /p sonic1.asm, s1built.bin, s1built.sym, s1built.lst
+	convsym.exe s1built.sym s1built.bin -a
+	rompad.exe s1built.bin 255 0
+	fixheadr.exe s1built.bin
+	
+	rem DEBUG BUILD
+	asm68k /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o ae- /o v+ /p /e __DEBUG__=1 sonic1.asm, s1built.debug.bin, s1built.debug.sym, s1built.debug.lst
+	convsym.exe s1built.debug.sym s1built.debug.bin -a
+	rompad.exe s1built.debug.bin 255 0
+	fixheadr.exe s1built.debug.bin
+	```
 
 This will produce two builds for you: the RELEASE build (`s1built.bin`) and the DEBUG one (`s1built.debug.bin`). They should be identical for now, but if you start using some of the advanced debugger features, like assertions and `KDebug` interface, these features will be compiled and enabled only in DEBUG builds to avoid performance penalties when not debugging.
 
@@ -242,4 +245,4 @@ Try to change the value of `DEBUGGER__EXTENSIONS__BTN_C_DEBUGGER` from `0` to `S
 >
 > You may notice that the screen contents are slightly different when `SampleDebugger` is called separately. This is because we don't have an exception header rendered and text itself is aligned differently when a debugger is invoked directly. If you want to aling text the same way exception screen does it, you can add `Console.Write "%<setx,1>%<setw,38>"` at the beginning of the debugger.
 
-
+When you've done playing, **feel free to revert any changes and intentionally thrown exceptions from this step.**
