@@ -230,6 +230,61 @@ Console	macro	argument1, argument2
 	endcase
 	endm
 
+#ifndef MD-SHELL
+; ---------------------------------------------------------------
+KDebug	macro	argument1
+	ifdef __DEBUG__	; KDebug interface is only available in DEBUG builds
+	switch lowstring("ATTRIBUTE")
+	case "write"
+		move.w	sr, -(sp)
+		__FSTRING_GenerateArgumentsCode argument1
+		movem.l	a0-a2/d7, -(sp)
+		lea		4*4(sp), a2
+		lea		.__data(pc), a1
+		jsr		__global__KDebug_Write_Formatted
+		movem.l	(sp)+, a0-a2/d7
+		if (.__sp>8)
+			lea		.__sp(sp), sp
+		elseif (.__sp>0)
+			addq.w	#.__sp, sp
+		endif
+		move.w	(sp)+, sr
+		bra.w	.__leave
+	.__data:
+		__FSTRING_GenerateDecodedString argument1
+		!align	2
+	.__leave:
+
+	case "writeline"
+		move.w	sr, -(sp)
+		__FSTRING_GenerateArgumentsCode argument1
+		movem.l	a0-a2/d7, -(sp)
+		lea		4*4(sp), a2
+		lea		.__data(pc), a1
+		jsr		__global__KDebug_WriteLine_Formatted
+		movem.l	(sp)+, a0-a2/d7
+		if (.__sp>8)
+			lea		.__sp(sp), sp
+		elseif (.__sp>0)
+			addq.w	#.__sp, sp
+		endif
+		move.w	(sp)+, sr
+		bra.w	.__leave
+	.__data:
+		__FSTRING_GenerateDecodedString argument1
+		!align	2
+	.__leave:
+
+	case "breakline"
+		move.w	sr, -(sp)
+		jsr		__global__KDebug_FlushLine
+		move.w	(sp)+, sr
+
+	endcase
+	endif
+	endm
+
+#endif
 ; ---------------------------------------------------------------
 __ErrorMessage  macro string, opts
 		__FSTRING_GenerateArgumentsCode string

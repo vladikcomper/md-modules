@@ -8,6 +8,8 @@
 ; Console run and console clear tests
 ; ---------------------------------------------------------------
 
+__DEBUG__:		equ	1		; enable KDebug
+
 	include	"..\..\..\build\modules\mdshell\headless\MDShell.asm"
 
 #ifdef ASM68K
@@ -49,6 +51,37 @@ TestProgram:
 	Console.Write "Paused. Press A/B/C/Start to continue..."
 	Console.Pause
 	Console.WriteLine "WELL PRESSED!"
+
+	jsr		CheckRegisterIntergity
+
+	KDebug.WriteLine "You shouldn't see this."
+	KDebug.Write "You still shouldn't see "
+	KDebug.Write "this!%<endl>"
+
+	; WARNING! This temporarily disables console!
+	pea		0.w							; allocate 4 bytes on the stack
+	move.l	a3, -(sp)
+	move.l	usp, a3
+	move.l	a3, 4(sp)					; remember USP
+	suba.w	a3, a3
+	move.l	a3, usp
+	move.l	(sp)+, a3
+
+	KDebug.WriteLine "You should see this now!"
+	KDebug.Write "You still should see "
+	KDebug.Write "this!%<endl>"
+	KDebug.Write "This line is extremely long and certainly flushes the buffer several times!"
+	KDebug.BreakLine
+
+	; WARNING! This re-enables console
+	move.l	a3, -(sp)
+	move.l	4(sp), a3
+	move.l	a3, usp
+	move.l	(sp)+, a3
+	addq.w	#4, sp						; free 4 bytes we previously allocated
+
+	Console.BreakLine
+	Console.WriteLine "ALL DONE!"
 
 	jmp		CheckRegisterIntergity
 

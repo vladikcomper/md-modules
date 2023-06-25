@@ -63,6 +63,109 @@ ErrorHandler_ClearConsole:	__global
 
 ; =============================================================================
 ; -----------------------------------------------------------------------------
+; Write formatted strings to KDebug message buffer
+; -----------------------------------------------------------------------------
+; INPUT:
+;		a1		Pointer to source formatted string
+;		a2		Arguments buffer pointer
+;
+; USES:
+;		a0-a2, d7
+; -----------------------------------------------------------------------------
+
+KDebug_WriteLine_Formatted: __global
+		pea		KDebug_FlushLine(pc)
+
+; -----------------------------------------------------------------------------
+KDebug_Write_Formatted: __global
+
+@buffer_size = $10
+
+		move.l	usp, a0
+		cmp.b	#_ConsoleMagic, Console.Magic(a0)	; are we running console?
+		beq.s	@quit						; if yes, disable KDebug output, because it breaks VDP address
+
+		move.l	a4, -(sp)
+		lea		@FlushBuffer(pc), a4		; flushing function
+		lea		-@buffer_size(sp), sp		; allocate string buffer
+		lea		(sp), a0					; a0 = string buffer
+		moveq	#@buffer_size-2, d7			; d7 = number of characters before flush -1
+
+@_inj0:	jsr		FormatString(pc)
+		lea		@buffer_size(sp), sp		; free string buffer
+		
+		move.l	(sp)+, a4
+@quit:
+		rts
+
+; ---------------------------------------------------------------
+; Flush buffer callback raised by FormatString
+; ---------------------------------------------------------------
+; INPUT:
+;		a0		Buffer position
+;		d7	.w	Number of characters remaining in buffer - 1
+;
+; OUTPUT:
+;		a0		Buffer position after flushing
+;		d7	.w	Number of characters before next flush - 1
+;		Carry	0 = continue operation
+;				1 = terminate FormatString with error condition
+;
+; WARNING: This function shouldn't modify d0-d4 / a1-a3!
+; ---------------------------------------------------------------
+
+@FlushBuffer:
+		clr.b	(a0)+					; finalize buffer
+
+		neg.w	d7
+		add.w	#@buffer_size-1, d7
+		sub.w	d7, a0					; a0 = start of the buffer
+
+		move.l	a0, -(sp)
+		move.l	a5, -(sp)
+
+		lea		VDP_Ctrl, a5
+		move.w	#$9E00, d7
+		bra.s	@write_buffer_next
+
+		@write_buffer:
+			move.w	d7, (a5)
+
+		@write_buffer_next:
+			move.b	(a0)+, d7
+			bgt.s	@write_buffer			; if not null-terminator or flag, branch
+			beq.s	@write_buffer_done		; if null-terminator, branch
+			sub.b	#_newl, d7				; is flag "new line"?
+			beq.s	@write_buffer			; if yes, branch
+			bra.s	@write_buffer_next		; otherwise, skip writing
+
+	; -----------------------------------------------------------------------------
+	@write_buffer_done:
+		move.l	(sp)+, a5
+		move.l	(sp)+, a0
+		moveq	#@buffer_size-2, d7		; d7 = number of characters before flush -1
+		rts								; WARNING! Must return Carry=0
+
+
+; =============================================================================
+; -----------------------------------------------------------------------------
+; Finishes the current line and flushes KDebug message buffer
+; -----------------------------------------------------------------------------
+
+KDebug_FlushLine:	__global
+		move.l	a0, -(sp)
+		move.l	usp, a0
+		cmp.b	#_ConsoleMagic, Console.Magic(a0)	; are we running console?
+		beq.s	@quit						; if yes, disable KDebug output, because it breaks VDP address
+
+		move.w	#$9E00, VDP_Ctrl			; send null-terminator
+@quit:
+		move.l	(sp)+, a0
+		rts
+
+
+; =============================================================================
+; -----------------------------------------------------------------------------
 ; Pause console program executions until A/B/C are pressed
 ; -----------------------------------------------------------------------------
 
@@ -238,6 +341,7 @@ Error_InitConsole:	__injectable
 Error_IdleLoop:	__injectable
 Console_Reset: __injectable
 Console_InitShared:	__injectable
+FormatString:	__injectable
 ErrorHandler_ConsoleConfig_Initial:	__injectable
 ErrorHandler_ConsoleConfig_Shared:	__injectable
 ErrorHandler_VDPConfig_Nametables:	__injectable
