@@ -49,7 +49,7 @@ The `Debugger.asm` file you've included earlier is just a set of macros definiti
 >
 > Why cannot we just have both definitions and code in one file? It's because we need Error Handler's code at the very end of the ROM, but debugger macros should be available from the beginning. In C/C++ terms, one is a header, and the other is an actual object file that is linked (included) the last. While it's technically possible to include Error Handler anywhere after the ROM header (e.g. in the middle), it's absolutely required that the debug symbol table is included after it, which is only possible at the end of ROM.
 
-At the very bottom of `sonic1.asm`, just before "EndOfRom:", add the following snippet:
+At the very bottom of `sonic1.asm`, just before `EndOfRom:`, add the following snippet:
 
 ```m68k
 ; ==============================================================
@@ -125,7 +125,7 @@ Now run `built.bat` again make sure SEGA sounds clean again.
 > If your disassembly has diverged from the original quite a lot, you may still have glitches in SEGA PCM. This is likely because the sample crosses 32 KB ROM boundary, which the native DAC driver cannot handle. The easiest (but often not the most space-efficient) way to fix this is to add `align $8000` before `SegaPCM:` to align it again.
 
 
-## Step 5. Install ConvSym for debug symbol generation
+## Step 5. Install ConvSym to generate debug symbols
 
 1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.0
 
@@ -161,7 +161,7 @@ This will produce two builds for you: the RELEASE build (`s1built.bin`) and the 
 
 > **Note**
 >
-> ASM68K runs compiles code in _case-insensitive mode_ by default. This means all symbols will be converted to lower-case. If you want to preserve case, add `/o c+` to compile flags to enable _case-sensitive mode_. Beware that you may need to fix a lot of labels if their casing differs!
+> ASM68K compiles code in _case-insensitive mode_ by default. This means all symbols will be converted to lower-case. If you want to preserve case, add `/o c+` to compile flags to enable the _case-sensitive mode_. Beware that you may need to fix a lot of labels if their casing differs!
 
 That's it! Save `build.bat` and run it. Make sure the are no errors in the output.
 
