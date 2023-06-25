@@ -73,6 +73,7 @@ ErrorHandler_PauseConsole:	__global
 		bne.s	@quit
 
 		move.w	#0, -(sp)					; allocate joypad memory
+		bsr.s	Joypad_Wait_ABCStart		; extra call to initiate joypad bitfield and avoid misdetecting pressed buttons
 @loop:
 		bsr.s	Joypad_Wait_ABCStart		; is A/B/C pressed?
 		beq.s	@loop						; if not, branch
@@ -115,6 +116,7 @@ Joypad_Wait_ABCStart:
 ErrorHandler_PagesController:	__global
 		movem.l	d0-a6, -(sp)				; back up all the registers ...
 		move.w	#0, -(sp)					; allocate joypad memory
+		bsr.s	Joypad_Wait_ABCStart		; extra call to initiate joypad bitfield and avoid misdetecting pressed buttons
 
 	@MainLoop:
 			lea		VDP_Ctrl, a5				; a5 = VDP_Ctrl
