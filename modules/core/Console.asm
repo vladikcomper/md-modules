@@ -402,8 +402,6 @@ Console_Write: __global
 ; INPUT:
 ;		a1		Pointer to source formatted string
 ;		a2		Arguments buffer pointer
-;		a5		VDP Control port
-;		a6		VDP Data port
 ;
 ; USES:
 ;		a0-a2, d7
