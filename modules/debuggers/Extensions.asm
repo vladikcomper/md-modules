@@ -147,6 +147,7 @@ ErrorHandler_PagesController:	__global
 
 			; Display debugger's own console
 			move.l	#(($8200+VRAM_DebuggerPage/$400)<<16)|($8400+VRAM_DebuggerPage/$2000), (a5)
+			move.l	d5, (a5)					; restore last VDP write address
 
 			; Execute the debugger
 			pea		@DestroyDebugger(pc)
