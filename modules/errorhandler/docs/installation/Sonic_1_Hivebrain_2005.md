@@ -243,6 +243,6 @@ Try to change the value of `DEBUGGER__EXTENSIONS__BTN_C_DEBUGGER` from `0` to `S
 
 > **Note**
 >
-> You may notice that the screen contents are slightly different when `SampleDebugger` is called separately. This is because we don't have an exception header rendered and text itself is aligned differently when a debugger is invoked directly. If you want to aling text the same way exception screen does it, you can add `Console.Write "%<setx,1>%<setw,38>"` at the beginning of the debugger.
+> You may notice that the screen contents are slightly different when `SampleDebugger` is called separately. This is because we don't have an exception header rendered and text itself is aligned differently when a debugger is invoked directly. If you want to align text the same way exception screen does it, you can add `Console.Write "%<setx,1>%<setw,38>"` at the beginning of the debugger.
 
 When you've done playing, **feel free to revert any changes and intentionally thrown exceptions from this step.**
