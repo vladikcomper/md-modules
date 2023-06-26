@@ -41,7 +41,7 @@ Currently, it targets The AS Macroassembler and ASM68K assemblers. It has instal
 
 - __KDebug integration for logging, breakpoints and cycle-couting (experimental).__
   - Display formatted strings at any point straight in your emulator's debug console!
-  - Use similar "high-level" macro interface as in console programs (`KDebug.WriteLine` instead of `Console.WriteLine`), but without interrupting your programs;
+  - Use a similar "high-level" macro interface as in console programs (`KDebug.WriteLine` instead of `Console.WriteLine`), but without interrupting your programs;
   - Currently, the only emulators to support KDebug are Gens KMod and Blastem-nightly;
   - Create manual breakpoints with `KDebug.BreakPoint`;
   - Measure your code performance using `KDebug.StartTimer` and `KDebug.EndTimer`.
