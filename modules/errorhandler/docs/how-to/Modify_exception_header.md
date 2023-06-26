@@ -101,11 +101,11 @@ Now it's time to make this placeholder message fancier!
 
 You can use the following special bytes to format it:
 
-- `%<endl>` - Starts a new line
-- `%<pal0>` - Use palette line #0 (white)
-- `%<pal1>` - Use palette line #1 (yellow)
-- `%<pal2>` - Use palette line #2 (blue)
-- `%<pal3>` - Use palette line #3 (dark-blue)
+- `endl` - Starts a new line
+- `pal0` - Use palette line #0 (white)
+- `pal1` - Use palette line #1 (yellow)
+- `pal2` - Use palette line #2 (blue)
+- `pal3` - Use palette line #3 (dark-blue)
 
 Here's an example of various flags in action:
 
