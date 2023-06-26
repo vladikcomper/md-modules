@@ -39,6 +39,13 @@ Currently, it targets The AS Macroassembler and ASM68K assemblers. It has instal
   - Assertions, widely adopted by many high-level languages, are provided by the debugger out-of-the box;
   - Use `assert` pseudo-instruction that is only compiled in DEBUG builds. This means zero run-time cost for your final (RELEASE) builds to implement self-testing code.
 
+- __KDebug integration for logging, breakpoints and cycle-couting (experimental).__
+  - Display formatted strings at any point straight in your emulator's debug console!
+  - Use the a similar "high-level" macro interface as in console programs (`KDebug.WriteLine` instead of `Console.WriteLine`), but without interrupting your programs;
+  - Currently, the only emulators to support KDebug are Gens KMod and Blastem-nightly;
+  - Create manual breakpoints with `KDebug.BreakPoint`;
+  - Measure your code performance using `KDebug.StartTimer` and `KDebug.EndTimer`.
+
 - __Easy to install and extremely lightweight.__
   - Error handler blob is below 3 KiB, which is quite small for the number of features it provides; optional debugger extensions take a few hundreds of bytes each;
   - It's quite easy to install, with installation instructions and ready configurations provided for the most mainline Sonic disassemblies.

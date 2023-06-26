@@ -210,7 +210,7 @@ Pauses console program execution until A, B, C or Start button is pressed on the
 
 ## Formatted string reference
 
-Formatted strings may include flags or formatted values, which are encapsulated in `"%<...>"`` tokens, for example:
+Formatted strings may include flags or formatted values, which are encapsulated in `%<...>` tokens, for example:
 
         Console.Write "d0 equals to %<.b d0 hex|signed>, and... %<endl>d1 is %<.w d1>"
 
