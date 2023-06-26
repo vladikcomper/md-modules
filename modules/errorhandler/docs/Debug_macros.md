@@ -5,6 +5,24 @@ This document covers the essential Debugger's API, which is presented in form of
 
 ## Table of contents
 
+- [`assert`](#assert)
+- [`RaiseError`](#raiseerror)
+- [`Console` macros](#console-macros)
+  - [`Console.Run`](#consolerun)
+  - [`Console.Write`](#consolewrite-and-consolewriteline)
+  - [`Console.SetXY`](#consolesetxy)
+  - [`Console.BreakLine`](#consolebreakline)
+  - [`Console.Clear`](#consoleclear)
+  - [`Console.Sleep`](#consolesleep)
+  - [`Console.Pause`](#consolepause)
+- [`KDebug` macros](#kdebug-macros)
+  - [`KDebug.Write`](#kdebugwriteline-and-kdebugwrite)
+  - [`KDebug.WriteLine`](#kdebugwriteline-and-kdebugwrite)
+  - [`KDebug.BreakLine`](#kdebugbreakline)
+  - [`KDebug.BreakPoint`](#kdebugbreakpoint)
+  - [`KDebug.StartTimer`](#kdebugstarttimer-and-kdebugendtimer)
+  - [`KDebug.EndTimer`](#kdebugstarttimer-and-kdebugendtimer)
+
 ## `assert`
 
 **Syntax:**
@@ -64,7 +82,7 @@ Operands in assertions can use all the addressing modes that `tst` and `cmp` ins
 * `dest_operand` (optional) - destination operand; if present, `src_operand` is compared to `dest_operand`, otherwise a single `src_operand` is tested.
 
 
-### `RaiseError`
+## `RaiseError`
 
 **Syntax:**
 
@@ -97,7 +115,7 @@ If `debugger` is not specified, the standard program is used which displays CPU 
 
 This set of macros provides an API for Debugger's built-in console. They are meant to be used inside _console programs_.
 
-Console programs work like normal assembly subroutines, but can call `Console` macros to render debug output on screen. They should end with an `rts` instruction like an every standard subroutine.
+Console programs work like normal assembly subroutines, but can call `Console` macros to render debug output on screen. They should end with an `rts` instruction like every standard subroutine.
 
 There are several ways to call a _console program_:
 
@@ -109,7 +127,34 @@ There are several ways to call a _console program_:
 >
 > If you use `Console` macros outside of a console program, nothing bad happens as the output is suppresed. So there are no side effects, except for wasted CPU cycles. This means you can insert `Console.Write/.WriteLine` statements in subroutines that can be used called both inside and outside of the console.
 
-### `Console.Write` and `Console.WriteLine`
+## `Console.Run`
+
+**Syntax:**
+
+```m68k
+        Console.Run program
+```
+
+**Description:**
+
+Halts normal execution, initializes a console and runs a specified program/subroutine inside it.
+
+_Console programs_ are essentially subroutines written in assembly, which can also call "high-level" `Console` macros to render debug output on screen. They should end with an `rts` instruction like every standard subroutine.
+
+```m68k
+        Console.Run MyConsoleProgram
+
+MyConsoleProgram:
+        Console.WriteLine "Hello, world!"
+        rts
+```
+
+**Arguments:**
+
+* `program` - a label of the program to run.
+
+
+## `Console.Write` and `Console.WriteLine`
 
 **Syntax:**
 
@@ -136,7 +181,7 @@ Writes a _formatted string_ in the console.
 
 * `text` - a formatted string to write in the console.
 
-### `Console.SetXY`
+## `Console.SetXY`
 
 **Syntax:**
 
@@ -172,7 +217,7 @@ Since `x` and `y` are _operands_, all M68K addressing modes may be used to pass 
 * `y` - a word-sized operand (register, memory or immediate value), represents y position in tiles
 
 
-### `Console.BreakLine`
+## `Console.BreakLine`
 
 **Syntax:**
 
@@ -190,7 +235,7 @@ Adds a newline.
         Console.Write "%<endl>"
 ```
 
-### `Console.Clear`
+## `Console.Clear`
 
 **Syntax:**
 
@@ -202,7 +247,7 @@ Adds a newline.
 
 Clears the entire console screen and resets the cursor back to the top-left corner (coordinate `#0, #0`).
 
-### `Console.Sleep`
+## `Console.Sleep`
 
 **Syntax:**
 
@@ -228,7 +273,7 @@ Since `frames` argument is an operand, it can use all M68K addressing mode, not 
 
 * `frames` - a word-sized operand (register, memory or immediate value), number of frames to sleep.
 
-### `Console.Pause`
+## `Console.Pause`
 
 **Syntax:**
 
@@ -254,7 +299,7 @@ Curently, the only emulators to support KDebug are:
 
 **`KDebug` macros are only compiled in DEBUG builds.** On unsupported emulators and the real hardware, these macros have no effect either way.
 
-### `KDebug.WriteLine` and `KDebug.Write`
+## `KDebug.WriteLine` and `KDebug.Write`
 
 **Syntax:**
 
@@ -281,7 +326,25 @@ Unlike `Console.Write`, `KDebug.Write` doesn't output the buffer unless end of t
 
 Unlike `Console.Write`/`.WriteLine`, `KDebug.Write`/`.WriteLine` don't support any special formatting tokens except for `%<endl>`. Any tokens like `%<pal0>`, `%<cr>` are ignored.
 
-### `KDebug.StartTimer` and `KDebug.EndTimer`
+## `KDebug.BreakLine`
+
+**Syntax:**
+
+```m68k
+        KDebug.BreakLine
+```
+
+**Description:**
+
+In DEBUG builds, flushes the message to supported emulator's debug window/console.
+
+**Alternative:**
+
+```m68k
+        KDebug.Write "%<endl>"
+```
+
+## `KDebug.StartTimer` and `KDebug.EndTimer`
 
 **Syntax:**
 
@@ -300,7 +363,7 @@ Cycle count is displayed in supported emulator's debug window/console. This has 
 >
 > Out of the supported emulators, Gens KMod and Blastem-nightly seem to calculate cycles differently. **Always prefer Blastem-nightly.**
 
-### `KDebug.BreakPoint`
+## `KDebug.BreakPoint`
 
 **Syntax:**
 
