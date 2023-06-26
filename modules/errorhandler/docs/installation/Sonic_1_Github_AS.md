@@ -126,6 +126,7 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 	```lua
 	common.fix_header("s1built.debug.bin")
 	```
+
 <details>
 <summary>Verifying that you've modified "build.lua" correctly</summary>
 
