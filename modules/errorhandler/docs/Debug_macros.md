@@ -10,6 +10,7 @@ This document covers the essential Debugger's API, which is presented in form of
 - [`Console` macros](#console-macros)
   - [`Console.Run`](#consolerun)
   - [`Console.Write`](#consolewrite-and-consolewriteline)
+  - [`Console.WriteLine`](#consolewrite-and-consolewriteline)
   - [`Console.SetXY`](#consolesetxy)
   - [`Console.BreakLine`](#consolebreakline)
   - [`Console.Clear`](#consoleclear)
