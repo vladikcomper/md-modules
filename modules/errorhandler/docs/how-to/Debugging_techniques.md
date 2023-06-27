@@ -5,7 +5,7 @@ This guide lists some really powerful debugging techniques that I use personally
 
 ## Validate function input parameters with assertions
 
-Consider you have this function that's used everywhere:
+Consider you have a function like this one in your code:
 
 ```m68k
 ; INPUT:
