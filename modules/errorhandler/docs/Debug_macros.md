@@ -166,7 +166,7 @@ MyConsoleProgram:
 
 **Description:**
 
-Writes a _formatted string_ in the console.
+Writes a [_formatted string_](Formatted_strings.md) in the console.
 
 `.WriteLine` variant automatically adds a newline at the end of the string.
 
@@ -305,13 +305,13 @@ Curently, the only emulators to support KDebug are:
 **Syntax:**
 
 ```m68k
-        Console.Write text
-        Console.WriteLine text
+        KDebug.Write text
+        KDebug.WriteLine text
 ```
 
 **Description:**
 
-In DEBUG builds, writes a _formatted string_ in the supported emulator's debug window/console. It has no effect on unsupported emulators, on the real hardware and in RELEASE builds.
+In DEBUG builds, writes a [_formatted string_](Formatted_strings.md) in the supported emulator's debug window/console. It has no effect on unsupported emulators, on the real hardware and in RELEASE builds.
 
 For logging, `KDebug.WriteLine` has the same interface as `Console.WriteLine`, but writes text to emulator's debug logger window/console instead. It's meant to be used outside of exceptions/console programs.
 
