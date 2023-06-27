@@ -3,14 +3,14 @@
 
 ___MD Error Handler and Debugger___ (also known as _"The Advanced Error Handler and Debugger"_) is a ready-to-use error handler that comes with a powerful integrated debugger. It aims to provide robust and extensible debugging tools built-in directly into the Mega-Drive ROM, that can be used anywhere (from emulators to the real hardware).
 
-Currently, it targets The AS Macroassembler and ASM68K assemblers. It has installation instructions and full support for the mainline Sonic disassemblies, but it can be intergated into any AS or ASM68K project (both the error handler and debugger) or even any pre-existing ROM (error handler only in a binary form).
+Currently, it targets **The AS Macroassembler** and **ASM68K** assemblers. It has installation instructions and full support for the mainline Sonic disassemblies, but it can be intergated into any AS or ASM68K project (both the error handler and debugger) or even any pre-existing ROM (error handler only in a binary form).
 
 
 ## Features
 
 - __Debug symbol support.__
   - It can extract symbols from AS and ASM68K at build time and bundle them with the ROM;
-  - Debug symbols are efficiently compressed to save space and 
+  - Debug symbols are efficiently compressed to save space and stored in custom database-like format; they are **not** visible as plain-text.
   - Error dumps will display symbols from your source code instead of raw offsets, making debugging crashes times more easier;
 
 - __Backtrace support, caller guessing and more.__
@@ -55,17 +55,22 @@ Currently, it targets The AS Macroassembler and ASM68K assemblers. It has instal
 
 Installation instructions are provided for:
 
-- Sonic 1 GitHub Disassembly (AS version)
-- Sonic 1 GitHub Disassembly (ASM68K version)
-- Sonic 1 Hivebrain 2005 Disassembly
+- [Sonic 1 GitHub Disassembly (AS version)](docs/installation/Sonic_1_Github_AS.md)
+- [Sonic 1 GitHub Disassembly (ASM68K version)](docs/installation/Sonic_1_Github_ASM68K.md)
+- [Sonic 1 Hivebrain 2005 Disassembly](docs/installation/Sonic_1_Hivebrain_2005.md)
 - Sonic 1 Hivebrain 2022 Disassembly
-- Sonic 2 GitHub Disassembly
+- [Sonic 2 GitHub Disassembly](docs/installation/Sonic_2_Github.md)
 
+## Documentation and help
 
-## Further reading
+### How-twos
 
-Please refer to this link for presentation and detailed description: https://sonicresearch.org/community/index.php?threads/advanced-error-handler-and-debugger.4442/#post-78456
+- [How-to add your details in exception headers](docs/how-to/Modify_exception_header.md)
 
+### Reference
+
+- [Debugger macro reference](docs/Debug_macros.md)
+- [Formatted string format reference](docs/Formatted_strings.md)
 
 ## Supported assemblers
 
