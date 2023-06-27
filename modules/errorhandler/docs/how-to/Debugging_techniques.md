@@ -164,13 +164,13 @@ MyHeavyFunction:
 
 @self: ; .self in AS
 	move.w 	d0, (a0)+
-	Console.WriteLine "Wrote %<.w d0> at address %<.l a0 sym>"
+	Console.WriteLine "Wrote %<.w d0> before the address %<.l a0 sym>"
 	move.w 	d1, (a0)+
-	Console.WriteLine "Wrote %<.w d1> at address %<.l a0 sym>"
+	Console.WriteLine "Wrote %<.w d1> before the address %<.l a0 sym>"
 	move.w 	d2, (a0)+
-	Console.WriteLine "Wrote %<.w d2> at address %<.l a0 sym>"
+	Console.WriteLine "Wrote %<.w d2> before the address %<.l a0 sym>"
 	move.w 	d3, (a0)+
-	Console.WriteLine "Wrote %<.w d3> at address %<.l a0 sym>"
+	Console.WriteLine "Wrote %<.w d3> before the address %<.l a0 sym>"
 	: <...>
 ```
 
