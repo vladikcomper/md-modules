@@ -1,5 +1,5 @@
 
-# Installing MD Debugger in Sonic 1 GitHub Disassembly
+# Installing MD Debugger in Sonic 1 GitHub Disassembly (AS, Mid-2022)
 
 > **Warning**
 >
@@ -19,7 +19,7 @@ The base disassembly used for this installation is available here: https://githu
 
 ## Step 1. Download and unpack the debugger
 
-1. Open the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.0
+1. Open the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.5
 2. Download the AS version of MD Debugger (`errorhandler-as.7z`);
 3. Extract its files into disassembly's root directory.
 
@@ -77,7 +77,7 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 ## Step 4. Install ConvSym to generate debug symbols
 
 
-1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.0
+1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.5
 
 2. Download the ConvSym utility for your platform: Windows, Linux, FreeBSD or MacOS;
 

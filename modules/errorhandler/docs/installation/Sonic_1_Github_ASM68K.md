@@ -1,26 +1,16 @@
 
-# Installing MD Debugger in Sonic 1 GitHub Disassembly (AS)
-
-> **Note**
->
-> This guide assumes your project is using a newer version of Sonic 1 GitHub disassembly after June 2023. It's when it switched to Lua-based build system introduced and it was then refactored.
->
-> For older versions, see the other guides.
+# Installing MD Debugger in Sonic 1 GitHub Disassembly (ASM68K)
 
 This guide describes a step-by-step installation process of the MD Error Handler and Debugger 2.5 and above in Sonic 1 GitHub Disassembly.
 
-There are two main branches of this disassembly using the AS and ASM68K assemblers respectively. This guide targets the AS version of the disassembly. For the ASM68K version, see the other guide.
+There are two main branches of this disassembly using the AS and ASM68K assemblers respectively. This guide targets the ASM68K version of the disassembly. For the AS version, see the other guide.
 
-> **Note**
->
-> The AS version of MD Debugger has slightly limited _formatted strings_ syntax. You probably won't notice this unless you're an advanced user (even so, there are workarounds), but bear in mind that MD Debugger was primarily developed for the ASM68K assembler and has better support for it.
-
-The base disassembly used for this installation is available here: https://github.com/sonicretro/s1disasm
+The base disassembly used for this installation is available here: https://github.com/sonicretro/s1disasm/tree/asm68k
 
 ## Step 1. Download and unpack the debugger
 
 1. Open the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.5
-2. Download the AS version of MD Debugger (`errorhandler-as.7z`);
+2. Download the ASM68K version of MD Debugger (`errorhandler-asm68k.7z`);
 3. Extract its files into disassembly's root directory.
 
 ## Step 2. Include debugger macros in your disassembly
@@ -64,13 +54,13 @@ The `Debugger.asm` file you've included earlier is just a set of macros definiti
 
 	The "WARNING!" comment in the snippet is just so you don't forget that _you cannot put anything_ after `include "ErrorHandler.asm"`, otherwise debug symbols cannot be used, because they will be appended just after the end of the ROM by ConvSym utility.
 
-2. If you try to run `build.lua` (or `build.bat` on Windows if Lua isn't globally available in your environment) now, you'll find quite a few errors related to multiply-defined labels. This is because the new error handler now conflicts with Sonic 1's native one. Fixing this is pretty straight-forward. Just remove the old code.
+2. If you try to run `build.bat` now, you'll find quite a few errors related to multiply-defined labels. This is because the new error handler now conflicts with Sonic 1's native one. Fixing this is pretty straight-forward. Just remove the old code.
 
 	In `sonic.asm`, find `BusError:`, which is the very first native exception handler.
 
 	You need to remove all the code from the `BusError:` line through the end of "ErrorWaitForC:" (look for `; End of function ErrorWaitForC` line). This is approx. 175 lines of code to remove.
 
-3. After removing the old exceptions code, run `build.lua`/`build.bat` and make sure your ROM builds properly.
+3. After removing the old exceptions code, run `build.bat` and make sure your ROM builds properly.
 
 Once everything's done, congratulations, the Error Handler is installed, you're almost there!
 
@@ -78,119 +68,41 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 
 1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.5
 
-2. Download the ConvSym utility for your platform: Windows, Linux, FreeBSD or MacOS;
+2. Download the ConvSym utility for Windows (or your current platform, e.g. Linux, FreeBSD, MacOS);
 
-3. Extract the ConvSym executable to the correct path in your disassembly depending on your platform:
+3. Extract `convsym.exe` to your disassembly's root directory.
 
-	- `build_tools\Windows-x86\convsym.exe` for Windows;
-	- `build_tools/Linux-x86_64/convsym` for Linux (64-bit);
-	- `build_tools/BSD-x86_64/convsym` for FreeBSD;
-	- `build_tools/Mac-x86_64/convsym` for MacOS;
+4. Now, open `build.bat` and locate the following lines:
 
-4. Open `build.lua` and locate the following line:
-
-	```lua
-	-- Assemble the ROM.
-	local compression = improved_dac_driver_compression and "kosinski-optimised" or "kosinski"
-	local success, continue = common.build_rom("sonic", "s1built", "", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
-
-	if not success then
-		exit_code = false
-	end
-
-	if not continue then
-		os.exit(false)
-	end
+	```shell
+	asm68k /k /p /o ae-,c+ sonic.asm, s1built.bin >errors.txt, , sonic.lst
+	fixheadr.exe s1built.bin
 	```
 
-5. Just **after** the lines listed above, insert this new code:
+5. Replace all the lines above with the following code:
 
-	```lua
-	-- Buld DEBUG ROM
-	local success, continue = common.build_rom("sonic", "s1built.debug", "-D __DEBUG__ -OLIST sonic.debug.lst", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
+	```shell
+	rem RELEASE BUILD
+	asm68k /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o ae- /o v+ /o c+ /p sonic.asm, s1built.bin, s1built.sym, sonic.lst
+	convsym.exe s1built.sym s1built.bin -a
+	fixheadr.exe s1built.bin
 
-	if not success then
-		exit_code = false
-	end
+	rem DEBUG BUILD
+	asm68k /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o ae- /o v+ /o c+ /p /e __DEBUG__=1 sonic.asm, s1built.debug.bin, s1built.debug.sym, s1built.debug.lst
+	convsym.exe s1built.debug.sym s1built.debug.bin -a
+	rompad.exe s1built.debug.bin 255 0
+	fixheadr.exe s1built.debug.bin
 
-	if not continue then
-		os.exit(false)
-	end
+	pause
 	```
-
-6. Now, locate these lines in the same file:
-
-	```lua
-	-- Correct the ROM's header with a proper checksum and end-of-ROM value.
-	common.fix_header("s1built.bin")
-	```
-
-7. Just **before** the above lines, insert this:
-
-	```lua
-	-- Append symbol table to the ROM.
-	local extra_tools = common.find_tools("debug symbol generator", "https://github.com/vladikcomper/md-modules", "https://github.com/sonicretro/s1disasm", "convsym")
-	if not extra_tools then
-		os.exit(false)
-	end
-	os.execute(extra_tools.convsym .. " sonic.lst s1built.bin -input as_lst -exclude -filter \"z[A-Z].+\" -a")
-	os.execute(extra_tools.convsym .. " sonic.debug.lst s1built.debug.bin -input as_lst -exclude -filter \"z[A-Z].+\" -a")
-	```
-
-8. Finally, **after** the `common.fix_header("s1built.bin")` line, add this:
-
-	```lua
-	common.fix_header("s1built.debug.bin")
-	```
-
-<details>
-<summary>Verifying that you've modified "build.lua" correctly</summary>
-
-If you're having issues with insertions listed above or want to double-check, here's a full diff:
-
-```diff
-diff --git a/build.lua b/build.lua
-index 18d6f39..39ea9ff 100755
---- a/build.lua
-+++ b/build.lua
-@@ -26,7 +26,27 @@ if not continue then
- 	os.exit(false)
- end
- 
-+-- Buld DEBUG ROM
-+local success, continue = common.build_rom("sonic", "s1built.debug", "-D __DEBUG__ -OLIST sonic.debug.lst", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
-+
-+if not success then
-+	exit_code = false
-+end
-+
-+if not continue then
-+	os.exit(false)
-+end
-+
-+-- Append symbol table to the ROM.
-+local extra_tools = common.find_tools("debug symbol generator", "https://github.com/vladikcomper/md-modules", "https://github.com/sonicretro/s1disasm", "convsym")
-+if not extra_tools then
-+	os.exit(false)
-+end
-+os.execute(extra_tools.convsym .. " sonic.lst s1built.bin -input as_lst -exclude -filter \"z[A-Z].+\" -a")
-+os.execute(extra_tools.convsym .. " sonic.debug.lst s1built.debug.bin -input as_lst -exclude -filter \"z[A-Z].+\" -a")
-+
- -- Correct the ROM's header with a proper checksum and end-of-ROM value.
- common.fix_header("s1built.bin")
-+common.fix_header("s1built.debug.bin")
- 
- os.exit(exit_code)
-```
-</details>
 
 This will produce two builds for you: the RELEASE build (`s1built.bin`) and the DEBUG one (`s1built.debug.bin`). They should be identical for now, but if you start using some of the advanced debugger features, like assertions and `KDebug` interface, these features will be compiled and enabled only in DEBUG builds to avoid performance penalties when not debugging.
 
 > **Note**
 >
-> AS compiles code in _case-insensitive mode_ by default. This means all symbols will be converted to upper-case. If you want to preserve case, add `-U` to compile flags to enable the _case-sensitive mode_. Beware that you may need to fix a lot of labels if their casing differs!
+> ASM68K compiles code in _case-insensitive mode_ by default. This means all symbols will be converted to lower-case. If you want to preserve case, add `/o c+` to compile flags to enable the _case-sensitive mode_. Beware that you may need to fix a lot of labels if their casing differs!
 
-That's it! Save `build.lua` and run it (or `build.bat` on Windows as its launcher). Make sure the are no errors in the output.
+That's it! Save `build.bat` and run it. Make sure the are no errors in the output.
 
 ## Step 5. Testing the debugger with an intentional crash
 

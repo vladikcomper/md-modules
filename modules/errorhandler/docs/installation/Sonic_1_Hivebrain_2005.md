@@ -11,7 +11,7 @@ The base disassembly used for this installation is available here: https://info.
 
 ## Step 1. Download and unpack the debugger
 
-1. Open the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.0
+1. Open the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.5
 2. Download the ASM68K version of MD Debugger (`errorhandler-asm68k.7z`);
 3. Extract its files into disassembly's root directory.
 
@@ -127,7 +127,7 @@ Now run `built.bat` again make sure SEGA sounds clean again.
 
 ## Step 5. Install ConvSym to generate debug symbols
 
-1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.0
+1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.5
 
 2. Download the ConvSym utility for Windows (or your current platform, e.g. Linux, FreeBSD, MacOS);
 
