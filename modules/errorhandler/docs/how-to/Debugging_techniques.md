@@ -53,9 +53,9 @@ If any if the checks above fails, you'll see "Assetion failed" exception with th
 
 ## Log in-game events with `KDebug`
 
-Ever dreamt of logging what's your game is doing without entering debuggers and halting its execution? With `KDebug` interface that the debugger provides and an emulator that supports it, your dreams come true!
+Ever dreamt of logging what your game is doing without entering debuggers and halting its execution? With `KDebug` interface the debugger provides and an emulator that supports it, your dreams come true!
 
-The following example shows how you can any invocation Nemesis decompressor in Sonic 1,
+The following example shows how you can log any invocation Nemesis decompressor in Sonic 1 and display what art it reads.
 
 Just find `NemDec:` label in your disassembly and insert the following line right after it:
 
@@ -159,7 +159,6 @@ MyHeavyFunction:
 Let's wrap it into a console program:
 
 ```m68k
-
 MyHeavyFunction:
 	Console.Run @self	; .self in AS
 
