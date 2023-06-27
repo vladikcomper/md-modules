@@ -1,11 +1,11 @@
 
 # Installing MD Debugger in Sonic 1 GitHub Disassembly
 
-> **Note**
+> **Warning**
 >
-> This guide assumes your project is using a newer version of Sonic 1 GitHub disassembly after June 2023. It's when it switched to Lua-based build system introduced and it was then refactored.
+> This guide assumes your project is using a version of Sonic 1 GitHub disassembly dated between July 2022 and June 2023. It's when it switched to Lua-based build system introduced, but before it was refactored.
 >
-> For older versions, see the other guides.
+> For the newest version of the disassembly, see the other guide.
 
 This guide describes a step-by-step installation process of the MD Error Handler and Debugger 2.5 and above in Sonic 1 GitHub Disassembly.
 
@@ -76,6 +76,7 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 
 ## Step 4. Install ConvSym to generate debug symbols
 
+
 1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.0
 
 2. Download the ConvSym utility for your platform: Windows, Linux, FreeBSD or MacOS;
@@ -91,30 +92,14 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 
 	```lua
 	-- Assemble the ROM.
-	local compression = improved_dac_driver_compression and "kosinski-optimised" or "kosinski"
-	local success, continue = common.build_rom("sonic", "s1built", "", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
-
-	if not success then
-		exit_code = false
-	end
-
-	if not continue then
-		os.exit(false)
-	end
+	local assemble_result = common.assemble_file("sonic.asm", "s1built.bin", tools.as, "", tools.s1p2bin, improved_dac_driver_compression and "" or " -a", false)
 	```
 
 5. Just **after** the lines listed above, insert this new code:
 
 	```lua
-	-- Buld DEBUG ROM
-	local success, continue = common.build_rom("sonic", "s1built.debug", "-D __DEBUG__ -OLIST sonic.debug.lst", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
-
-	if not success then
-		exit_code = false
-	end
-
-	if not continue then
-		os.exit(false)
+	if assemble_result == 'success' then
+		assemble_result = common.assemble_file("sonic.asm", "s1built.debug.bin", tools.as, "-D __DEBUG__ -OLIST sonic.debug.lst", tools.s1p2bin, improved_dac_driver_compression and "" or " -a", false)
 	end
 	```
 
@@ -129,8 +114,15 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 
 	```lua
 	-- Append symbol table to the ROM.
-	local extra_tools = common.find_tools("debug symbol generator", "https://github.com/vladikcomper/md-modules", "https://github.com/sonicretro/s1disasm", "convsym")
+	local extra_tools, extra_platform_directory = common.find_tools("convsym")
 	if not extra_tools then
+		print(string.format("\z
+			Couldn't find 'convsym' utility for your platform.n\z
+			\n\z
+			Make sure the appropriate executable is installed; if not, compile it from the source code avaliable here:\n\z
+			'https://github.com/vladikcomper/md-modules/tree/master/utils/convsym'\n\z
+			\n\z
+			Once compiled, copy the executable to the '%s' directory of your project.", extra_platform_directory))
 		os.exit(false)
 	end
 	os.execute(extra_tools.convsym .. " sonic.lst s1built.bin -input as_lst -exclude -filter \"z[A-Z].+\" -a")
@@ -150,28 +142,35 @@ If you're having issues with insertions listed above or want to double-check, he
 
 ```diff
 diff --git a/build.lua b/build.lua
-index 18d6f39..39ea9ff 100755
+index 0426da0..1e352dc 100755
 --- a/build.lua
 +++ b/build.lua
-@@ -26,7 +26,27 @@ if not continue then
- 	os.exit(false)
+@@ -42,6 +42,10 @@ os.rename("s1built.bin", "s1built.prev.bin")
+ -- Assemble the ROM.
+ local assemble_result = common.assemble_file("sonic.asm", "s1built.bin", tools.as, "", tools.s1p2bin, improved_dac_driver_compression and "" or " -a", false)
+
++if assemble_result == 'success' then
++       assemble_result = common.assemble_file("sonic.asm", "s1built.debug.bin", tools.as, "-D __DEBUG__ -OLIST sonic.debug.lst", tools.s1p2bin, improved_dac_driver_compression and "" or " -a", false)
++end
++
+ if assemble_result == "crash" then
+        print "\n\z
+                **********************************************************************\n\z
+@@ -66,8 +70,23 @@ elseif assemble_result == "error" then
+        os.exit(false)
  end
- 
-+-- Buld DEBUG ROM
-+local success, continue = common.build_rom("sonic", "s1built.debug", "-D __DEBUG__ -OLIST sonic.debug.lst", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
-+
-+if not success then
-+	exit_code = false
-+end
-+
-+if not continue then
-+	os.exit(false)
-+end
-+
+
 +-- Append symbol table to the ROM.
-+local extra_tools = common.find_tools("debug symbol generator", "https://github.com/vladikcomper/md-modules", "https://github.com/sonicretro/s1disasm", "convsym")
++local extra_tools, extra_platform_directory = common.find_tools("convsym")
 +if not extra_tools then
-+	os.exit(false)
++       print(string.format("\z
++               Couldn't find 'convsym' utility for your platform.n\z
++               \n\z
++               Make sure the appropriate executable is installed; if not, compile it from the source code avaliable here:\n\z
++               'https://github.com/vladikcomper/md-modules/tree/master/utils/convsym'\n\z
++               \n\z
++               Once compiled, copy the executable to the '%s' directory of your project.", extra_platform_directory))
++       os.exit(false)
 +end
 +os.execute(extra_tools.convsym .. " sonic.lst s1built.bin -input as_lst -exclude -filter \"z[A-Z].+\" -a")
 +os.execute(extra_tools.convsym .. " sonic.debug.lst s1built.debug.bin -input as_lst -exclude -filter \"z[A-Z].+\" -a")
@@ -179,8 +178,6 @@ index 18d6f39..39ea9ff 100755
  -- Correct the ROM's header with a proper checksum and end-of-ROM value.
  common.fix_header("s1built.bin")
 +common.fix_header("s1built.debug.bin")
- 
- os.exit(exit_code)
 ```
 </details>
 
