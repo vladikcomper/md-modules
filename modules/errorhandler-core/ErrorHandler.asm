@@ -104,8 +104,8 @@ ErrorHandler:	__global
 	addq.w	#8, a4							; skip extension part of the stack frame
 @skip:
 
-	; Print module name error occured in
-	lea 	Str_Module(pc), a0				; a0 = label string
+	; Print exception offset
+	lea 	Str_Offset(pc), a0				; a0 = label string
 	move.l	2(a4), d1						; d1 = last return offset
 	jsr		Error_DrawOffsetLocation(pc)
 
@@ -592,8 +592,8 @@ Str_SetErrorScreen:
 Str_Address:
 	dc.b	_pal1, 'Address: ', 0
 
-Str_Module:
-	dc.b	_pal1, 'Module: ', 0
+Str_Offset:
+	dc.b	_pal1, 'Offset: ', 0
 
 Str_Caller:
  	dc.b	_pal1, 'Caller: ', 0
