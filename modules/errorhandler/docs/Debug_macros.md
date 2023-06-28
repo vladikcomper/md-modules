@@ -300,6 +300,12 @@ Curently, the only emulators to support KDebug are:
 
 **`KDebug` macros are only compiled in DEBUG builds.** On unsupported emulators and the real hardware, these macros have no effect either way.
 
+Under the hood, `KDebug` macros communicate with the emulator via unused VDP registers. This, lucky enough, has no side effects on the real hardware. But be careful when using it in code that does VDP access for that very reason: this resets the last VDP access address.
+
+> **Warning**
+>
+> Watch out when using `KDebug` macros in code that writes data to VDP. If used in-between writes, this resets the write address, so your writes may be disrupted. **This is a hardware limitation.**
+
 ## `KDebug.WriteLine` and `KDebug.Write`
 
 **Syntax:**

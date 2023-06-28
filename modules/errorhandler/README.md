@@ -63,11 +63,12 @@ Installation instructions are provided for:
 
 ## Documentation and help
 
-### How-twos
+### Guides
 
+- [Powerful debugging techniques](docs/how-to/Debugging_techniques.md)
 - [How-to add your details in exception headers](docs/how-to/Modify_exception_header.md)
 
-### Reference
+### References
 
 - [Debugger macro reference](docs/Debug_macros.md)
 - [Formatted string format reference](docs/Formatted_strings.md)
@@ -98,11 +99,19 @@ Currently, the *Advanced Error Handler and Debugger 2.0* supports integration wi
   - Support for symbols in RAM section (must be properly implemented in your project);
   - Advanced offset transformations: mask, upper/bottom boundary, add/subtract base address;
 - Added `assert` macro.
+- Implemented `KDebug` integration with the following new macros:
+  - `KDebug.WriteLine`
+  - `KDebug.Write`
+  - `KDebug.BreakLine`
+  - `KDebug.BreakPoint`
+  - `KDebug.StartTimer`
+  - `KDebug.EndTimer`
 - Added additional `Console.*` macros:
   - `Console.Clear`
   - `Console.Pause`
   - `Console.Sleep`
 - Improve readability of offsets and symbols in the exception header;
+- Renamed "Module:" field in exception header to "Offset:" for clarity;
 - **ASM68K version:** Support "case-sensitive" compile-flag;
 - **AS version:** Most of the M68K addressing modes are now supported in formatted strings. The following examples now work:
   - `%<.w #1234>`

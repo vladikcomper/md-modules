@@ -55,27 +55,21 @@ If any if the checks above fails, you'll see "Assetion failed" exception with th
 
 Ever dreamt of logging what your game is doing without entering debuggers and halting its execution? With `KDebug` interface the debugger provides and an emulator that supports it, your dreams come true!
 
-The following example shows how you can log any invocation Nemesis decompressor in Sonic 1 and display what art it reads.
+The following example shows how you can log any invocation Kosinski decompressor in Sonic 1 and display what art it reads.
 
-Just find `NemDec:` label in your disassembly and insert the following line right after it:
+Just find `KosDec:` label in your disassembly and insert the following line right after it:
 
 ```m68k
-NemDec:
-	KDebug.WriteLine "NemDec: Decompressing %<.l a0 sym>..."
-
+KosDec:
+	KDebug.WriteLine "KosDec: Decompressing %<.l a0 sym> -> %<.l a1>"
 ```
 
 Now build your game and run the DEBUG build in Blastem-nightly or Gens KMod. In emulator's debug console you should see the following messages pop up as you play:
 
 ```
-KDEBUG MESSAGE: NemDec: Decompressing Nem_SegaLogo...
-KDEBUG MESSAGE: NemDec: Decompressing Nem_JapNames...
-KDEBUG MESSAGE: NemDec: Decompressing Nem_CreditText...
-KDEBUG MESSAGE: NemDec: Decompressing Nem_TitleFg...
-KDEBUG MESSAGE: NemDec: Decompressing Nem_TitleSonic...
-KDEBUG MESSAGE: NemDec: Decompressing Nem_TitleTM...
-KDEBUG MESSAGE: NemDec: Decompressing Nem_GHZ_1st...
-KDEBUG MESSAGE: NemDec: Decompressing Nem_TitleCard...
+KDEBUG MESSAGE: KosDec: Decompressing Kos_Z80 -> 00A00000
+KDEBUG MESSAGE: KosDec: Decompressing Kos_Z80 -> 00A00000
+KDEBUG MESSAGE: KosDec: Decompressing Blk256_GHZ -> 00FF0000
 ```
 
 ## Running arbitrary code in DEBUG builds
