@@ -37,7 +37,24 @@ At the time of writing, the following versions were-up-to date:
 - Windows 64-bit: https://www.retrodev.com/blastem/nightlies/blastem-win64-0.6.3-pre-215c2afbe896.zip
 - Linux 64-bit: https://www.retrodev.com/blastem/nightlies/blastem64-0.6.3-pre-215c2afbe896.tar.gz
 
-**IMPORTANT!** To see the debug output, you need to launch Blastem-nightly from the terminal, so you can see its output.
+### Viewing debug messages on Windows
+
+On Windows, you cannot easily toggle emulators console out of the box (at least at the time of writing), but there's a workaround for it.
+
+1. Start you ROM in Blastem-nightly;
+2. Press the `u` key to pause the game and toggle debugger;
+3. You should now emulator's console and all the messages up to this point;
+4. Since you've paused the game by toggling the debugger, type `c` in the console and press `Enter` to continue;
+5. The emulator's console will still be open in a separate window and you should now see debug messages properly.
+
+   ![Blastem console on Windows](../.images/blastem-win-console.png)
+
+### Viewing debug messages on Linux
+
+Viewing messages on Linux is easy and straightforward: just launch the emulator from terminal, you'll see its output.
+
+1. Open Terminal and type in path to the `blastem` executable (you may add it to your `PATH` for easier access);
+2. You will see debug messages in the very same terminal.
 
 ## Setting up Gens KMod (not recommended)
 
@@ -47,6 +64,10 @@ At the time of writing, the following versions were-up-to date:
 
 1. Start the emulator and enable debugging: "Option" > "Debug..." > "Active Development Features".
 
+   ![Gens KMod Debug menu](../.images/gens-kmod_menu.png)
+
+   ![Gens KMod Debug options](../.images/gens-kmod_debug.png)
+
 2. Open "CPU" > "Debug" > "Messages" to see the logs.
 
-
+   ![Gens KMod Debug Messages](../.images/gens-kmod_messages.png)

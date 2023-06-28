@@ -1,7 +1,7 @@
 
-# MD Error Handler and Debugger
+# MD Debugger and Error Handler
 
-___MD Error Handler and Debugger___ (also known as _"The Advanced Error Handler and Debugger"_) is a ready-to-use error handler that comes with a powerful integrated debugger. It aims to provide robust and extensible debugging tools built-in directly into the Mega-Drive ROM, that can be used anywhere (from emulators to the real hardware).
+___MD Debugger and Error Handler___ (or simply "MD Debugger", also known as _"The Advanced Error Handler and Debugger"_) is a ready-to-use error handler that comes with a powerful integrated debugger. It aims to provide robust and extensible debugging tools built-in directly into the Mega-Drive ROM, that can be used anywhere (from emulators to the real hardware).
 
 Currently, it targets **The AS Macroassembler** and **ASM68K** assemblers. It has installation instructions and full support for the mainline Sonic disassemblies, but it can be intergated into any AS or ASM68K project (both the error handler and debugger) or even any pre-existing ROM (error handler only in a binary form).
 
@@ -58,8 +58,10 @@ Installation instructions are provided for:
 - [Sonic 1 GitHub Disassembly (AS version)](docs/installation/Sonic_1_Github_AS.md)
 - [Sonic 1 GitHub Disassembly (ASM68K version)](docs/installation/Sonic_1_Github_ASM68K.md)
 - [Sonic 1 Hivebrain 2005 Disassembly](docs/installation/Sonic_1_Hivebrain_2005.md)
-- Sonic 1 Hivebrain 2022 Disassembly
+- [Sonic 1 Hivebrain 2022 Disassembly](docs/installation/Sonic_1_Hivebrain_2022.md)
 - [Sonic 2 GitHub Disassembly](docs/installation/Sonic_2_Github.md)
+
+If you'd like to contribute new installation instructions or update the existing ones, feel free to open a Pull Request: https://github.com/vladikcomper/md-modules/pulls
 
 ## Documentation and help
 
@@ -67,6 +69,8 @@ Installation instructions are provided for:
 
 - [Powerful debugging techniques](docs/how-to/Debugging_techniques.md)
 - [How-to add your details in exception headers](docs/how-to/Modify_exception_header.md)
+- [Using KDebug intergration](docs/how-to/Use_KDebug_integration.md)
+- [Troubleshooting](docs/how-to/Troubleshoot.md)
 
 ### References
 
@@ -78,11 +82,11 @@ Installation instructions are provided for:
 Currently, the *Advanced Error Handler and Debugger 2.0* supports integration with the following assemblers:
 
 * __ASM68K__ (`bundle-asm68k`)
-* __The AS Macroassembler__ v.1.42 Bld 55 and above (bundle-as)
+* __The AS Macroassembler__ v.1.42 Bld 55 and above (`bundle-as`)
 
 > **Warning**
 >
-> The AS Macroassembler version has limited support for some features!
+> The AS Macroassembler version has limited support for some features
 
 
 ## Version History

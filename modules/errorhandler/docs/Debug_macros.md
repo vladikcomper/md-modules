@@ -36,7 +36,7 @@ This document covers the essential Debugger's API, which is presented in form of
 
 Asserts that the given condition is true. Raises an "assertion failed" exception otherwise with the text of a failed condition.
 
-This only works in DEBUG builds (when `__DEBUG__` symbol is defined). In RELEASE builds, `assert` pseudo-insturctions aren't assembled.
+This only works in DEBUG builds (when `__DEBUG__` symbol is defined). In RELEASE builds, `assert` pseudo-instructions aren't assembled.
 
 Think of assertions as pseudo-instructions for debugging purposes that: test the given operands (`src_operand` and `dest_operand`), continue program execution if `condition` is true, raise an exception with `RaiseError` otherwise. Consider the following example:
 

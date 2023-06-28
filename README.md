@@ -8,8 +8,8 @@ This repository includes modules for Mega-Drive projects (`modules/` directory) 
 
 ### Modules
 
-* [Error Handler](modules/errorhandler) - the Advanced Error Handler and Debugger for handling exceptions and debugging your Mega-Drive ROMs;
-* [MD-Shell](modules/mdshell) - a stand-alone easy to use "assembly header" to run small programs as Mega-Drive ROMs.
+* [MD Debugger and Error Handler](modules/errorhandler) - also known as _The Advanced Error Handler and Debugger_, handles exceptions and helps to debug your Mega-Drive ROMs in any emulators and on the real hardware;
+* [MD-Shell](modules/mdshell) - a stand-alone easy to use "assembly header" to run small programs as Mega-Drive ROMs, ncludes MD Debugger.
 
 ### Utilities
 
