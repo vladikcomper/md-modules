@@ -295,6 +295,9 @@ KDebug	macro	argument1
 		move.w	#$9D00, ($C00004).l
 		move.w	(sp)+, sr
 
+	elsecase
+		!error	"ATTRIBUTE isn't a member of KDebug"
+
 	endcase
 	endif
 	endm
