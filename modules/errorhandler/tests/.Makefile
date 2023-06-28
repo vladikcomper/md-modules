@@ -13,7 +13,7 @@ MDSHELL_HEADLESS := ../../../build/mdshell/headless/MDShell.asm
 TEST_BUILD_DIR := ../../../build/modules/errorhandler/tests
 
 
-.PHONY:	all console-run flow-test raise-error clean
+.PHONY:	all console-run console-utils flow-test raise-error clean
 
 all:	console-run console-utils flow-test raise-error
 
