@@ -39,7 +39,9 @@ cram	macro	offset,operand
 		
 ; A special macro to define externally visible symbols
 __global macro	*
+	if def(__global__\*)=0
 __global__\*:
+	endc
 \*:
 		endm
 
