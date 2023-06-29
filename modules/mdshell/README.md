@@ -39,6 +39,51 @@ The following bundles are currently provided:
 
 ## Macros reference
 
+### `assert`
+
+**Syntax:**
+
+        assert[.b|.w|.l]    src_operand, condition[, dest_operand]
+
+**Description:**
+
+Asserts that the given condition is true. Raises "assertion failed" exception otherwise with the text of a failed condition.
+
+Think of assertions as pseudo-instructions for debugging purposes that: test the given operands (`src_operand` and `dest_operand`), continue program execution if `condition` is true, raise an exception with `RaiseError` otherwise. Consider the following example:
+
+        assert.w d0, lt, #64       ; assert than `d0` register is less than 64
+
+This code is equivalent to the following:
+
+        cmp.w    #64, d0
+        blt.s    ok
+        RaiseError "Assertion failed:%<endl>d0 lt #64"
+    ok:
+
+Assertions also have a single-operand form for simplicity:
+
+        assert.b MyRAMFlag, ne     ; assert that `MyRAMFlag` is not equal to zero
+
+Which is the same as using `tst` instead of `cmp` in the equivalent code:
+
+        tst.b    MyRAMFlag
+        bne.s    ok
+        RaiseError "Assertion failed:%<endl>MyRAMFlag ne"
+    ok:
+
+Operands in assertions can use all the addressing modes that `tst` and `cmp` instructions support:
+
+        assert.b (a0), eq            ; assert that the byte at `(a0)` is zero
+        assert.w d2, lo, 2(a3)       ; assert that `d2` register is lower than `2(a3)`
+        assert.l MyData(pc,d0), mi   ; assert that the longword at `MyData(pc,d0)` is negative
+
+**Arguments:**
+
+* `src_operand` - source operand.
+* `condition` - condition to test (e.g. `eq`, `ne`, `mi`, `pl`, `cs`, `cc` etc).
+* `dest_operand` (optional) - destination operand; if present, `src_operand` is compared to `dest_operand`, otherwise a single `src_operand` is tested.
+
+
 ### `RaiseError`
 
 **Syntax:**
@@ -53,6 +98,7 @@ Displays an error screen with the specified message. Program execution is then h
 
 * `text` - a formatted string representing an error message, for example: `"Object at address %<.w a0 hex> crashed"`; displays in error screen's header.
 * `handler` (optional) - label of the console program (subroutine) used to print error screen body; if omitted, standard error handler is used.
+
 
 ### `Console.Write` and `Console.WriteLine`
 
@@ -164,7 +210,7 @@ Pauses console program execution until A, B, C or Start button is pressed on the
 
 ## Formatted string reference
 
-Formatted strings may include flags or formatted values, which are encapsulated in `"%<...>"`` tokens, for example:
+Formatted strings may include flags or formatted values, which are encapsulated in `%<...>` tokens, for example:
 
         Console.Write "d0 equals to %<.b d0 hex|signed>, and... %<endl>d1 is %<.w d1>"
 
@@ -245,8 +291,12 @@ SomeString:
 > Do not try to print SP directly, the results are unreliable.
 
 > **Warning**
-> AS version has limitations and only supports register direct, register indirect and absolute addressing modes. Absolute mode is only supported when passing symbols, not raw addresses, e.g.:
+> AS version doesn't support some of the addressing modes in formatted strings. Only the following modes are supported:
 >
-> `Console.Write "%<.w $FFFFEE00>"` doesn't work in AS, but `Console.Write "%<.w Camera_X_Pos>"` does.
+> - __Absolute__ (`MyAddress`, `$FF0000`), but `(xxx).w`/`(xxx).l` syntax is not recognized;
+> - __Immediate__ (`#1234`, `#SomeValue`);
+> - __Register direct__ (`d0`-`a6`);
+> - __Address register indirect__ (`(a0)`-`(a6)`);
+> - __Address register indirect with displacement__ (e.g. `1(a0)`, `-$20(a3)`, `myval(a1)` etc);
 >
-> ASM68K version supports all standard addressing modes that M68K provides.
+> ASM68K version supports all the standard addressing modes that M68K provides.

@@ -16,7 +16,7 @@ TEST_BUILD_DIR := ..\..\..\build\modules\errorhandler\tests
 
 .PHONY:	all console-run console-utils flow-test raise-error clean
 
-all:	console-run flow-test raise-error
+all:	console-run console-utils flow-test raise-error
 
 clean:
 	rm -f $(TEST_BUILD_DIR)\*

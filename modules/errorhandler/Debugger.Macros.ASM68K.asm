@@ -159,6 +159,62 @@ Console &
 	endc
 	endm
 
+#ifndef MD-SHELL
+; ---------------------------------------------------------------
+KDebug &
+	macro
+
+	if def(__DEBUG__)	; KDebug interface is only available in DEBUG builds
+	if strcmp("\0","write")|strcmp("\0","writeline")|strcmp("\0","Write")|strcmp("\0","WriteLine")
+		move.w	sr, -(sp)
+		__FSTRING_GenerateArgumentsCode \1
+		movem.l	a0-a2/d7, -(sp)
+		if (__sp>0)
+			lea		4*4(sp), a2
+		endc
+		lea		@str\@(pc), a1
+		jsr		__global__KDebug_\0\_Formatted
+		movem.l	(sp)+, a0-a2/d7
+		if (__sp>8)
+			lea		__sp(sp), sp
+		elseif (__sp>0)
+			addq.w	#__sp, sp
+		endc
+		move.w	(sp)+, sr
+		bra.w	@instr_end\@
+	@str\@:
+		__FSTRING_GenerateDecodedString \1
+		even
+	@instr_end\@:
+
+	elseif strcmp("\0","breakline")|strcmp("\0","BreakLine")
+		move.w	sr, -(sp)
+		jsr		__global__KDebug_FlushLine
+		move.w	(sp)+, sr
+
+	elseif strcmp("\0","starttimer")|strcmp("\0","StartTimer")
+		move.w	sr, -(sp)
+		move.w	#$9FC0, ($C00004).l
+		move.w	(sp)+, sr
+
+	elseif strcmp("\0","endtimer")|strcmp("\0","EndTimer")
+		move.w	sr, -(sp)
+		move.w	#$9F00, ($C00004).l
+		move.w	(sp)+, sr
+
+	elseif strcmp("\0","breakpoint")|strcmp("\0","BreakPoint")
+		move.w	sr, -(sp)
+		move.w	#$9D00, ($C00004).l
+		move.w	(sp)+, sr
+
+	else
+		inform	2,"""\0"" isn't a member of ""KDebug"""
+
+	endc
+	endc
+	endm
+
+#endif
 ; ---------------------------------------------------------------
 __ErrorMessage &
 	macro	string, opts
