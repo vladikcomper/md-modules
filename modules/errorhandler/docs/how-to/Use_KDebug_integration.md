@@ -1,5 +1,7 @@
 
-# Using "KDebug" integration in MD Debugger
+# Using KDebug integration in MD Debugger
+
+![KDebug integration](../.images/eh_kdebug.png)
 
 "KDebug" integration works in DEBUG builds and allows you to log messages, count cycles and break point in emulators that support it.
 
