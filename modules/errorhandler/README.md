@@ -1,14 +1,15 @@
 
 # MD Debugger and Error Handler
 
-![Illegal instruction](docs/.images/eh_illegal_instr.png) ![Backtrace](docs/.images/eh_custom_debugger.png) ![Backtrace](docs/.images/eh_backtrace.png)
+![Illegal instruction](docs/.images/eh_illegal_instr.png) ![Backtrace](docs/.images/eh_custom_debugger.png)
 
 ___MD Debugger and Error Handler___ (or simply "MD Debugger", also known as _"The Advanced Error Handler and Debugger"_) is a ready-to-use error handler that comes with a powerful integrated debugger. It aims to provide robust and extensible debugging tools built-in directly into the Mega-Drive ROM, that can be used anywhere (from emulators to the real hardware).
 
 Currently, it targets **The AS Macroassembler** and **ASM68K** assemblers. It has installation instructions and full support for the mainline Sonic disassemblies, but it can be intergated into any AS or ASM68K project (both the error handler and debugger) or even any pre-existing ROM (error handler only in a binary form).
 
-
 ## Features
+
+![KDebug](docs/.images/eh_kdebug.png)
 
 - __Debug symbol support.__
   - It can extract symbols from AS and ASM68K at build time and bundle them with the ROM;
