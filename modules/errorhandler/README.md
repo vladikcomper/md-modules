@@ -5,7 +5,7 @@
 
 ___MD Debugger and Error Handler___ (or simply "MD Debugger", also known as _"The Advanced Error Handler and Debugger"_) is a ready-to-use error handler that comes with a powerful integrated debugger. It aims to provide robust and extensible debugging tools built-in directly into the Mega-Drive ROM, that can be used anywhere (from emulators to the real hardware).
 
-Currently, it targets **The AS Macroassembler** and **ASM68K** assemblers. It has installation instructions and full support for the mainline Sonic disassemblies, but it can be intergated into any AS or ASM68K project (both the error handler and debugger) or even any pre-existing ROM (error handler only in a binary form).
+Currently, it targets **The AS Macroassembler** and **ASM68K** assemblers. It has installation instructions and full support for the mainline Sonic disassemblies, but it can be integrated into any AS or ASM68K project (both the error handler and debugger) or even any pre-existing ROM (error handler only in a binary form).
 
 ## Features
 
@@ -29,7 +29,7 @@ Currently, it targets **The AS Macroassembler** and **ASM68K** assemblers. It ha
 - __Easily write your own debuggers with "high-level" macros.__
   - Write your own debug programs to display what you need;
   - Use "high-level" macros that debugger environment provides, like `Console.Write "My d0 is %<.w d0 hex>"`;
-  - Formatted string syntax in the debugger is extremely powerful: display any value from any memory location as: hexidecimal, decimal, binary, signed, unsigned, symbol or even a null-terminated ASCII string. Control output by modifying colors or adding line breaks.
+  - Formatted string syntax in the debugger is extremely powerful: display any value from any memory location as: hexadecimal, decimal, binary, signed, unsigned, symbol or even a null-terminated ASCII string. Control output by modifying colors or adding line breaks.
 
 - __Throw custom exceptions and customize error handling.__
   - You can throw custom exceptions at any time using `RaiseError` macro;
@@ -42,7 +42,7 @@ Currently, it targets **The AS Macroassembler** and **ASM68K** assemblers. It ha
   - Assertions, widely adopted by many high-level languages, are provided by the debugger out-of-the box;
   - Use `assert` pseudo-instruction that is only compiled in DEBUG builds. This means zero run-time cost for your final (RELEASE) builds to implement self-testing code.
 
-- __KDebug integration for logging, breakpoints and cycle-couting (experimental).__
+- __KDebug integration for logging, breakpoints and cycle-counting (experimental).__
   - Display formatted strings at any point straight in your emulator's debug console!
   - Use a similar "high-level" macro interface as in console programs (`KDebug.WriteLine` instead of `Console.WriteLine`), but without interrupting your programs;
   - Currently, the only emulators to support KDebug are Gens KMod and Blastem-nightly;
