@@ -96,6 +96,8 @@ Currently, the *Advanced Error Handler and Debugger 2.0* supports integration wi
 
 ### Version 2.5 (2023-06-30)
 
+![Backtrace](docs/.images/eh_backtrace.png) ![Address registers](docs/.images/eh_address_regs.png)
+
 - Introduced debugger extensions and the following new built-in debuggers:
   - Backtrace debugger (mapped to the B button by default);
   - Address register debugger (mapped to the A button by default).
