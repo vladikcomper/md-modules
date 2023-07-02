@@ -160,10 +160,10 @@ Include your new file somewhere in `sonic.asm`. I recommend including it right a
 >
 > Remember not to include anything **after** `include "ErrorHandler.asm"` not to break debug symbol support.
 
-To use this debugger in `RaiseError`, pass its label (`SampleLevelDebugger`) as the second argument:
+To use this debugger in `RaiseError`, pass its label (`SampleDebugger`) as the second argument:
 ```diff
 -	RaiseError "Intentional crash test:%<endl>Level ID: %<.w v_zone>%<endl>Frame: %<.w v_framecount>"
-+	RaiseError "Intentional crash test:%<endl>Level ID: %<.w v_zone>%<endl>Frame: %<.w v_framecount>", SampleLevelDebugger
++	RaiseError "Intentional crash test:%<endl>Level ID: %<.w v_zone>%<endl>Frame: %<.w v_framecount>", SampleDebugger
 ```
 
 If you now try to run it, you should see a differently looking exception screen. It now displays camera coordinates and object slots.

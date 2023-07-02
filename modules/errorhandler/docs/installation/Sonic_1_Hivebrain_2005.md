@@ -17,7 +17,7 @@ The base disassembly used for this installation is available here: https://info.
 
 ## Step 2. Include debugger macros in your disassembly
 
-Open `sonic1.asm` file in your favorite text editor and add the following like at the beginning to include Error Handler's main definitions:
+Open `sonic1.asm` file in your favorite text editor and add the following line at the beginning to include Error Handler's main definitions:
 
 ```m68k
 	include	"Debugger.asm"
@@ -221,10 +221,10 @@ Include your new file somewhere in `sonic1.asm`. I recommend including it right 
 >
 > Remember not to include anything **after** `include "ErrorHandler.asm"` not to break debug symbol support.
 
-To use this debugger in `RaiseError`, pass its label (`SampleLevelDebugger`) as the second argument:
+To use this debugger in `RaiseError`, pass its label (`SampleDebugger`) as the second argument:
 ```diff
 -	RaiseError "Intentional crash test:%<endl>Level ID: %<.w $FFFFFE10>%<endl>Frame: %<.w $FFFFFE04>"
-+	RaiseError "Intentional crash test:%<endl>Level ID: %<.w $FFFFFE10>%<endl>Frame: %<.w $FFFFFE04>", SampleLevelDebugger
++	RaiseError "Intentional crash test:%<endl>Level ID: %<.w $FFFFFE10>%<endl>Frame: %<.w $FFFFFE04>", SampleDebugger
 ```
 
 If you now try to run it, you should see a differently looking exception screen. It now displays camera coordinates and object slots.
