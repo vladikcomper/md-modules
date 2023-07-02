@@ -126,7 +126,7 @@ There are several ways to call a _console program_:
 
 > **Note**
 >
-> If you use `Console` macros outside of a console program, nothing bad happens as the output is suppresed. So there are no side effects, except for wasted CPU cycles. This means you can insert `Console.Write/.WriteLine` statements in subroutines that can be used called both inside and outside of the console.
+> If you use `Console` macros outside of a console program, nothing bad happens as the output is suppressed. So there are no side effects, except for wasted CPU cycles. This means you can insert `Console.Write/.WriteLine` statements in subroutines that can be used called both inside and outside of the console.
 
 ## `Console.Run`
 
@@ -294,7 +294,7 @@ Pauses console program execution until A, B, C or Start button is pressed on the
 
 This set of macros provides an experimental interface for logging, timing code and breakpoints in emulators the support KMod debug registers.
 
-Curently, the only emulators to support KDebug are:
+Currently, the only emulators to support KDebug are:
 - Blastem-nightly;
 - Gens KMod (outdated, not recommended).
 
