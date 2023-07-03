@@ -31,7 +31,7 @@ For a full reference of the available `KDebug` macros, see the [Macros Reference
 
 ## Setting up Blastem-nightly (recommended)
 
-A newer, not yet official released, versions of Blastem support KDebug integrataion. They are still available as nightly builds, hence I use the name Blastem-nightly.
+A newer, not yet officially released versions of Blastem support KDebug integration. They are still available as nightly builds, hence I use the name Blastem-nightly.
 
 You can find all nightly builds here: https://www.retrodev.com/blastem/nightlies/. **But you need only the latest of them!** Find Blastem version 0.6.3-pre for your platform that was build recently.
 
