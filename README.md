@@ -54,8 +54,7 @@ Make sure you have the necessary dependencies:
 pkg install gmake python3 wine
 ```
 
-> **Note**
->
+> [!NOTE]\
 > If you're running a 64-bit system, you'll likely also need a 32-bit installation of Wine. As of FreeBSD 13, the following script may automate the process:
 >
 > ```sh
@@ -82,8 +81,7 @@ brew tap homebrew/cask-versions
 brew install --cask --no-quarantine wine-stable
 ```
 
-> **Warning**
->
+> [!WARNING]\
 > Since MacOS Catalina 10.15, 32-bit software is no longer supported. You may not be able to build *Modules* which require 32-bit Wine.
 
 To build everything, use one of the following commands:
