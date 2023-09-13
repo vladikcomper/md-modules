@@ -404,9 +404,9 @@ Error_DrawInterruptHandler:
 
 ; ---------------------------------------------------------------
 @uknown_handler_address:
-	jsr		Console_Write_Formatted(pc)
-	lea		Str_Undefined(pc), a1
-	jmp		Console_WriteLine_Formatted(pc)
+	jsr		Console_Write(pc)
+	lea		Str_Undefined(pc), a0
+	jmp		Console_WriteLine(pc)
 
 
 ; ===============================================================
