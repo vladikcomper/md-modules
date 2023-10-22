@@ -358,7 +358,7 @@ __FSTRING_GenerateArgumentsCode &
 __FSTRING_GenerateDecodedString &
 	macro string
 
-	__lpos:	= 1						; start position
+	__lpos:	= 1							; start position
 	__pos:	= instr(\string,'%<')		; token position
 
 	while (__pos)
@@ -387,7 +387,12 @@ __FSTRING_GenerateDecodedString &
 			endif
 
 			if (\__param < $80)
+#ifdef BUNDLE-AXM68K
+## For AXM68K compatibility, we replace "dec" with "deci"
+				inform	2,"Illegal operand format setting: ""\__param\"". Expected ""hex"", ""deci"", ""bin"", ""sym"", ""str"" or their derivatives."
+#else
 				inform	2,"Illegal operand format setting: ""\__param\"". Expected ""hex"", ""dec"", ""bin"", ""sym"", ""str"" or their derivatives."
+#endif
 			endif
 
 			if "\__type"=".b"

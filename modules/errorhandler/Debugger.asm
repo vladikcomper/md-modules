@@ -35,8 +35,9 @@
 #ifdef BUNDLE-ASM68K
 #include Debugger.Macros.ASM68K.asm
 #endif
-##
-##
+#ifdef BUNDLE-AXM68K
+#include Debugger.Macros.ASM68K.asm
+#endif
 #ifdef BUNDLE-AS
 #include Debugger.Macros.AS.asm
 #endif

@@ -10,9 +10,9 @@ SRC_FILES = $(wildcard $(SRC_DIR)/*.asm)
 CORE_SRC_FILES ?= $(wildcard ../errorhandler-core/*.asm) $(wildcard ../core/*.asm)
 
 
-.PHONY:	all asm68k asm68k-debug asm68k-extsym asm68k-linkable as as-extsym tests clean
+.PHONY:	all asm68k asm68k-debug asm68k-extsym asm68k-linkable axm68k axm68k-extsym as as-extsym tests clean
 
-all:	asm68k asm68k-debug asm68k-extsym asm68k-linkable as as-extsym
+all:	asm68k asm68k-debug asm68k-extsym asm68k-linkable axm68k axm68k-extsym as as-extsym
 
 asm68k:	$(BUILD_DIR)/asm68k/Debugger.asm $(BUILD_DIR)/asm68k/ErrorHandler.asm
 
@@ -21,6 +21,10 @@ asm68k-debug:	$(BUILD_DIR)/asm68k-debug/Debugger.asm $(BUILD_DIR)/asm68k-debug/E
 asm68k-extsym:	$(BUILD_DIR)/asm68k-extsym/Debugger.asm $(BUILD_DIR)/asm68k-extsym/ErrorHandler.asm
 
 asm68k-linkable:		$(BUILD_DIR)/asm68k-linkable/Debugger.asm $(BUILD_DIR)/asm68k-linkable/Debugger.obj
+
+axm68k:	$(BUILD_DIR)/axm68k/Debugger.asm $(BUILD_DIR)/axm68k/ErrorHandler.asm
+
+axm68k-extsym:	$(BUILD_DIR)/axm68k-extsym/Debugger.asm $(BUILD_DIR)/axm68k-extsym/ErrorHandler.asm
 
 as:	$(BUILD_DIR)/as/Debugger.asm $(BUILD_DIR)/as/ErrorHandler.asm
 
@@ -52,6 +56,16 @@ $(BUILD_DIR)/asm68k-linkable/Debugger.asm $(BUILD_DIR)/asm68k-linkable/Debugger.
 	mkdir -p $(BUILD_DIR)/asm68k-linkable
 	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def LINKABLE -def LINKABLE-WITH-DATA-SECTION -out $(BUILD_DIR)/asm68k-linkable/Debugger.asm
 	cp $(CORE_BUILD_DIR)/ErrorHandler.obj $(BUILD_DIR)/asm68k-linkable/Debugger.obj
+
+$(BUILD_DIR)/axm68k/Debugger.asm $(BUILD_DIR)/axm68k/ErrorHandler.asm &: 	$(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
+	mkdir -p $(BUILD_DIR)/axm68k
+	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-AXM68K -out $(BUILD_DIR)/axm68k/Debugger.asm
+	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-AXM68K -out $(BUILD_DIR)/axm68k/ErrorHandler.asm
+
+$(BUILD_DIR)/axm68k-extsym/Debugger.asm $(BUILD_DIR)/axm68k-extsym/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
+	mkdir -p $(BUILD_DIR)/axm68k-extsym
+	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-AXM68K -def EXTSYM -out $(BUILD_DIR)/axm68k-extsym/Debugger.asm
+	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-AXM68K -def EXTSYM -out $(BUILD_DIR)/axm68k-extsym/ErrorHandler.asm
 
 $(BUILD_DIR)/as/Debugger.asm $(BUILD_DIR)/as/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
 	mkdir -p $(BUILD_DIR)/as
