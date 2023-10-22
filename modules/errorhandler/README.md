@@ -82,9 +82,10 @@ If you'd like to contribute new installation instructions or update the existing
 
 ## Supported assemblers
 
-Currently, the *Advanced Error Handler and Debugger 2.0* supports integration with the following assemblers:
+Currently, the *MD Debugger and Error Handler* supports integration with the following assemblers:
 
 * __ASM68K__ (`bundle-asm68k`)
+  * __AXM68K__, a hacked ASM68K usually bundled with macros for Z80 assembly support (`bundle-axm68k`)
 * __The AS Macroassembler__ v.1.42 Bld 55 and above (`bundle-as`)
 
 > **Warning**

@@ -51,7 +51,8 @@ There are two types of tokes:
 
 - `format` (optional) - value format specifier; `hex` is used by default. The following formats are supported:
 	- `hex`, `hex|signed` - display as a hexadecimal number (unsigned or signed);
-	- `dec`, `hex|signed` - display as a decimal number (unsigned or signed);
+	- `dec`, `dec|signed` - display as a decimal number (unsigned or signed);
+		- **Note:** For AXM68K assembler, it's `deci` instead, because of a name conflict.
 	- `bin`, `bin|signed` - display as a binary number (unsigned or signed);
 	- `sym` - treat value as an offset, display as `symbol+displacement`;
 	- `str` - treat value as an offset, display null terminated C-string it points to.
@@ -113,4 +114,4 @@ SomeString:
 - `%<setx,X>` - set X-position of the next character on the line;
 	- __In AS version__, the syntax is `%<setx>%<X>` due to macros limitations.
 
-__In ASM68K version__, flags can be merged into a single token, for example: instead of `"%<endl>%<setx,2>%<pal0>"` you can just write `"%<endl,setx,2,pal0>"`.
+__In ASM68K version__, flags can be merged into a single token, for example: instead of `"%<endl>%<setx,2>%<pal0>"` you can just write `"%<endl,setx,2,pal0>"` (this also applied to AXM68K).
