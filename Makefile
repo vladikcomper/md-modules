@@ -16,6 +16,7 @@ test:	all
 	$(MAKE) -C utils/cbundle test
 	$(MAKE) -C modules/mdshell tests
 	$(MAKE) -C modules/errorhandler tests
+	$(MAKE) -C modules/errorhandler-core tests
 
 clean:
 	rm -drf build/modules build/utils

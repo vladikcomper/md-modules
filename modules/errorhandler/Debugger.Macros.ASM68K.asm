@@ -85,19 +85,30 @@ Console &
 
 	if strcmp("\0","write")|strcmp("\0","writeline")|strcmp("\0","Write")|strcmp("\0","WriteLine")
 		move.w	sr, -(sp)
+
 		__FSTRING_GenerateArgumentsCode \1
-		movem.l	a0-a2/d7, -(sp)
+
+		; If we have any arguments in string, use formatted string function ...
 		if (__sp>0)
+			movem.l	a0-a2/d7, -(sp)
 			lea		4*4(sp), a2
+			lea		@str\@(pc), a1
+			jsr		__global__Console_\0\_Formatted
+			movem.l	(sp)+, a0-a2/d7
+			if (__sp>8)
+				lea		__sp(sp), sp
+			else
+				addq.w	#__sp, sp
+			endc
+
+		; ... Otherwise, use direct write as an optimization
+		else
+			move.l	a0, -(sp)
+			lea		@str\@(pc), a0
+			jsr		__global__Console_\0
+			move.l	(sp)+, a0
 		endc
-		lea		@str\@(pc), a1
-		jsr		__global__Console_\0\_Formatted
-		movem.l	(sp)+, a0-a2/d7
-		if (__sp>8)
-			lea		__sp(sp), sp
-		elseif (__sp>0)
-			addq.w	#__sp, sp
-		endc
+
 		move.w	(sp)+, sr
 		bra.w	@instr_end\@
 	@str\@:

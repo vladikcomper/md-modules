@@ -138,17 +138,30 @@ Console	macro	argument1, argument2
 	switch lowstring("ATTRIBUTE")
 	case "write"
 		move.w	sr, -(sp)
+
 		__FSTRING_GenerateArgumentsCode argument1
-		movem.l	a0-a2/d7, -(sp)
-		lea		4*4(sp), a2
-		lea		.__data(pc), a1
-		jsr		__global__Console_Write_Formatted
-		movem.l	(sp)+, a0-a2/d7
-		if (.__sp>8)
-			lea		.__sp(sp), sp
-		elseif (.__sp>0)
-			addq.w	#.__sp, sp
+
+		; If we have any arguments in string, use formatted string function ...
+		if (.__sp>0)
+			movem.l	a0-a2/d7, -(sp)
+			lea		4*4(sp), a2
+			lea		.__data(pc), a1
+			jsr		__global__Console_Write_Formatted
+			movem.l	(sp)+, a0-a2/d7
+			if (.__sp>8)
+				lea		.__sp(sp), sp
+			elseif (.__sp>0)
+				addq.w	#.__sp, sp
+			endif
+		
+		; ... Otherwise, use direct write as an optimization
+		else
+			move.l	a0, -(sp)
+			lea		.__data(pc), a0
+			jsr		__global__Console_Write
+			move.l	(sp)+, a0
 		endif
+
 		move.w	(sp)+, sr
 		bra.w	.__leave
 	.__data:
@@ -158,17 +171,29 @@ Console	macro	argument1, argument2
 
 	case "writeline"
 		move.w	sr, -(sp)
+
 		__FSTRING_GenerateArgumentsCode argument1
-		movem.l	a0-a2/d7, -(sp)
-		lea		4*4(sp), a2
-		lea		.__data(pc), a1
-		jsr		__global__Console_WriteLine_Formatted
-		movem.l	(sp)+, a0-a2/d7
-		if (.__sp>8)
-			lea		.__sp(sp), sp
-		elseif (.__sp>0)
-			addq.w	#.__sp, sp
+
+		; If we have any arguments in string, use formatted string function ...
+		if (.__sp>0)
+			movem.l	a0-a2/d7, -(sp)
+			lea		4*4(sp), a2
+			lea		.__data(pc), a1
+			jsr		__global__Console_WriteLine_Formatted
+			movem.l	(sp)+, a0-a2/d7
+			if (.__sp>8)
+				lea		.__sp(sp), sp
+			elseif (.__sp>0)
+				addq.w	#.__sp, sp
+			endif
+		; ... Otherwise, use direct write as an optimization
+		else
+			move.l	a0, -(sp)
+			lea		.__data(pc), a0
+			jsr		__global__Console_WriteLine
+			move.l	(sp)+, a0
 		endif
+
 		move.w	(sp)+, sr
 		bra.w	.__leave
 	.__data:
