@@ -87,10 +87,11 @@ FormatString_CodeHandlers:
 
 	; codes B0..BF : Display symbol
 	lea		FormatSym_Handlers(pc), a3			; $00
-	move.b	d3, d2								; $04
-	and.w	#3, d2								; $06	; d2 = 0, 1, 3 ... (ignore handlers for signed values)
-	add.w	d2, d2								; $0A	; multiply 4-bit code by 2 as instructions in the code handlers below are word-sized
-	jmp		@ArgumentFetchFlow(pc,d2)			; $0C	; jump to an appropriate instruction (note that even invalid codes won't crash)
+	moveq	#3, d2								; $04
+	and.b	d3, d2								; $06	; d2 = 0, 1, 3 ... (ignore handlers for signed values)
+	add.w	d2, d2								; $08	; multiply 4-bit code by 2 as instructions in the code handlers below are word-sized
+	jmp		@ArgumentFetchFlow(pc,d2)			; $0A	; jump to an appropriate instruction (note that even invalid codes won't crash)
+	nop											; $0E
 
 	; codes C0..CF : Display symbol's displacement (to be used after codes B0..BF, if extra formatting is due)
 	tst.w	d0									; $00	; check "GetSymbolByOffset" (see "FormatSym" code)
