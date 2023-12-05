@@ -599,7 +599,7 @@ Str_Caller:
  	dc.b	_pal1, 'Caller: ', 0
 
 Str_OffsetLocation:
-	dc.b	_pal2, _hex|long, ' ', _pal0, _sym|long|split|forced, _pal2, _disp|weak, 0
+	dc.b	_pal2, _hex|byte, _hex|word, ' ', _pal0, _sym|long|split|forced, _pal2, _disp|weak, 0
 
 Str_USP:
 	dc.b	_setx, $10, _pal0, 'usp: ', _pal2, _hex|long, 0
