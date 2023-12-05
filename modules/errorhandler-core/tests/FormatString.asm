@@ -289,17 +289,17 @@ addTest macro args,source_str,compare_str
 	; #25: Labels test #2
 	addTest { <.l short_data_chunk+1> }, &
 			<$B3,$00>, &
-			<'short_data_chunk+0001'>
+			<'short_data_chunk+1'>
 
 	; #26: Labels test #3
 	addTest { <.l long_data_chunk+$10001> }, &
 			<$B3,$00>, &
-			<'long_data_chunk+00010001'>
+			<'long_data_chunk+10001'>
 
 	; #27: Buffer limit + Lables test
 	addTest { <.l long_data_chunk+$10001> }, &
 			<'Overflow>>> ',$B3,$00>, &
-			<'Overflow>>> long_data_chunk+0001'>
+			<'Overflow>>> long_data_chunk+1000'>
 
 	; #28: Signed hex numbers test
 	addTest { <.w $1234>, <.l -$01234567>, <.w $FFFF> }, &
@@ -324,12 +324,12 @@ addTest macro args,source_str,compare_str
 	; #32: Advanced symbol output test #2
 	addTest { <.l $101> }, &
 			<$B3,$00>, &
-			<'Offset_100+0001'>
+			<'Offset_100+1'>
 
 	; #33: Advanced symbol output test #3
 	addTest { <.l $1FF> }, &
 			<$B3,$00>, &
-			<'Offset_100+00FF'>
+			<'Offset_100+FF'>
 
 	; #34: Advanced symbol output test #4 (non-existent symbol)
 	addTest { <.l 0> }, &
@@ -359,7 +359,7 @@ addTest macro args,source_str,compare_str
 	; #39: Advanced symbol output test #9 (far away symbol)
 	addTest { <.l $20080> }, &
 			<$B7,$00>, &
-			<'long_data_chunk+00010000'>
+			<'long_data_chunk+10000'>
 
 	; #40: Advanced symbol output test #10 (RAM addr)
 	addTest { <.l $FF0000> }, &
@@ -374,12 +374,12 @@ addTest macro args,source_str,compare_str
 	; #42: Advanced symbol output test #12 (RAM addr)
 	addTest { <.l $FFFF0001> }, &
 			<$B3,$00>, &
-			<'RAM_Offset_FF0000+0001'>
+			<'RAM_Offset_FF0000+1'>
 
 	; #43: Advanced symbol output test #13 (RAM addr)
 	addTest { <.l $FFFF0002> }, &
 			<$B7,$00>, &
-			<'RAM_Offset_FF0000+0002'>
+			<'RAM_Offset_FF0000+2'>
 
 	; #44: Advanced symbol output test #10 (RAM addr #2)
 	addTest { <.l $FF8000> }, &
@@ -394,7 +394,7 @@ addTest macro args,source_str,compare_str
 	; #46: Advanced symbol output test #12 (RAM addr #2)
 	addTest { <.w $8001> }, &
 			<$B1,$00>, &
-			<'RAM_Offset_FFFF8000+0001'>
+			<'RAM_Offset_FFFF8000+1'>
 
 	; #47: Advanced symbol output test #13 (RAM addr #3)
 	addTest { <.w $FF> }, &
@@ -404,17 +404,17 @@ addTest macro args,source_str,compare_str
 	; #48: Symbol and displacement test #1
 	addTest { <.l $1001> }, &
 			<$B3+8,$C0,$00>, &
-			<'ShouldOverflowBufferWithDis+0001'>
+			<'ShouldOverflowBufferWithDis+1'>
 
 	; #49: Symbol and displacement test #2
 	addTest { <.l $1001> }, &
-			<$B3+8,$C0,'this is no longer visible!',$00>, &
-			<'ShouldOverflowBufferWithDis+0001'>
+			<'>>>',$B3+8,$C0,'this is no longer visible!',$00>, &
+			<'>>>ShouldOverflowBufferWithDis+1'>
 
 	; #50: Symbol and displacement test #3
 	addTest { <.l $1001> }, &
-			<$B3+8,'(',$C0,')',$00>, &
-			<'ShouldOverflowBufferWithDis(+000'>
+			<'>>>',$B3+8,'(',$C0,')',$00>, &
+			<'>>>ShouldOverflowBufferWithDis(+'>
 
 	; #51: Symbol and displacement test #4
 	addTest { <.l $1000> }, &
@@ -423,13 +423,13 @@ addTest macro args,source_str,compare_str
 
 	; #52: Symbol and displacement test #5
 	addTest { <.l $1003> }, &
-			<$B3,$00>, &
-			<'ShouldOverflowBufferWithDisp+000'>
+			<'>>>>',$B3,$00>, &
+			<'>>>>ShouldOverflowBufferWithDisp'>
 
 	; #53: Symbol and displacement test #6
 	addTest { <.l $1005> }, &
 			<$B3,$00>, &
-			<'ShouldOverflowBufferWithDisp2+00'>
+			<'ShouldOverflowBufferWithDisp2+1'>
 
 	; #54: Symbol and displacement test #7
 	addTest { <.l $1007> }, &
@@ -445,6 +445,16 @@ addTest macro args,source_str,compare_str
 	addTest { <.l $100B> }, &
 			<$B3,$00>, &
 			<'ShouldOverflowBufferEvenWithoutD'>
+
+	; #57: Symbol and displacement test #10
+	addTest { <.l long_data_chunk+$10010> }, &
+			<$B3,$00>, &
+			<'long_data_chunk+10010'>
+
+	; #58: Symbol and displacement test #11
+	addTest { <.l long_data_chunk+$100010> }, &
+			<$B3,$00>, &
+			<'long_data_chunk+100010'>
 
 	dc.w	-1
 	 
