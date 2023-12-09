@@ -397,9 +397,17 @@ Error_DrawInterruptHandler:
 	bne.s	Error_Return				; if not, branch
 
 	movea.l	d0, a2						; a2 = handler routine
-	cmp.w	#$4EF9, (a2)+				; does routine include jmp (xxx).l opcode?
-	bne.s	@uknown_handler_address		; if not, process "Str_IntHandler_Unknown"
+	cmp.w	#$4EF9, (a2)+				; does routine start jmp (xxx).l opcode?
+	bne.s	@chk_jmp_xxx_w				; if not, branch
 	move.l	(a2), d1					; d1 = interrupt handler offset
+	bra.s	Error_DrawOffsetLocation
+
+; ---------------------------------------------------------------
+@chk_jmp_xxx_w:
+	cmp.w	#$4EF8, -2(a2)				; does routine start with jmp (xxx).w opcode?
+	bne.s	@uknown_handler_address		; if not, branch
+	move.w	(a2), d1
+	ext.l	d1							; d1 = interrupt handler offset
 	bra.s	Error_DrawOffsetLocation
 
 ; ---------------------------------------------------------------
