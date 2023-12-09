@@ -339,7 +339,9 @@ Error_DrawOffsetLocation2:	__global
 	move.l	d1, -(sp)
 	move.l	d1, -(sp)
 	lea		(sp), a2						; a2 = arguments buffer
-	lea		Str_OffsetLocation(pc), a1
+
+Error_DrawOffsetLocation__inj:	__global
+	lea		Str_OffsetLocation_24bit(pc), a1
 	jsr		Console_WriteLine_Formatted(pc)
 	addq.w	#8,sp							; free arguments buffer
 	rts
@@ -598,8 +600,11 @@ Str_Offset:
 Str_Caller:
  	dc.b	_pal1, 'Caller: ', 0
 
-Str_OffsetLocation:
+Str_OffsetLocation_24bit:	__global
 	dc.b	_pal2, _hex|byte, _hex|word, ' ', _pal0, _sym|long|split|forced, _pal2, _disp|weak, 0
+
+Str_OffsetLocation_32bit:	__global
+	dc.b	_pal2, _hex|long, ' ', _pal0, _sym|long|split|forced, _pal2, _disp|weak, 0
 
 Str_USP:
 	dc.b	_setx, $10, _pal0, 'usp: ', _pal2, _hex|long, 0

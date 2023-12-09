@@ -55,18 +55,24 @@ $(BUILD_DIR)\ErrorHandler.ExtSymbols.Globals.asm:	$(BUILD_DIR)\ErrorHandler.ExtS
 
 # Linkable blobs in assembly format
 
-$(BUILD_DIR)\ErrorHandler.Blob.asm:	$(BUILD_DIR)\ErrorHandler.bin | $(BUILD_DIR)
-	$(BLOBTOASM) $^ $@
+$(BUILD_DIR)\ErrorHandler.Blob.asm:	$(BUILD_DIR)\ErrorHandler.bin $(BUILD_DIR)\ErrorHandler.SymbolTable.log | $(BUILD_DIR)
+	$(BLOBTOASM) $(BUILD_DIR)\ErrorHandler.bin $@ -m $(SRC_DIR)\inject-tables\ErrorHandler.Blob.txt -t $(BUILD_DIR)\ErrorHandler.SymbolTable.log
 
-$(BUILD_DIR)\ErrorHandler.Debug.Blob.asm:	$(BUILD_DIR)\ErrorHandler.Debug.bin | $(BUILD_DIR)
-	$(BLOBTOASM) $^ $@
+$(BUILD_DIR)\ErrorHandler.Debug.Blob.asm:	$(BUILD_DIR)\ErrorHandler.Debug.bin $(BUILD_DIR)\ErrorHandler.Debug.SymbolTable.log | $(BUILD_DIR)
+	$(BLOBTOASM) $(BUILD_DIR)\ErrorHandler.Debug.bin $@ -m $(SRC_DIR)\inject-tables\ErrorHandler.Blob.txt -t $(BUILD_DIR)\ErrorHandler.Debug.SymbolTable.log
 
-$(BUILD_DIR)\ErrorHandler.ExtSymbols.Blob.asm:	$(BUILD_DIR)\ErrorHandler.ExtSymbols.bin $(BUILD_DIR)\ErrorHandler.ExtSymbols.InjectTable.log | $(BUILD_DIR)
-	$(BLOBTOASM) $(BUILD_DIR)\ErrorHandler.ExtSymbols.bin $@ -m $(SRC_DIR)\inject-tables\ErrorHandler.ExtSymbols.Blob.txt -t $(BUILD_DIR)\ErrorHandler.ExtSymbols.InjectTable.log
+$(BUILD_DIR)\ErrorHandler.ExtSymbols.Blob.asm:	$(BUILD_DIR)\ErrorHandler.ExtSymbols.bin $(BUILD_DIR)\ErrorHandler.ExtSymbols.SymbolTable.log | $(BUILD_DIR)
+	$(BLOBTOASM) $(BUILD_DIR)\ErrorHandler.ExtSymbols.bin $@ -m $(SRC_DIR)\inject-tables\ErrorHandler.ExtSymbols.Blob.txt -t $(BUILD_DIR)\ErrorHandler.ExtSymbols.SymbolTable.log
 
 
-$(BUILD_DIR)\ErrorHandler.ExtSymbols.InjectTable.log:	$(BUILD_DIR)\ErrorHandler.ExtSymbols.sym | $(CONVSYM)
-	$(CONVSYM) $^ $@ -output asm -inopt "/processLocals-" -outopt "%s: %X" -filter '__inject_.+'
+$(BUILD_DIR)\ErrorHandler.SymbolTable.log:	$(BUILD_DIR)\ErrorHandler.sym | $(CONVSYM)
+	$(CONVSYM) $^ $@ -output asm -inopt "/processLocals-" -outopt "%s: %X"
+
+$(BUILD_DIR)\ErrorHandler.Debug.SymbolTable.log:	$(BUILD_DIR)\ErrorHandler.Debug.sym | $(CONVSYM)
+	$(CONVSYM) $^ $@ -output asm -inopt "/processLocals-" -outopt "%s: %X"
+
+$(BUILD_DIR)\ErrorHandler.ExtSymbols.SymbolTable.log:	$(BUILD_DIR)\ErrorHandler.ExtSymbols.sym | $(CONVSYM)
+	$(CONVSYM) $^ $@ -output asm -inopt "/processLocals-" -outopt "%s: %X"
 
 
 $(BUILD_DIR):

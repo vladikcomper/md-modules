@@ -36,6 +36,20 @@
 #endif
 ##
 
+; ---------------------------------------------------------------
+; Additional parameters
+; ---------------------------------------------------------------
+
+	if DEBUGGER__USE_COMPACT_OFFSETS
+		DEBUGGER__STR_OFFSET_SELECTOR:	equ	__global__Str_OffsetLocation_24bit
+	else
+		DEBUGGER__STR_OFFSET_SELECTOR:	equ	__global__Str_OffsetLocation_32bit
+#ifdef BUNDLE-ASM68K
+	endc
+#else
+	endif
+#endif
+
 #include ErrorHandler.Extensions.asm
 
 ; ---------------------------------------------------------------
