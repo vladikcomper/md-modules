@@ -146,7 +146,7 @@ def tokenizeBlob(blob: bytes, symbolTable: Dict[str, int], injectionData: Dict[i
 	# Make data ranges ...
 	data_ranges: List[Tuple[int, int]] = []
 	start_offset = 0
-	for inject_offset, inject_data in injectionData.items():
+	for inject_offset, inject_data in sorted(injectionData.items()):
 		data_ranges.append((start_offset, inject_offset))
 		start_offset = inject_offset + inject_data.size
 	data_ranges.append((start_offset, len(blob)))
