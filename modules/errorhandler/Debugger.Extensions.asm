@@ -2,6 +2,11 @@
 ; Debugger customization
 ; ---------------------------------------------------------------
 
+; Use compact 24-bit offsets instead of 32-bit ones
+; This will display shorter offests next to the symbols in the exception screen header.
+; M68K bus is limited to 24 bits anyways, so not displaying unused bits saves screen space.
+DEBUGGER__USE_COMPACT_OFFSETS:			equ		1		; 0 = OFF, 1 = ON
+
 ; Enable debugger extensions
 ; Pressing A/B/C on the exception screen can open other debuggers
 ; Pressing Start or unmapped button returns to the exception

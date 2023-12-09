@@ -1,3 +1,1 @@
-__inject_symboldata_ptr_1+2:long:inline: SymbolData_Ptr
-__inject_symboldata_ptr_2+2:long:inline: SymbolData_Ptr
 Error_DrawOffsetLocation__inj+2:word:inline: DEBUGGER__STR_OFFSET_SELECTOR-__global__Error_DrawOffsetLocation__inj-2

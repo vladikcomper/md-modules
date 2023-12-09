@@ -44,9 +44,9 @@ FormatHex_Byte:
 	and.w	d3,d2						; get nibble
 	move.b	HexDigitToChar(pc,d2), (a0)+
 	
-	dbf		d7, FormatHex_Word_WriteLastNibble
+	dbf		d7, FormatHex_Word_WriteLastNibble2
 	jsr		(a4)
-	bcc.s	FormatHex_Word_WriteLastNibble
+	bcc.s	FormatHex_Word_WriteLastNibble2
 	rts		; return Carry=1
 
 ; ---------------------------------------------------------------
@@ -63,23 +63,26 @@ FormatHex_Word_Swapped:
 
 ; ---------------------------------------------------------------
 FormatHex_Word:
-	moveq	#4,d2
-	moveq	#$F,d3
 
+	__it:	= 0
 	rept 4-1
-		rol.w	d2,d1
-		move.b	d1,d4
-		and.w	d3,d4						; get nibble
+	__it:	= __it+1
+		rol.w	#4, d1
+		moveq	#$F, d4
+		and.w	d1, d4								; get nibble
 		move.b	HexDigitToChar(pc,d4), (a0)+
-		dbf		d7, *+6						; if buffer is not exhausted, branch
-		jsr		(a4)						; otherwise, call buffer flush function
-		bcs.s	FormatHex_Return			; if buffer is terminated, branch
+		dbf		d7, FormatHex_Word_Nibble\#__it		; if buffer is not exhausted, branch
+		jsr		(a4)								; otherwise, call buffer flush function
+		bcs.s	FormatHex_Return					; if buffer is terminated, branch
+	FormatHex_Word_Nibble\#__it:					; set label for the next nibble
 	endr
 
-	rol.w	d2,d1
-
 FormatHex_Word_WriteLastNibble:
-	and.w	d3,d1						; get nibble
+	rol.w	#4, d1
+	moveq	#$F, d3
+
+FormatHex_Word_WriteLastNibble2:
+	and.w	d3, d1						; get nibble
 	move.b	HexDigitToChar(pc,d1), (a0)+
 	dbf		d7, FormatHex_Return
 	jmp		(a4)						; call buffer flush function and return buffer status
@@ -90,3 +93,49 @@ FormatHex_Return:
 ; ---------------------------------------------------------------
 HexDigitToChar:
 	dc.b	'0123456789ABCDEF'
+
+; ---------------------------------------------------------------
+FormatHex_LongWord_Trim:
+	swap	d1
+	beq.s	FormatHex_Word_Trim_Swapped		; if high word is 0000, we only have to display the lower one
+
+FormatHex_LongWord_Trim_Swapped_NonZero:
+	bsr.s	FormatHex_Word_Trim
+	bcs.s	FormatHex_Return				; if buffer terminated, branch
+	bra		FormatHex_Word_Swapped			; should display a word without trimming now
+
+FormatHex_Word_Trim_Swapped:
+	swap	d1
+
+; ---------------------------------------------------------------
+FormatHex_Word_Trim:
+
+	__it:	= 0
+	rept 4-2
+	__it:	= __it+1
+
+		rol.w	#4, d1
+		moveq	#$F, d4
+		and.w	d1, d4
+		beq.s	FormatHex_Word_Trim_Nibble\#__it		; if nibble is 0, check next nibble (don't draw)
+
+		; If we get to this point, we are going to branch to "non-trim" routines from now on ...
+		move.b	HexDigitToChar(pc,d4), (a0)+			; output digit
+		dbf		d7, FormatHex_Word_Nibble\#__it			; if buffer is not exhausted, branch to normal nibble drawing routine
+		jsr		(a4)									; otherwise, call buffer flush function
+		bcc.s	FormatHex_Word_Nibble\#__it				; if buffer is not terminated, branch to normal nibble drawing routine
+		rts
+
+	FormatHex_Word_Trim_Nibble\#__it:
+	endr
+
+	; Pre-last iteration is special as it connects with `FormatHex_Word_WriteLastNibble`
+	rol.w	#4, d1
+	moveq	#$F, d4
+	and.w	d1, d4
+	beq.s	FormatHex_Word_WriteLastNibble			; even if this nibble is 0, the last one is rendered anyways
+	move.b	HexDigitToChar(pc,d4), (a0)+
+	dbf		d7, FormatHex_Word_WriteLastNibble	; if buffer is not exhausted, branch
+	jsr		(a4)									; otherwise, call buffer flush function
+	bcc.s	FormatHex_Word_WriteLastNibble			; if buffer is not terminated, branch
+	rts
