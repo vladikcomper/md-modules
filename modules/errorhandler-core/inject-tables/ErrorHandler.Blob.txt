@@ -1,1 +1,4 @@
 Error_DrawOffsetLocation__inj+2:word:inline: DEBUGGER__STR_OFFSET_SELECTOR-__global__Error_DrawOffsetLocation__inj-2
+ErrorHandler_ExtraDebuggerList+0:long:inline: DEBUGGER__EXTENSIONS__BTN_A_DEBUGGER
+ErrorHandler_ExtraDebuggerList+4:long:inline: DEBUGGER__EXTENSIONS__BTN_C_DEBUGGER
+ErrorHandler_ExtraDebuggerList+8:long:inline: DEBUGGER__EXTENSIONS__BTN_B_DEBUGGER

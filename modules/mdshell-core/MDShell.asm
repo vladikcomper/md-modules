@@ -262,7 +262,7 @@ IdleInt:
 ; Tell error handler that we want to inject Symbol table pointer from outside
 _USE_SYMBOL_DATA_REF_: equ 1
 
-	include	'..\errorhandler-core\ErrorHandler.asm'
+	include	'..\errorhandler-core\Main.asm'
 
 ; ---------------------------------------------------------------
 ; Non-headless builds end here and override data below

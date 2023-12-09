@@ -4,12 +4,10 @@ include ../../utils/.Makefile # For $(CONVSYM), $(CBUNDLE) etc
 
 BUILD_DIR ?= ../../build/modules/errorhandler
 CORE_BUILD_DIR ?= ../../build/modules/errorhandler-core
-EXT_BUILD_DIR ?= ../../build/modules/debuggers
 SRC_DIR ?= .
 
 SRC_FILES = $(wildcard $(SRC_DIR)/*.asm)
 CORE_SRC_FILES ?= $(wildcard ../errorhandler-core/*.asm) $(wildcard ../core/*.asm)
-EXT_SRC_FILES ?= $(wildcard ../debuggers/*.asm) $(wildcard ../core/*.asm)
 
 
 .PHONY:	all asm68k asm68k-debug asm68k-extsym as as-extsym tests clean
@@ -33,27 +31,27 @@ clean:
 	rm -rf $(BUILD_DIR)/*
 
 
-$(BUILD_DIR)/asm68k/Debugger.asm $(BUILD_DIR)/asm68k/ErrorHandler.asm &:	$(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Globals.asm $(EXT_BUILD_DIR)/Extensions.Blob.asm $(EXT_BUILD_DIR)/Backtrace.Blob.asm $(EXT_BUILD_DIR)/AddressRegisters.Blob.asm | $(BUILD_DIR)
+$(BUILD_DIR)/asm68k/Debugger.asm $(BUILD_DIR)/asm68k/ErrorHandler.asm &:	$(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Globals.asm | $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)/asm68k
 	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -out $(BUILD_DIR)/asm68k/Debugger.asm
 	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-ASM68K -out $(BUILD_DIR)/asm68k/ErrorHandler.asm
 
-$(BUILD_DIR)/asm68k-debug/Debugger.asm $(BUILD_DIR)/asm68k-debug/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Debug.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Debug.Globals.asm $(EXT_BUILD_DIR)/Extensions.Blob.asm $(EXT_BUILD_DIR)/Backtrace.Blob.asm $(EXT_BUILD_DIR)/AddressRegisters.Blob.asm | $(BUILD_DIR)
+$(BUILD_DIR)/asm68k-debug/Debugger.asm $(BUILD_DIR)/asm68k-debug/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Debug.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Debug.Globals.asm | $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)/asm68k-debug
 	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def DEBUG -out $(BUILD_DIR)/asm68k-debug/Debugger.asm
 	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-ASM68K -def DEBUG -out $(BUILD_DIR)/asm68k-debug/ErrorHandler.asm
 
-$(BUILD_DIR)/asm68k-extsym/Debugger.asm $(BUILD_DIR)/asm68k-extsym/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Globals.asm $(EXT_BUILD_DIR)/Extensions.Blob.asm $(EXT_BUILD_DIR)/Backtrace.Blob.asm $(EXT_BUILD_DIR)/AddressRegisters.Blob.asm | $(BUILD_DIR)
+$(BUILD_DIR)/asm68k-extsym/Debugger.asm $(BUILD_DIR)/asm68k-extsym/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Globals.asm | $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)/asm68k-extsym
 	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def EXTSYM -out $(BUILD_DIR)/asm68k-extsym/Debugger.asm
 	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-ASM68K -def EXTSYM -out $(BUILD_DIR)/asm68k-extsym/ErrorHandler.asm
 
-$(BUILD_DIR)/as/Debugger.asm $(BUILD_DIR)/as/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Globals.asm $(EXT_BUILD_DIR)/Extensions.Blob.asm $(EXT_BUILD_DIR)/Backtrace.Blob.asm $(EXT_BUILD_DIR)/AddressRegisters.Blob.asm | $(BUILD_DIR)
+$(BUILD_DIR)/as/Debugger.asm $(BUILD_DIR)/as/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Globals.asm | $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)/as
 	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-AS -out $(BUILD_DIR)/as/Debugger.asm
 	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-AS -out $(BUILD_DIR)/as/ErrorHandler.asm
 
-$(BUILD_DIR)/as-extsym/Debugger.asm $(BUILD_DIR)/as-extsym/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Globals.asm $(EXT_BUILD_DIR)/Extensions.Blob.asm $(EXT_BUILD_DIR)/Backtrace.Blob.asm $(EXT_BUILD_DIR)/AddressRegisters.Blob.asm | $(BUILD_DIR)
+$(BUILD_DIR)/as-extsym/Debugger.asm $(BUILD_DIR)/as-extsym/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Globals.asm | $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)/as-extsym
 	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-AS -def EXTSYM -out $(BUILD_DIR)/as-extsym/Debugger.asm
 	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-AS -def EXTSYM -out $(BUILD_DIR)/as-extsym/ErrorHandler.asm
@@ -67,16 +65,6 @@ $(CORE_BUILD_DIR)/ErrorHandler.Debug.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Deb
 
 $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Globals.asm &:	$(CORE_SRC_FILES)
 	$(MAKE) -C ../errorhandler-core extsym
-
-
-$(EXT_BUILD_DIR)/Extensions.Blob.asm:	$(EXT_SRC_FILES)
-	$(MAKE) -C ../debuggers extensions
-
-$(EXT_BUILD_DIR)/Backtrace.Blob.asm:	$(EXT_SRC_FILES)
-	$(MAKE) -C ../debuggers backtrace
-
-$(EXT_BUILD_DIR)/AddressRegisters.Blob.asm:	$(EXT_SRC_FILES)
-	$(MAKE) -C ../debuggers address
 
 
 $(BUILD_DIR):

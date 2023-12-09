@@ -16,10 +16,6 @@
 ; Import global functions
 ; ---------------------------------------------------------------
 
-; Debugger extension functions
-#include ../../build/modules/debuggers/Extensions.Globals.asm
-
-; MD Shell & Core functions
 #include ../../build/modules/mdshell-core/MDShell.Globals.asm
 
 ; ---------------------------------------------------------------
@@ -44,7 +40,5 @@
 MDShell:
 #include ../../build/modules/mdshell-core/MDShell.Blob.asm
 
-
-#include ../errorhandler/ErrorHandler.Extensions.asm
 
 #include ../errorhandler/ErrorHandler.Exceptions.asm
