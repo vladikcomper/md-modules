@@ -16,10 +16,6 @@
 ; Import error handler global functions
 ; ---------------------------------------------------------------
 
-; Debugger extension functions
-#include ../../build/modules/debuggers/Extensions.Globals.asm
-
-; Error handler & core functions
 #ifdef DEBUG
 #include ../../build/modules/errorhandler-core/ErrorHandler.Debug.Globals.asm
 #else
@@ -50,8 +46,6 @@
 	endif
 #endif
 
-#include ErrorHandler.Extensions.asm
-
 ; ---------------------------------------------------------------
 ; Error handler blob
 ; ---------------------------------------------------------------
@@ -64,6 +58,18 @@ ErrorHandler:
 #include ../../build/modules/errorhandler-core/ErrorHandler.ExtSymbols.Blob.asm
 #else
 #include ../../build/modules/errorhandler-core/ErrorHandler.Blob.asm
+#endif
+#endif
+
+#ifdef BUNDLE-AS
+; ---------------------------------------------------------------
+; Import global functions
+; ---------------------------------------------------------------
+
+#ifdef EXTSYM
+#include ../../build/modules/errorhandler-core/ErrorHandler.ExtSymbols.Globals.asm
+#else
+#include ../../build/modules/errorhandler-core/ErrorHandler.Globals.asm
 #endif
 #endif
 

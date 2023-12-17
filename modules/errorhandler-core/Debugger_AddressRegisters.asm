@@ -1,21 +1,24 @@
 
 ; =============================================================================
 ; -----------------------------------------------------------------------------
-; Address registers debugger
+; MD Debugger and Error Handler
 ;
-; (c) 2023, Vladikcomper
+; (c) 2016-2023, Vladikcomper
+; -----------------------------------------------------------------------------
+; Address registers debugger
 ; -----------------------------------------------------------------------------
 
-		include	"..\core\Macros.asm"			; for "__global", "__injectable"
+
+		include	"..\core\Macros.asm"			; for "__global"
 		include	"..\core\Console.defs.asm"		; for "_pal0", "_newl" etc
 
-; -----------------------------------------------------------------------------
+
 Debugger_AddressRegisters:	__global
 		movem.l	a0-a6, -(sp)						; dump registers
 
 		; Setup screen header (position and "Address Registers:" text)
-		lea		Str_ScreenHeader(pc), a0
-@_inj0:	jsr		Console_Write(pc)
+		lea		@Str_ScreenHeader(pc), a0
+		jsr		Console_Write(pc)
 
 		; Render registers table
 		lea		(sp), a4							; get registers dump in the stack ...
@@ -27,7 +30,7 @@ Debugger_AddressRegisters:	__global
 	@loop:
 			lea		(sp), a0							; a0 = label
 			move.l	(a4)+, d1							; d1 = address register value
-@_inj1:		jsr		Error_DrawOffsetLocation(pc)
+			jsr		Error_DrawOffsetLocation(pc)
 
 			addq.b	#1, 2(sp)							; add 1 to register's digit ASCII
 			dbf		d6, @loop
@@ -36,23 +39,7 @@ Debugger_AddressRegisters:	__global
 		rts
 
 ; -----------------------------------------------------------------------------
-Str_ScreenHeader:
+@Str_ScreenHeader:
 		dc.b	_newl, _setx, 1, _setw, 38
 		dc.b	_pal1, 'Address Registers:', _newl, _newl, 0
 		even
-
-	if def(_LINKABLE_)
-__blob_end:
-	endc
-
-; =============================================================================
-; -----------------------------------------------------------------------------
-; Injectable routines for a stand-alone build
-; -----------------------------------------------------------------------------
-; NOTE:
-;	Each invocation of them marked with @_injX or __injX symbol will be
-;	manually linked by BLOBTOASM utility using the injection map.
-; -----------------------------------------------------------------------------
-
-Console_Write:	__injectable
-Error_DrawOffsetLocation:	__injectable

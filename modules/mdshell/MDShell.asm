@@ -12,15 +12,13 @@
 #include ../errorhandler/Debugger.Constants.asm
 
 
+#ifdef BUNDLE-ASM68K
 ; ---------------------------------------------------------------
 ; Import global functions
 ; ---------------------------------------------------------------
 
-; Debugger extension functions
-#include ../../build/modules/debuggers/Extensions.Globals.asm
-
-; MD Shell & Core functions
 #include ../../build/modules/mdshell-core/MDShell.Globals.asm
+#endif
 
 ; ---------------------------------------------------------------
 ; Macros
@@ -45,6 +43,12 @@ MDShell:
 #include ../../build/modules/mdshell-core/MDShell.Blob.asm
 
 
-#include ../errorhandler/ErrorHandler.Extensions.asm
+#ifdef BUNDLE-AS
+; ---------------------------------------------------------------
+; Import global functions
+; ---------------------------------------------------------------
+
+#include ../../build/modules/mdshell-core/MDShell.Globals.asm
+#endif
 
 #include ../errorhandler/ErrorHandler.Exceptions.asm

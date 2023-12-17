@@ -31,14 +31,14 @@ clean:
 
 # Raw unlinked binaries
 
-$(BUILD_DIR)/ErrorHandler.bin $(BUILD_DIR)/ErrorHandler.sym &:	$(SRC_DIR)/ErrorHandler.asm $(wildcard $(CORE_DIR)/*.asm) | $(BUILD_DIR)
-	$(ASM68K) $(ASFLAGS) $(SRC_DIR)/ErrorHandler.asm, $(BUILD_DIR)/ErrorHandler.bin, $(BUILD_DIR)/ErrorHandler.sym, $(BUILD_DIR)/ErrorHandler.lst
+$(BUILD_DIR)/ErrorHandler.bin $(BUILD_DIR)/ErrorHandler.sym &:	$(wildcard $(SRC_DIR)/*.asm) $(wildcard $(CORE_DIR)/*.asm) | $(BUILD_DIR)
+	$(ASM68K) $(ASFLAGS) $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.bin, $(BUILD_DIR)/ErrorHandler.sym, $(BUILD_DIR)/ErrorHandler.lst
 
-$(BUILD_DIR)/ErrorHandler.Debug.bin $(BUILD_DIR)/ErrorHandler.Debug.sym &:	$(SRC_DIR)/ErrorHandler.asm $(wildcard $(CORE_DIR)/*.asm) | $(BUILD_DIR)
-	$(ASM68K) $(ASFLAGS) /e __DEBUG__ $(SRC_DIR)/ErrorHandler.asm, $(BUILD_DIR)/ErrorHandler.Debug.bin, $(BUILD_DIR)/ErrorHandler.Debug.sym, $(BUILD_DIR)/ErrorHandler.Debug.lst
+$(BUILD_DIR)/ErrorHandler.Debug.bin $(BUILD_DIR)/ErrorHandler.Debug.sym &:	$(wildcard $(SRC_DIR)/*.asm) $(wildcard $(CORE_DIR)/*.asm) | $(BUILD_DIR)
+	$(ASM68K) $(ASFLAGS) /e __DEBUG__ $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.Debug.bin, $(BUILD_DIR)/ErrorHandler.Debug.sym, $(BUILD_DIR)/ErrorHandler.Debug.lst
 
-$(BUILD_DIR)/ErrorHandler.ExtSymbols.bin $(BUILD_DIR)/ErrorHandler.ExtSymbols.sym &:	$(SRC_DIR)/ErrorHandler.asm $(wildcard $(CORE_DIR)/*.asm) | $(BUILD_DIR)
-	$(ASM68K) $(ASFLAGS) /e _USE_SYMBOL_DATA_REF_=1 /e SymbolData_Ptr=0 $(SRC_DIR)/ErrorHandler.asm, $(BUILD_DIR)/ErrorHandler.ExtSymbols.bin, $(BUILD_DIR)/ErrorHandler.ExtSymbols.sym, $(BUILD_DIR)/ErrorHandler.ExtSymbols.lst
+$(BUILD_DIR)/ErrorHandler.ExtSymbols.bin $(BUILD_DIR)/ErrorHandler.ExtSymbols.sym &:	$(wildcard $(SRC_DIR)/*.asm) $(wildcard $(CORE_DIR)/*.asm) | $(BUILD_DIR)
+	$(ASM68K) $(ASFLAGS) /e _USE_SYMBOL_DATA_REF_=1 /e SymbolData_Ptr=0 $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.ExtSymbols.bin, $(BUILD_DIR)/ErrorHandler.ExtSymbols.sym, $(BUILD_DIR)/ErrorHandler.ExtSymbols.lst
 
 
 # Global symbol tables
