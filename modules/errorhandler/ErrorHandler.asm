@@ -61,6 +61,18 @@ ErrorHandler:
 #endif
 #endif
 
+#ifdef BUNDLE-AS
+; ---------------------------------------------------------------
+; Import global functions
+; ---------------------------------------------------------------
+
+#ifdef EXTSYM
+#include ../../build/modules/errorhandler-core/ErrorHandler.ExtSymbols.Globals.asm
+#else
+#include ../../build/modules/errorhandler-core/ErrorHandler.Globals.asm
+#endif
+#endif
+
 #ifndef EXTSYM
 ; ---------------------------------------------------------------
 ; WARNING!
