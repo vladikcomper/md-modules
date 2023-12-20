@@ -21,4 +21,6 @@ Vectors+54:long:inline: ErrorExcept
 Vectors+58:long:inline: ErrorExcept
 Vectors+5C:long:inline: ErrorExcept
 Vectors+60:long:inline: ErrorExcept
+Vectors+70:long:inline: MDSHELL__HBLANK_HANDLER
+Vectors+78:long:inline: MDSHELL__VBLANK_HANDLER
 __inject_main+2:long:inline: Main

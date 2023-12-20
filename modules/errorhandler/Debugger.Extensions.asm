@@ -1,6 +1,14 @@
 ; ---------------------------------------------------------------
 ; Debugger customization
 ; ---------------------------------------------------------------
+#ifdef MD-SHELL
+
+; VBlank interrupt handler (default is "IdleInt", which returns immediately)
+MDSHELL__VBLANK_HANDLER:				equ		__global__IdleInt
+
+; HBlank interrupt handler (default is "IdleInt", which returns immediately)
+MDSHELL__HBLANK_HANDLER:				equ		__global__IdleInt
+#endif
 
 ; Use compact 24-bit offsets instead of 32-bit ones
 ; This will display shorter offests next to the symbols in the exception screen header.
