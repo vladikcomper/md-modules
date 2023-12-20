@@ -110,3 +110,51 @@ KDebug_FlushLine:	__global
 @quit:
 	move.l	(sp)+, a0
 	rts
+
+
+; =============================================================================
+; -----------------------------------------------------------------------------
+; Write raw string to KDebug message buffer
+; -----------------------------------------------------------------------------
+; INPUT:
+;		a0		Pointer to null-terminated string
+;
+; OUTPUT:
+;		a0		Pointer to the end of string
+;
+; MODIFIES:
+;		a0
+; -----------------------------------------------------------------------------
+
+KDebug_WriteLine:	__global
+	pea		KDebug_FlushLine(pc)
+
+; ---------------------------------------------------------------
+KDebug_Write:	__global
+	move.w	d7, -(sp)
+	move.l	a5, -(sp)
+
+	move.l	usp, a5
+	cmp.b	#_ConsoleMagic, Console.Magic(a5)	; are we running console?
+	beq.s	@write_buffer_done					; if yes, disable KDebug output, because it breaks VDP address
+
+	lea		VDP_Ctrl, a5
+	move.w	#$9E00, d7
+	bra.s	@write_buffer_next
+
+	@write_buffer:
+		move.w	d7, (a5)
+
+	@write_buffer_next:
+		move.b	(a0)+, d7
+		bgt.s	@write_buffer			; if not null-terminator or flag, branch
+		beq.s	@write_buffer_done		; if null-terminator, branch
+		sub.b	#_newl, d7				; is flag "new line"?
+		beq.s	@write_buffer			; if yes, branch
+		bra.s	@write_buffer_next		; otherwise, skip writing
+
+	; -----------------------------------------------------------------------------
+	@write_buffer_done:
+	move.l	(sp)+, a5
+	move.w	(sp)+, d7
+	rts
