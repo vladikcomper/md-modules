@@ -7,6 +7,8 @@
 ; Full exception test
 ; ---------------------------------------------------------------
 
+__DEBUG__:		equ		1				; use DEBUG version of the debugger
+
 VInt_Address:	equ		$FFFFC000
 HInt_Address:	equ		$00FFC006
 
