@@ -259,6 +259,7 @@ Console_SetWidth: __global
 	rts
 
 
+; ===============================================================
 ; ---------------------------------------------------------------
 ; Subroutine to draw string on screen
 ; ---------------------------------------------------------------
@@ -445,7 +446,7 @@ Console_Write_Formatted: __global
 ;		Carry	0 = continue operation
 ;				1 = terminate FormatString with error condition
 ;
-; WARNING: This function shouldn't modify d0-d4 / a1-a3!
+; WARNING: This function can only modify a0 / d7 !
 ; ---------------------------------------------------------------
 
 @FlushBuffer:
