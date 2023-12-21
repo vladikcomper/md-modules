@@ -255,10 +255,14 @@ Console	macro	argument1, argument2
 	endcase
 	endm
 
-#ifndef MD-SHELL
 ; ---------------------------------------------------------------
+; KDebug integration interface
+; ---------------------------------------------------------------
+
 KDebug	macro	argument1
+#ifndef MD-SHELL
 	ifdef __DEBUG__	; KDebug interface is only available in DEBUG builds
+#endif
 	switch lowstring("ATTRIBUTE")
 	case "write"
 		move.w	sr, -(sp)
@@ -349,10 +353,11 @@ KDebug	macro	argument1
 		!error	"ATTRIBUTE isn't a member of KDebug"
 
 	endcase
+#ifndef MD-SHELL
 	endif
+#endif
 	endm
 
-#endif
 ; ---------------------------------------------------------------
 __ErrorMessage  macro string, opts
 		__FSTRING_GenerateArgumentsCode string
