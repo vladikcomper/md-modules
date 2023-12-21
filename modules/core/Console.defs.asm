@@ -16,7 +16,8 @@ _CONSOLE_DEFS:	equ	1
 
 			rsreset
 Console_RAM				equ		__rs
-Console.ScreenPosReq	rs.l	1				;		screen position request for VDP
+Console.ScreenPosReq	rs.l	1				;		current on-screen position request for VDP
+Console.ScreenRowReq:	rs.l	1				;		start of row position request for VDP
 Console.CharsPerLine	rs.w	1				; d2	number of characters per line
 Console.CharsRemaining	rs.w	1				; d3	remaining number of characters
 Console.BasePattern		rs.w	1				; d4	base pattern
