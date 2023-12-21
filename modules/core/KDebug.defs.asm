@@ -27,7 +27,7 @@ KDebug &
 			lea		4*4(sp), a2
 		endc
 		lea		@str\@(pc), a1
-		jsr		KDebug_\0\_Formatted
+		jsr		KDebug_\0\_Formatted(pc)
 		movem.l	(sp)+, a0-a2/d7
 		if (__sp>8)
 			lea		__sp(sp), sp
@@ -43,7 +43,7 @@ KDebug &
 
 	elseif strcmp("\0","breakline")|strcmp("\0","BreakLine")
 		move.w	sr, -(sp)
-		jsr		KDebug_FlushLine
+		jsr		KDebug_FlushLine(pc)
 		move.w	(sp)+, sr
 
 	elseif strcmp("\0","starttimer")|strcmp("\0","StartTimer")
