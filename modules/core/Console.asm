@@ -103,7 +103,8 @@ Console_InitShared:	__global
 
 	; Init Console RAM
 	move.l	a3, usp					; remember Console RAM pointer in USP to restore it in later calls
-	move.l	d5,	(a3)+				; Console RAM => copy screen position (long)
+	move.l	d5,	(a3)+				; Console RAM => set current position (long)
+	move.l	d5,	(a3)+				; Console RAM => set start-of-line position (long)
 	move.l	(a1)+, (a3)+			; Console RAM => copy number of characters per line (word) + characters remaining for the current line (word)
 	move.l	(a1)+, (a3)+			; Console RAM => copy base pattern (word) + screen row size (word)
 	move.w	#_ConsoleMagic<<8, (a3)+; Console RAM => set magic number, clear reserved byte
@@ -151,16 +152,16 @@ Console_SetPosAsXY: __global
 	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 
-	move.w	(a3), d2
-	and.w	#$E000, d2				; clear out displacement, leave base offset only
+	move.w	Console.ScreenRowReq(a3), d2
+	and.w	#$E000, d2						; clear out displacement, leave base offset only
 	mulu.w	Console.ScreenRowSz(a3), d1
 	add.w	d1, d2
 	add.w	d0, d2
 	add.w	d0, d2
-	move.w	d2, (a3)
-	move.l	(a3)+, VDP_Ctrl
-
-	move.w	(a3)+, (a3)+			; Reset remaining characters counter
+	move.w	d2, (a3)						; Console RAM => update current position
+	move.w	d2, Console.ScreenRowReq(a3)	; Console RAM => update start-of-line position
+	addq.w	#8, a3
+	move.w	(a3)+, (a3)+					; Reset remaining characters counter
 
 @quit:
 	movem.l	(sp)+, d1-d2/a3
@@ -204,12 +205,13 @@ Console_StartNewLine: __global
 	bne.s	@quit
 
 	move.w	d0, -(sp)
-	move.w	(a3), d0
+	move.w	Console.ScreenRowReq(a3), d0
 	add.w	Console.ScreenRowSz(a3), d0
 	; TODOh: Check if offset is out of plane boundaries
 	and.w	#$5FFF, d0			; make sure line stays within plane
-	move.w	d0, (a3)			; save new position
-	move.l	(a3)+, VDP_Ctrl
+	move.w	d0, (a3)						; Console RAM => update current position
+	move.w	d0, Console.ScreenRowReq(a3)	; Console RAM => update start-of-line position
+	addq.w	#8, a3
 	move.w	(a3)+, (a3)+		; reset characters on line counter (copy "CharsPerLine" to "CharsRemaining")
 
 	move.w	(sp)+, d0
@@ -283,19 +285,22 @@ Console_WriteLine: __global
 
 ; ---------------------------------------------------------------
 Console_Write: __global
-	movem.l	d1-d6/a3/a6, -(sp)
+	movem.l	d1-d7/a3/a6, -(sp)
 	move.l	usp, a3
 	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 
 	; Load console variables
-	move.l	(a3)+, d5			; d5 = VDP screen position request
+	movem.l	(a3)+, d5/d7		; d5 = VDP request: current position
+								; d7 = VDP request: start-of-line position
 	movem.w	(a3), d2-d4/d6		; d2 = number of characters per line
 
 	swap	d6					; d3 = number of characters remaining until next line
 								; d4 = base pattern
 								; d6 = screen position increment value
 	lea		VDP_Data, a6		; a6 = VDP_Data
+	move.l	d5, 4(a6)			; VDP => set current position
+	swap	d5
 
 	; First iteration in @loop, unrolled
 	moveq	#0, d1
@@ -305,23 +310,27 @@ Console_Write: __global
 
 @done:
 	movem.w	d2-d4, (a3)			; save d2-d4 (ignore d6 as it won't get changes anyways ...)
-	move.l	d5, -(a3)			; save screen position
+	swap	d5
+	movem.l	d5/d7, -(a3)		; save current and start-of-line positions
 	
 @quit:
-	movem.l	(sp)+, d1-d6/a3/a6
+	movem.l	(sp)+, d1-d7/a3/a6
 	rts
 
 ; ---------------------------------------------------------------
 	@loop:
 		dbf		d3, @writechar
 		add.w	d2, d3				; restore number of characters per line
-		add.l	d6, d5
-		bclr	#29, d5
-		move.l	d5, 4(a6)			; setup screen position
+		add.l	d6, d7
+		bclr	#29, d7
+		move.l	d7, 4(a6)			; setup screen position
+		move.l	d7, d5				; current position = start-of-line position
+		swap	d5
 
 	@writechar:
 		add.w	d4, d1  			; add base pattern
 		move.w	d1, (a6)			; draw
+		addq.w	#2, d5				; next character position
 
 	@nextchar:
 		moveq	#0, d1
@@ -338,9 +347,9 @@ Console_Write: __global
 @CommandHandlers:
 
 	; For flags E0-EF (no arguments)
-	add.l	d6, d5						; $00	; codes E0-E1 : start a new line
+	add.l	d6, d7						; $00	; codes E0-E1 : start a new line
 	moveq	#29, d1 					; $02	; codes E2-E3 : <<UNUSED>>
-	bclr	d1, d5						; $04	; codes E4-E5 : <<UNUSED>>
+	bclr	d1, d7						; $04	; codes E4-E5 : <<UNUSED>>
 	bra.s	@reset_line					; $06	; codes E6-E7 : reset position to the beginning of line
 	bra.s	@set_palette_line_0			; $08	; codes E8-E9 : set palette line #0
 	bra.s	@set_palette_line_1			; $0A	; codes EA-EB : set palette line #1
@@ -357,14 +366,16 @@ Console_Write: __global
 	add.w	d1, d1						; $1C	; codes FC-FD : <<UNUSED>>
 	moveq	#-$80, d3					; $1E	; codes FE-FF : <<UNUSED>>
 	swap	d3							;
-	and.l	d3, d5						;
+	and.l	d3, d7						;
 	swap	d1							;
-	or.l	d1, d5						;
+	or.l	d1, d7						;
 ;	bra.s	@reset_line					; restore d3 anyways, as it's corrupted
 
 @reset_line:
 	move.w	d2, d3
-	move.l	d5, 4(a6)
+	move.l	d7, 4(a6)
+	move.l	d7, d5						; current position = start-of-line position
+	swap	d5
 	bra.s	@nextchar
 
 ; ---------------------------------------------------------------

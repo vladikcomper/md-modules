@@ -9,7 +9,7 @@
 
 	include	"..\..\..\build\modules\mdshell\headless\MDShell.asm"
 
-	include	"..\..\..\build\modules\errorhandler\asm68k\Debugger.asm"
+	include	"..\..\..\build\modules\errorhandler\asm68k-debug\Debugger.asm"
 
 ; --------------------------------------------------------------
 
@@ -47,4 +47,4 @@ GlobalData:
 
 ; --------------------------------------------------------------
 
-	include	"..\..\..\build\modules\errorhandler\asm68k\ErrorHandler.asm"
+	include	"..\..\..\build\modules\errorhandler\asm68k-debug\ErrorHandler.asm"

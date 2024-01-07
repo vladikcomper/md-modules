@@ -42,7 +42,7 @@ Currently, it targets **The AS Macroassembler** and **ASM68K** assemblers. It ha
   - Assertions, widely adopted by many high-level languages, are provided by the debugger out-of-the box;
   - Use `assert` pseudo-instruction that is only compiled in DEBUG builds. This means zero run-time cost for your final (RELEASE) builds to implement self-testing code.
 
-- __KDebug integration for logging, breakpoints and cycle-counting (experimental).__
+- __KDebug integration for logging, breakpoints and cycle-counting.__
   - Display formatted strings at any point straight in your emulator's debug console!
   - Use a similar "high-level" macro interface as in console programs (`KDebug.WriteLine` instead of `Console.WriteLine`), but without interrupting your programs;
   - Currently, the only emulators to support KDebug are Gens KMod and Blastem-nightly;

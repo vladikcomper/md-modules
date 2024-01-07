@@ -64,15 +64,12 @@ MyFunction:
 	endc					; endif in AS
 ```
 
-## Problem: Using `KDebug` or `Console.Write` alongside VRAM writes has side effects
+## Problem: Using `KDebug` or `Console` alongside VRAM writes has side effects
 
-Be extremely careful when using `KDebug` or `Console.Write`/`.WriteLine`/`.BreakLine` to debug code that does VRAM/CRAM/VSRAM access. All these macros access VDP, so it resets the last accessed VRAM/CRAM/VSRAM address. Moreover, setting a different VRAM/CRAM/VSRAM address in-between `Console.Write` calls will disrupt Console output, because `Console` expects last VRAM address to point to the next on-screen tile to draw on.
+Be extremely careful when using `KDebug` or `Console.Write`/`.WriteLine`/`.BreakLine` to debug code that does VRAM/CRAM/VSRAM access. All these macros access VDP, so it resets the last accessed VRAM/CRAM/VSRAM address. Moreover, `Console.Write` calls set last write address to on-screen output so your code may output data to the screen instead of the intended location.
 
 This is a hardware limitation unfortunately, there isn't a universal workaround for this.
 
 To make debugging VDP writes as pain-free as possible, follow this advice:
-1. Use `Console.BreakLine` before `Console.Write`, `Console.WriteLine` to reset VDP access address; `Console.Write "%<endl>You new line"` also works;
-2. Avoid writing to VDP in-between `Console.Write` calls; if you absolutely have to, manually set the write address each time and use the advice above with `Console.BreakLine`;
-3. Prefer `KDebug.WriteLine` if possible as it only resets the last accessed VDP address, but doesn't do any VDP writes.
-
-
+- Make sure you don't call `KDebug` or `Console` macros in-between VDP data port writes.
+- If you absolutely have to, manually set VDP write address after each macro call.

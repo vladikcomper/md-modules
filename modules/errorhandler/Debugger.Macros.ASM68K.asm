@@ -170,12 +170,16 @@ Console &
 	endc
 	endm
 
-#ifndef MD-SHELL
 ; ---------------------------------------------------------------
+; KDebug integration interface
+; ---------------------------------------------------------------
+
 KDebug &
 	macro
 
+#ifndef MD-SHELL
 	if def(__DEBUG__)	; KDebug interface is only available in DEBUG builds
+#endif
 	if strcmp("\0","write")|strcmp("\0","writeline")|strcmp("\0","Write")|strcmp("\0","WriteLine")
 		move.w	sr, -(sp)
 
@@ -233,10 +237,11 @@ KDebug &
 		inform	2,"""\0"" isn't a member of ""KDebug"""
 
 	endc
+#ifndef MD-SHELL
 	endc
+#endif
 	endm
 
-#endif
 ; ---------------------------------------------------------------
 __ErrorMessage &
 	macro	string, opts

@@ -5,24 +5,24 @@ This document covers the essential Debugger's API, which is presented in form of
 
 ## Table of contents
 
-- [`assert`](#assert)
-- [`RaiseError`](#raiseerror)
-- [`Console` macros](#console-macros)
-  - [`Console.Run`](#consolerun)
-  - [`Console.Write`](#consolewrite-and-consolewriteline)
-  - [`Console.WriteLine`](#consolewrite-and-consolewriteline)
-  - [`Console.SetXY`](#consolesetxy)
-  - [`Console.BreakLine`](#consolebreakline)
-  - [`Console.Clear`](#consoleclear)
-  - [`Console.Sleep`](#consolesleep)
-  - [`Console.Pause`](#consolepause)
-- [`KDebug` macros](#kdebug-macros)
-  - [`KDebug.Write`](#kdebugwriteline-and-kdebugwrite)
-  - [`KDebug.WriteLine`](#kdebugwriteline-and-kdebugwrite)
-  - [`KDebug.BreakLine`](#kdebugbreakline)
-  - [`KDebug.BreakPoint`](#kdebugbreakpoint)
-  - [`KDebug.StartTimer`](#kdebugstarttimer-and-kdebugendtimer)
-  - [`KDebug.EndTimer`](#kdebugstarttimer-and-kdebugendtimer)
+- [assert](#assert)
+- [RaiseError](#raiseerror)
+- [Console macros](#console-macros)
+  - [Console.Run](#consolerun)
+  - [Console.Write](#consolewrite-and-consolewriteline)
+  - [Console.WriteLine](#consolewrite-and-consolewriteline)
+  - [Console.SetXY](#consolesetxy)
+  - [Console.BreakLine](#consolebreakline)
+  - [Console.Clear](#consoleclear)
+  - [Console.Sleep](#consolesleep)
+  - [Console.Pause](#consolepause)
+- [KDebug macros](#kdebug-macros)
+  - [KDebug.Write](#kdebugwriteline-and-kdebugwrite)
+  - [KDebug.WriteLine](#kdebugwriteline-and-kdebugwrite)
+  - [KDebug.BreakLine](#kdebugbreakline)
+  - [KDebug.BreakPoint](#kdebugbreakpoint)
+  - [KDebug.StartTimer](#kdebugstarttimer-and-kdebugendtimer)
+  - [KDebug.EndTimer](#kdebugstarttimer-and-kdebugendtimer)
 
 ## `assert`
 
@@ -124,7 +124,7 @@ There are several ways to call a _console program_:
 - By mapping it to a joypad button on exception screen (see `DEBUGGER__EXTENSIONS__BTN_C_DEBUGGER` in `Debugger.asm`);
 - Via `Console.Run`.
 
-> **Note**
+> [!NOTE]
 >
 > If you use `Console` macros outside of a console program, nothing bad happens as the output is suppressed. So there are no side effects, except for wasted CPU cycles. This means you can insert `Console.Write/.WriteLine` statements in subroutines that can be used called both inside and outside of the console.
 
@@ -288,11 +288,7 @@ Pauses console program execution until A, B, C or Start button is pressed on the
 
 ## `KDebug` macros
 
-> **Warning**
->
-> Experimental feature! This API or its behaviour may have breaking changes in the future revisions.
-
-This set of macros provides an experimental interface for logging, timing code and breakpoints in emulators the support KMod debug registers.
+This set of macros provides a convenient interface for logging (similar to `Console.Write`/`.WriteLine`), timing code and breakpoints in emulators the support KMod debug registers.
 
 Currently, the only emulators to support KDebug are:
 - Blastem-nightly;
@@ -300,11 +296,11 @@ Currently, the only emulators to support KDebug are:
 
 **`KDebug` macros are only compiled in DEBUG builds.** On unsupported emulators and the real hardware, these macros have no effect either way.
 
-Under the hood, `KDebug` macros communicate with the emulator via unused VDP registers. This, lucky enough, has no side effects on the real hardware. But be careful when using it in code that does VDP access for that very reason: this resets the last VDP access address.
+Under the hood, `KDebug` macros communicate with the emulator via unused VDP registers. This, lucky enough, has no side effects on the real hardware. But be careful when using it in the middle of the code that writes to VDP data port for that very reason: `KDebug` resets the last VDP access address. **This is a hardware quirk.**
 
-> **Warning**
+> [!WARNING]
 >
-> Watch out when using `KDebug` macros in code that writes data to VDP. If used in-between writes, this resets the write address, so your writes may be disrupted. **This is a hardware limitation.**
+> Avoid using `KDebug` macros _in-between_ VDP data port writes. Since `KDebug` integration accesses its own VDP registers, this resets the last write address, so your writes may be disrupted. However, if you explicitly set VDP write address after using `KDebug`, everything will be fine. This is what `Console.Write` does for `KDebug` and `Console` interoperability.
 
 ## `KDebug.WriteLine` and `KDebug.Write`
 
@@ -321,13 +317,9 @@ In DEBUG builds, writes a [_formatted string_](Formatted_strings.md) in the supp
 
 For logging, `KDebug.WriteLine` has the same interface as `Console.WriteLine`, but writes text to emulator's debug logger window/console instead. It's meant to be used outside of exceptions/console programs.
 
-> **Note**
->
-> In current implementation, `KDebug.WriteLine` and `KDebug.Write` _cannot be used_ in _console programs_. The output will be suppressed. You probably don't want this anyways, as `Console.WriteLine`/`.Write` is available in debugger's native console.
-
 Unlike `Console.Write`, `KDebug.Write` doesn't output the buffer unless end of the line character (`%<endl>`) is encountered. This is emulator's quirk and cannot be changed. **Always prefer `KDebug.WriteLine` where possible**, because it ends the line for you and the message is displayed immediately.
 
-> **Warning**
+> [!WARNING]
 >
 > When using multiple `KDebug.Write` invocations to accumulate a line from several pieces/parts, never forget to put `%<endl>` in the last `.Write` or change it to `.WriteLine`. Your line won't be flushed into emulator's console unless `%<endl>` is sent.
 
@@ -362,11 +354,11 @@ In DEBUG builds, flushes the message to supported emulator's debug window/consol
 
 **Description:**
 
-In DEBUG builds, `KDebug.StartTimer` starts counting CPU cycles and `KDebug.EndTimer` displays the number elapsed cycles. Use it to measure the performance of your code.
+In DEBUG builds, `KDebug.StartTimer` starts counting CPU cycles and `KDebug.EndTimer` displays the number of elapsed cycles. Use it to measure the performance of your code.
 
 Cycle count is displayed in supported emulator's debug window/console. This has no effect on unsupported emulators, on the real hardware and in RELEASE builds.
 
-> **Warning**
+> [!WARNING]
 >
 > Out of the supported emulators, Gens KMod and Blastem-nightly seem to calculate cycles differently. **Always prefer Blastem-nightly.**
 

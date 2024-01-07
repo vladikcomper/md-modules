@@ -28,21 +28,14 @@ KDebug_Write_Formatted: __global
 
 @buffer_size = $10
 
-	move.l	usp, a0
-	cmp.b	#_ConsoleMagic, Console.Magic(a0)	; are we running console?
-	beq.s	@quit						; if yes, disable KDebug output, because it breaks VDP address
-
 	move.l	a4, -(sp)
 	lea		@FlushBuffer(pc), a4		; flushing function
 	lea		-@buffer_size(sp), sp		; allocate string buffer
 	lea		(sp), a0					; a0 = string buffer
 	moveq	#@buffer_size-2, d7			; d7 = number of characters before flush -1
-
 	jsr		FormatString(pc)
 	lea		@buffer_size(sp), sp		; free string buffer
-	
 	move.l	(sp)+, a4
-@quit:
 	rts
 
 ; ---------------------------------------------------------------
@@ -101,14 +94,7 @@ KDebug_Write_Formatted: __global
 ; -----------------------------------------------------------------------------
 
 KDebug_FlushLine:	__global
-	move.l	a0, -(sp)
-	move.l	usp, a0
-	cmp.b	#_ConsoleMagic, Console.Magic(a0)	; are we running console?
-	beq.s	@quit						; if yes, disable KDebug output, because it breaks VDP address
-
 	move.w	#$9E00, VDP_Ctrl			; send null-terminator
-@quit:
-	move.l	(sp)+, a0
 	rts
 
 
@@ -133,10 +119,6 @@ KDebug_WriteLine:	__global
 KDebug_Write:	__global
 	move.w	d7, -(sp)
 	move.l	a5, -(sp)
-
-	move.l	usp, a5
-	cmp.b	#_ConsoleMagic, Console.Magic(a5)	; are we running console?
-	beq.s	@write_buffer_done					; if yes, disable KDebug output, because it breaks VDP address
 
 	lea		VDP_Ctrl, a5
 	move.w	#$9E00, d7

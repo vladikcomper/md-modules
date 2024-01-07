@@ -60,7 +60,7 @@ Viewing messages on Linux is easy and straightforward: just launch the emulator 
 
 ## Setting up Gens KMod (not recommended)
 
-> **Warning**
+> [!WARNING]
 > 
 > Kens KMod is a heavily outdated and inaccurate emulator. **Using it is not recommended.**
 
