@@ -29,9 +29,13 @@ Main:
 
 ; --------------------------------------------------------------
 TestProgram:
+	KDebug.WriteLine "Entering test program..."
+
 	Console.SetXY #1, #1
 	Console.Write "%<pal1>Refreshing in ~1 second..."
+	KDebug.WriteLine "About to call Console.Sleep..."
 	Console.Sleep #60
+	KDebug.WriteLine "Console.Sleep finished"
 	Console.Clear
 
 	Console.WriteLine "Refreshed!"
@@ -49,37 +53,20 @@ TestProgram:
 	jsr		CheckRegisterIntergity
 
 	Console.Write "Paused. Press A/B/C/Start to continue..."
+	KDebug.WriteLine "Prepare to call Console.Pause..."
 	Console.Pause
+	KDebug.WriteLine "Console.Pause called"
 	Console.WriteLine "WELL PRESSED!"
+	KDebug.WriteLine "Printed success message to the console"
 
 	jsr		CheckRegisterIntergity
 
-	KDebug.WriteLine "You shouldn't see this."
-	KDebug.Write "You still shouldn't see "
-	KDebug.Write "this!%<endl>"
-
-	; WARNING! This temporarily disables console!
-	pea		0.w							; allocate 4 bytes on the stack
-	move.l	a3, -(sp)
-	move.l	usp, a3
-	move.l	a3, 4(sp)					; remember USP
-	suba.w	a3, a3
-	move.l	a3, usp
-	move.l	(sp)+, a3
-
-	KDebug.WriteLine "You should see this now!"
-	KDebug.Write "You still should see "
-	KDebug.Write "this!%<endl>"
+	KDebug.WriteLine "Testing KDebug writes exclusively..."
+	KDebug.Write "You should see "
+	KDebug.Write "this line once endl token is encountered!%<endl>"
 	KDebug.Write "This line is extremely long and certainly flushes the buffer several times!"
 	KDebug.BreakLine
 
-	; WARNING! This re-enables console
-	move.l	a3, -(sp)
-	move.l	4(sp), a3
-	move.l	a3, usp
-	move.l	(sp)+, a3
-	addq.w	#4, sp						; free 4 bytes we previously allocated
-
 	KDebug.StartTimer
 	nop
 	nop
@@ -100,6 +87,7 @@ TestProgram:
 	nop
 	KDebug.EndTimer
 
+	KDebug.WriteLine "You should see debugger now. Type 'c' and press Enter to continue..."
 	KDebug.BreakPoint
 
 	Console.BreakLine
