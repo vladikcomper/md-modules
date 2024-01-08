@@ -29,7 +29,7 @@ KDebug &
 			movem.l	a0-a2/d7, -(sp)
 			lea		4*4(sp), a2
 			lea		@str\@(pc), a1
-			jsr		__global__KDebug_\0\_Formatted(pc)
+			jsr		KDebug_\0\_Formatted(pc)
 			movem.l	(sp)+, a0-a2/d7
 			if (__sp>8)
 				lea		__sp(sp), sp
@@ -41,7 +41,7 @@ KDebug &
 		else
 			move.l	a0, -(sp)
 			lea		@str\@(pc), a0
-			jsr		__global__KDebug_\0(pc)
+			jsr		KDebug_\0(pc)
 			move.l	(sp)+, a0
 		endc
 
@@ -59,17 +59,17 @@ KDebug &
 
 	elseif strcmp("\0","starttimer")|strcmp("\0","StartTimer")
 		move.w	sr, -(sp)
-		move.w	#$9FC0, ($C00004).l
+		move.w	#$9FC0, VDP_Ctrl
 		move.w	(sp)+, sr
 
 	elseif strcmp("\0","endtimer")|strcmp("\0","EndTimer")
 		move.w	sr, -(sp)
-		move.w	#$9F00, ($C00004).l
+		move.w	#$9F00, VDP_Ctrl
 		move.w	(sp)+, sr
 
 	elseif strcmp("\0","breakpoint")|strcmp("\0","BreakPoint")
 		move.w	sr, -(sp)
-		move.w	#$9D00, ($C00004).l
+		move.w	#$9D00, VDP_Ctrl
 		move.w	(sp)+, sr
 
 	else
