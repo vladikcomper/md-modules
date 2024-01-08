@@ -41,14 +41,14 @@ RaiseError &
 	pea		*(pc)
 	move.w	sr, -(sp)
 	__FSTRING_GenerateArgumentsCode \string
-	jsr		__global__ErrorHandler
+	jsr		MDDBG__ErrorHandler
 	__FSTRING_GenerateDecodedString \string
 	if strlen("\console_program")			; if console program offset is specified ...
 		dc.b	\opts+_eh_enter_console|(((*&1)^1)*_eh_align_offset)	; add flag "_eh_align_offset" if the next byte is at odd offset ...
 		even															; ... to tell Error handler to skip this byte, so it'll jump to ...
 		if DEBUGGER__EXTENSIONS__ENABLE
 			jsr		\console_program										; ... an aligned "jsr" instruction that calls console program itself
-			jmp		__global__ErrorHandler_PagesController
+			jmp		MDDBG__ErrorHandler_PagesController
 		else
 			jmp		\console_program										; ... an aligned "jmp" instruction that calls console program itself
 		endc
@@ -56,7 +56,7 @@ RaiseError &
 		if DEBUGGER__EXTENSIONS__ENABLE
 			dc.b	\opts+_eh_return|(((*&1)^1)*_eh_align_offset)			; add flag "_eh_align_offset" if the next byte is at odd offset ...
 			even															; ... to tell Error handler to skip this byte, so it'll jump to ...
-			jmp		__global__ErrorHandler_PagesController
+			jmp		MDDBG__ErrorHandler_PagesController
 		else
 			dc.b	\opts+0						; otherwise, just specify \opts for error handler, +0 will generate dc.b 0 ...
 			even								; ... in case \opts argument is empty or skipped
@@ -93,7 +93,7 @@ Console &
 			movem.l	a0-a2/d7, -(sp)
 			lea		4*4(sp), a2
 			lea		@str\@(pc), a1
-			jsr		__global__Console_\0\_Formatted
+			jsr		MDDBG__Console_\0\_Formatted
 			movem.l	(sp)+, a0-a2/d7
 			if (__sp>8)
 				lea		__sp(sp), sp
@@ -105,7 +105,7 @@ Console &
 		else
 			move.l	a0, -(sp)
 			lea		@str\@(pc), a0
-			jsr		__global__Console_\0
+			jsr		MDDBG__Console_\0
 			move.l	(sp)+, a0
 		endc
 
@@ -118,19 +118,19 @@ Console &
 
 #ifndef MD-SHELL
 	elseif strcmp("\0","run")|strcmp("\0","Run")
-		jsr		__global__ErrorHandler_ConsoleOnly
+		jsr		MDDBG__ErrorHandler_ConsoleOnly
 		jsr		\1
 		bra.s	*
 
 #endif
 	elseif strcmp("\0","clear")|strcmp("\0","Clear")
 		move.w	sr, -(sp)
-		jsr		__global__ErrorHandler_ClearConsole
+		jsr		MDDBG__ErrorHandler_ClearConsole
 		move.w	(sp)+, sr
 
 	elseif strcmp("\0","pause")|strcmp("\0","Pause")
 		move.w	sr, -(sp)
-		jsr		__global__ErrorHandler_PauseConsole
+		jsr		MDDBG__ErrorHandler_PauseConsole
 		move.w	(sp)+, sr
 
 	elseif strcmp("\0","sleep")|strcmp("\0","Sleep")
@@ -141,7 +141,7 @@ Console &
 		subq.w	#1, d0
 		bcs.s	@sleep_done\@
 		@sleep_loop\@:
-			jsr		__global__VSync
+			jsr		MDDBG__VSync
 			dbf		d0, @sleep_loop\@
 
 	@sleep_done\@:
@@ -154,14 +154,14 @@ Console &
 		movem.l	d0-d1, -(sp)
 		move.w	\2, -(sp)
 		move.w	\1, -(sp)
-		jsr		__global__Console_SetPosAsXY_Stack
+		jsr		MDDBG__Console_SetPosAsXY_Stack
 		addq.w	#4, sp
 		movem.l	(sp)+, d0-d1
 		move.w	(sp)+, sr
 
 	elseif strcmp("\0","breakline")|strcmp("\0","BreakLine")
 		move.w	sr, -(sp)
-		jsr		__global__Console_StartNewLine
+		jsr		MDDBG__Console_StartNewLine
 		move.w	(sp)+, sr
 
 	else
@@ -190,7 +190,7 @@ KDebug &
 			movem.l	a0-a2/d7, -(sp)
 			lea		4*4(sp), a2
 			lea		@str\@(pc), a1
-			jsr		__global__KDebug_\0\_Formatted
+			jsr		MDDBG__KDebug_\0\_Formatted
 			movem.l	(sp)+, a0-a2/d7
 			if (__sp>8)
 				lea		__sp(sp), sp
@@ -202,7 +202,7 @@ KDebug &
 		else
 			move.l	a0, -(sp)
 			lea		@str\@(pc), a0
-			jsr		__global__KDebug_\0
+			jsr		MDDBG__KDebug_\0
 			move.l	(sp)+, a0
 		endc
 
@@ -215,7 +215,7 @@ KDebug &
 
 	elseif strcmp("\0","breakline")|strcmp("\0","BreakLine")
 		move.w	sr, -(sp)
-		jsr		__global__KDebug_FlushLine
+		jsr		MDDBG__KDebug_FlushLine
 		move.w	(sp)+, sr
 
 	elseif strcmp("\0","starttimer")|strcmp("\0","StartTimer")
@@ -246,12 +246,12 @@ KDebug &
 __ErrorMessage &
 	macro	string, opts
 		__FSTRING_GenerateArgumentsCode \string
-		jsr		__global__ErrorHandler
+		jsr		MDDBG__ErrorHandler
 		__FSTRING_GenerateDecodedString \string
 		if DEBUGGER__EXTENSIONS__ENABLE
 			dc.b	\opts+_eh_return|(((*&1)^1)*_eh_align_offset)	; add flag "_eh_align_offset" if the next byte is at odd offset ...
 			even													; ... to tell Error handler to skip this byte, so it'll jump to ...
-			jmp		__global__ErrorHandler_PagesController	; ... extensions controller
+			jmp		MDDBG__ErrorHandler_PagesController				; ... extensions controller
 		else
 			dc.b	\opts+0
 			even

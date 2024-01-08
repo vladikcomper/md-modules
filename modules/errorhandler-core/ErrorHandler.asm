@@ -3,11 +3,14 @@
 ; -----------------------------------------------------------------------------
 ; MD Debugger and Error Handler
 ;
-; (c) 2016-2023, Vladikcomper
+; (c) 2016-2024, Vladikcomper
 ; -----------------------------------------------------------------------------
 ; Error Handler Screen
 ; -----------------------------------------------------------------------------
 
+	if def(__LINKABLE__)
+		section	rom
+	endc
 
 	include	'..\core\Macros.asm'
 	include	'..\core\KDebug.defs.asm'
@@ -347,8 +350,13 @@ Error_DrawOffsetLocation2:	__global
 	move.l	d1, -(sp)
 	lea		(sp), a2						; a2 = arguments buffer
 
+	; Non-linkable builds can override "Str_OffsetLocation_24bit"
+	; using Blob2Asm (poor man's linker)
+	if def(__LINKABLE__)=0
 Error_DrawOffsetLocation__inj:	__global
+	endc
 	lea		Str_OffsetLocation_24bit(pc), a1
+
 	jsr		Console_WriteLine_Formatted(pc)
 	addq.w	#8,sp							; free arguments buffer
 	rts

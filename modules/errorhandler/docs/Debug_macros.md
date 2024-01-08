@@ -288,7 +288,7 @@ Pauses console program execution until A, B, C or Start button is pressed on the
 
 ## `KDebug` macros
 
-This set of macros provides a convenient interface for logging (similar to `Console.Write`/`.WriteLine`), timing code and breakpoints in emulators the support KMod debug registers.
+This set of macros provides a convenient interface for debug logging, timing code and breakpoints in emulators that support KMod debug registers.
 
 Currently, the only emulators to support KDebug are:
 - Blastem-nightly;

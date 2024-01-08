@@ -3,7 +3,7 @@
 ; -----------------------------------------------------------------------------
 ; MD Debugger and Error Handler
 ;
-; (c) 2016-2023, Vladikcomper
+; (c) 2016-2024, Vladikcomper
 ; -----------------------------------------------------------------------------
 
 ; -----------------------------------------------------------------------------
@@ -42,7 +42,15 @@
 	include	'..\errorhandler-core\Debugger_AddressRegisters.asm'
 	include	'..\errorhandler-core\Debugger_Backtrace.asm'
 
-	if def(_USE_SYMBOL_DATA_REF_)=0
+	if def(__LINKABLE__)
+; -----------------------------------------------------------------------------
+; Linkable builds include pre-defined exceiption vectors
+; -----------------------------------------------------------------------------
+
+	include	'..\errorhandler-core\Exceptions.asm'
+	endc
+
+	if def(__EXTSYM__)=0
 ; -----------------------------------------------------------------------------
 ; Symbol table at the end of the ROM
 ; -----------------------------------------------------------------------------

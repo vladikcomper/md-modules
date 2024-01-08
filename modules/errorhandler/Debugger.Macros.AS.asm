@@ -83,7 +83,7 @@ RaiseError	macro	string, consoleprogram, opts
 	pea		*(pc)
 	move.w	sr, -(sp)
 	__FSTRING_GenerateArgumentsCode string
-	jsr		__global__ErrorHandler
+	jsr		MDDBG__ErrorHandler
 	__FSTRING_GenerateDecodedString string
 	if ("consoleprogram"<>"")			; if console program offset is specified ...
 		.__align_flag:	set	((((*)&1)!1)*_eh_align_offset)
@@ -95,7 +95,7 @@ RaiseError	macro	string, consoleprogram, opts
 		!align	2													; ... to tell Error handler to skip this byte, so it'll jump to ...
 		if DEBUGGER__EXTENSIONS__ENABLE
 			jsr		consoleprogram										; ... an aligned "jsr" instruction that calls console program itself
-			jmp		__global__ErrorHandler_PagesController
+			jmp		MDDBG__ErrorHandler_PagesController
 		else
 			jmp		consoleprogram										; ... an aligned "jmp" instruction that calls console program itself
 		endif
@@ -108,7 +108,7 @@ RaiseError	macro	string, consoleprogram, opts
 				dc.b	_eh_return|.__align_flag							; add flag "_eh_align_offset" if the next byte is at odd offset ...
 			endif
 			!align	2													; ... to tell Error handler to skip this byte, so it'll jump to ...
-			jmp		__global__ErrorHandler_PagesController
+			jmp		MDDBG__ErrorHandler_PagesController
 		else
 			dc.b	opts+0						; otherwise, just specify \opts for error handler, +0 will generate dc.b 0 ...
 			!align	2							; ... in case \opts argument is empty or skipped
@@ -146,7 +146,7 @@ Console	macro	argument1, argument2
 			movem.l	a0-a2/d7, -(sp)
 			lea		4*4(sp), a2
 			lea		.__data(pc), a1
-			jsr		__global__Console_Write_Formatted
+			jsr		MDDBG__Console_Write_Formatted
 			movem.l	(sp)+, a0-a2/d7
 			if (.__sp>8)
 				lea		.__sp(sp), sp
@@ -158,7 +158,7 @@ Console	macro	argument1, argument2
 		else
 			move.l	a0, -(sp)
 			lea		.__data(pc), a0
-			jsr		__global__Console_Write
+			jsr		MDDBG__Console_Write
 			move.l	(sp)+, a0
 		endif
 
@@ -179,7 +179,7 @@ Console	macro	argument1, argument2
 			movem.l	a0-a2/d7, -(sp)
 			lea		4*4(sp), a2
 			lea		.__data(pc), a1
-			jsr		__global__Console_WriteLine_Formatted
+			jsr		MDDBG__Console_WriteLine_Formatted
 			movem.l	(sp)+, a0-a2/d7
 			if (.__sp>8)
 				lea		.__sp(sp), sp
@@ -190,7 +190,7 @@ Console	macro	argument1, argument2
 		else
 			move.l	a0, -(sp)
 			lea		.__data(pc), a0
-			jsr		__global__Console_WriteLine
+			jsr		MDDBG__Console_WriteLine
 			move.l	(sp)+, a0
 		endif
 
@@ -203,19 +203,19 @@ Console	macro	argument1, argument2
 
 #ifndef MD-SHELL
 	case "run"
-		jsr		__global__ErrorHandler_ConsoleOnly
+		jsr		MDDBG__ErrorHandler_ConsoleOnly
 		jsr		argument1
 		bra.s	*
 
 #endif
 	case "clear"
 		move.w	sr, -(sp)
-		jsr		__global__ErrorHandler_ClearConsole
+		jsr		MDDBG__ErrorHandler_ClearConsole
 		move.w	(sp)+, sr
 
 	case "pause"
 		move.w	sr, -(sp)
-		jsr		__global__ErrorHandler_PauseConsole
+		jsr		MDDBG__ErrorHandler_PauseConsole
 		move.w	(sp)+, sr
 
 	case "sleep"
@@ -226,7 +226,7 @@ Console	macro	argument1, argument2
 		subq.w	#1, d0
 		bcs.s	.__sleep_done
 		.__sleep_loop:
-			jsr		__global__VSync
+			jsr		MDDBG__VSync
 			dbf		d0, .__sleep_loop
 
 	.__sleep_done:
@@ -239,14 +239,14 @@ Console	macro	argument1, argument2
 		movem.l	d0-d1, -(sp)
 		move.w	argument2, -(sp)
 		move.w	argument1, -(sp)
-		jsr		__global__Console_SetPosAsXY_Stack
+		jsr		MDDBG__Console_SetPosAsXY_Stack
 		addq.w	#4, sp
 		movem.l	(sp)+, d0-d1
 		move.w	(sp)+, sr
 
 	case "breakline"
 		move.w	sr, -(sp)
-		jsr		__global__Console_StartNewLine
+		jsr		MDDBG__Console_StartNewLine
 		move.w	(sp)+, sr
 
 	elsecase
@@ -274,7 +274,7 @@ KDebug	macro	argument1
 			movem.l	a0-a2/d7, -(sp)
 			lea		4*4(sp), a2
 			lea		.__data(pc), a1
-			jsr		__global__KDebug_Write_Formatted
+			jsr		MDDBG__KDebug_Write_Formatted
 			movem.l	(sp)+, a0-a2/d7
 			if (.__sp>8)
 				lea		.__sp(sp), sp
@@ -286,7 +286,7 @@ KDebug	macro	argument1
 		else
 			move.l	a0, -(sp)
 			lea		.__data(pc), a0
-			jsr		__global__KDebug_Write
+			jsr		MDDBG__KDebug_Write
 			move.l	(sp)+, a0
 		endif
 
@@ -306,7 +306,7 @@ KDebug	macro	argument1
 			movem.l	a0-a2/d7, -(sp)
 			lea		4*4(sp), a2
 			lea		.__data(pc), a1
-			jsr		__global__KDebug_WriteLine_Formatted
+			jsr		MDDBG__KDebug_WriteLine_Formatted
 			movem.l	(sp)+, a0-a2/d7
 			if (.__sp>8)
 				lea		.__sp(sp), sp
@@ -318,7 +318,7 @@ KDebug	macro	argument1
 		else
 			move.l	a0, -(sp)
 			lea		.__data(pc), a0
-			jsr		__global__KDebug_WriteLine
+			jsr		MDDBG__KDebug_WriteLine
 			move.l	(sp)+, a0
 		endif
 
@@ -331,7 +331,7 @@ KDebug	macro	argument1
 
 	case "breakline"
 		move.w	sr, -(sp)
-		jsr		__global__KDebug_FlushLine
+		jsr		MDDBG__KDebug_FlushLine
 		move.w	(sp)+, sr
 
 	case "starttimer"
@@ -361,14 +361,14 @@ KDebug	macro	argument1
 ; ---------------------------------------------------------------
 __ErrorMessage  macro string, opts
 		__FSTRING_GenerateArgumentsCode string
-		jsr		__global__ErrorHandler
+		jsr		MDDBG__ErrorHandler
 		__FSTRING_GenerateDecodedString string
 
 		if DEBUGGER__EXTENSIONS__ENABLE
 		.__align_flag: set (((*)&1)!1)*_eh_align_offset
 			dc.b	(opts)+_eh_return|.__align_flag	; add flag "_eh_align_offset" if the next byte is at odd offset ...
 			!align	2												; ... to tell Error handler to skip this byte, so it'll jump to ...
-			jmp		__global__ErrorHandler_PagesController	; ... extensions controller
+			jmp		MDDBG__ErrorHandler_PagesController	; ... extensions controller
 		else
 			dc.b	(opts)+0
 			!align	2

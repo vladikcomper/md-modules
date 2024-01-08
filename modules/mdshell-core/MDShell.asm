@@ -260,7 +260,7 @@ IdleInt:	__global
 ; ---------------------------------------------------------------
 
 ; Tell error handler that we want to inject Symbol table pointer from outside
-_USE_SYMBOL_DATA_REF_: equ 1
+__EXTSYM__: equ 1
 
 	include	'..\errorhandler-core\Main.asm'
 
@@ -271,10 +271,10 @@ __blob_end:
 	endc
 
 ; ---------------------------------------------------------------
-; Error routines
+; Exception vectors
 ; ---------------------------------------------------------------
 
-	include	"Exceptions.asm"
+	include	"..\errorhandler-core\Exceptions.asm"
 
 ; ---------------------------------------------------------------
 ; Headless builds end here

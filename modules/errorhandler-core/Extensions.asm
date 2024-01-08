@@ -3,13 +3,13 @@
 ; -----------------------------------------------------------------------------
 ; MD Debugger and Error Handler
 ;
-; (c) 2016-2023, Vladikcomper
+; (c) 2016-2024, Vladikcomper
 ; -----------------------------------------------------------------------------
 ; Error Handler Extensions and utilities
 ; -----------------------------------------------------------------------------
 
 
-	include	"..\core\Macros.asm"		; for "__global", "__injectable", "VDP_Ctrl"
+	include	"..\core\Macros.asm"		; for "__global", "VDP_Ctrl"
 	include	"..\core\Console.defs.asm"	; for "Console_RAM"
 
 

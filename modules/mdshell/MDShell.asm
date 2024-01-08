@@ -6,7 +6,7 @@
 ; ---------------------------------------------------------------
 
 
-#include ../errorhandler/Debugger.Extensions.asm
+#include ../errorhandler/Debugger.Config.asm
 
 
 #include ../errorhandler/Debugger.Constants.asm

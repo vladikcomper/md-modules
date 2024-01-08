@@ -7,13 +7,15 @@ SRC_DIR ?= .
 CORE_DIR ?= ../core
 
 ASM68K ?= wine ../exec/asm68k.exe
-ASFLAGS = /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae-
+ASFLAGS = /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae-
 
-.PHONY:	all release	debug extsym tests clean
+.PHONY:	all release release-linkable debug extsym tests clean
 
-all:	release	debug extsym
+all:	release release-linkable debug extsym
 
 release:	$(BUILD_DIR)/ErrorHandler.bin $(BUILD_DIR)/ErrorHandler.Blob.asm $(BUILD_DIR)/ErrorHandler.Globals.asm
+
+release-linkable:	$(BUILD_DIR)/ErrorHandler.obj
 
 debug:	$(BUILD_DIR)/ErrorHandler.Debug.bin $(BUILD_DIR)/ErrorHandler.Debug.Blob.asm $(BUILD_DIR)/ErrorHandler.Debug.Globals.asm
 
@@ -28,29 +30,33 @@ tests:	release	debug extsym
 clean:
 	rm -f $(BUILD_DIR)/*.*
 
+# ASM68K-linkable object file
+
+$(BUILD_DIR)/ErrorHandler.obj:	$(wildcard $(SRC_DIR)/*.asm) $(wildcard $(CORE_DIR)/*.asm) | $(BUILD_DIR)
+	$(ASM68K) $(ASFLAGS) /l /e __LINKABLE__ $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.obj, , $(BUILD_DIR)/ErrorHandler.Linkable.lst
 
 # Raw unlinked binaries
 
 $(BUILD_DIR)/ErrorHandler.bin $(BUILD_DIR)/ErrorHandler.sym &:	$(wildcard $(SRC_DIR)/*.asm) $(wildcard $(CORE_DIR)/*.asm) | $(BUILD_DIR)
-	$(ASM68K) $(ASFLAGS) $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.bin, $(BUILD_DIR)/ErrorHandler.sym, $(BUILD_DIR)/ErrorHandler.lst
+	$(ASM68K) $(ASFLAGS) /p $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.bin, $(BUILD_DIR)/ErrorHandler.sym, $(BUILD_DIR)/ErrorHandler.lst
 
 $(BUILD_DIR)/ErrorHandler.Debug.bin $(BUILD_DIR)/ErrorHandler.Debug.sym &:	$(wildcard $(SRC_DIR)/*.asm) $(wildcard $(CORE_DIR)/*.asm) | $(BUILD_DIR)
-	$(ASM68K) $(ASFLAGS) /e __DEBUG__ $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.Debug.bin, $(BUILD_DIR)/ErrorHandler.Debug.sym, $(BUILD_DIR)/ErrorHandler.Debug.lst
+	$(ASM68K) $(ASFLAGS) /p /e __DEBUG__ $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.Debug.bin, $(BUILD_DIR)/ErrorHandler.Debug.sym, $(BUILD_DIR)/ErrorHandler.Debug.lst
 
 $(BUILD_DIR)/ErrorHandler.ExtSymbols.bin $(BUILD_DIR)/ErrorHandler.ExtSymbols.sym &:	$(wildcard $(SRC_DIR)/*.asm) $(wildcard $(CORE_DIR)/*.asm) | $(BUILD_DIR)
-	$(ASM68K) $(ASFLAGS) /e _USE_SYMBOL_DATA_REF_=1 /e SymbolData_Ptr=0 $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.ExtSymbols.bin, $(BUILD_DIR)/ErrorHandler.ExtSymbols.sym, $(BUILD_DIR)/ErrorHandler.ExtSymbols.lst
+	$(ASM68K) $(ASFLAGS) /p /e __EXTSYM__ /e SymbolData_Ptr=0 $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.ExtSymbols.bin, $(BUILD_DIR)/ErrorHandler.ExtSymbols.sym, $(BUILD_DIR)/ErrorHandler.ExtSymbols.lst
 
 
 # Global symbol tables
 
 $(BUILD_DIR)/ErrorHandler.Globals.asm:	$(BUILD_DIR)/ErrorHandler.sym | $(BUILD_DIR) $(CONVSYM)
-	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
+	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "MDDBG_.+"
 
 $(BUILD_DIR)/ErrorHandler.Debug.Globals.asm:	$(BUILD_DIR)/ErrorHandler.Debug.sym | $(BUILD_DIR) $(CONVSYM)
-	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
+	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "MDDBG_.+"
 
 $(BUILD_DIR)/ErrorHandler.ExtSymbols.Globals.asm:	$(BUILD_DIR)/ErrorHandler.ExtSymbols.sym | $(BUILD_DIR) $(CONVSYM)
-	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "__global_.+"
+	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "MDDBG_.+"
 
 
 # Linkable blobs in assembly format
@@ -64,6 +70,7 @@ $(BUILD_DIR)/ErrorHandler.Debug.Blob.asm:	$(BUILD_DIR)/ErrorHandler.Debug.bin $(
 $(BUILD_DIR)/ErrorHandler.ExtSymbols.Blob.asm:	$(BUILD_DIR)/ErrorHandler.ExtSymbols.bin $(BUILD_DIR)/ErrorHandler.ExtSymbols.SymbolTable.log | $(BUILD_DIR)
 	$(BLOBTOASM) $(BUILD_DIR)/ErrorHandler.ExtSymbols.bin $@ -m $(SRC_DIR)/inject-tables/ErrorHandler.ExtSymbols.Blob.txt -t $(BUILD_DIR)/ErrorHandler.ExtSymbols.SymbolTable.log
 
+# Symbols tables for Blob2Asm utility (poor man's linker)
 
 $(BUILD_DIR)/ErrorHandler.SymbolTable.log:	$(BUILD_DIR)/ErrorHandler.sym | $(CONVSYM)
 	$(CONVSYM) $^ $@ -output asm -inopt "/processLocals-" -outopt "%s: %X"
