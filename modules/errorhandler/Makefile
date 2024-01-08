@@ -48,7 +48,7 @@ $(BUILD_DIR)/asm68k-extsym/Debugger.asm $(BUILD_DIR)/asm68k-extsym/ErrorHandler.
 	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def EXTSYM -out $(BUILD_DIR)/asm68k-extsym/Debugger.asm
 	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-ASM68K -def EXTSYM -out $(BUILD_DIR)/asm68k-extsym/ErrorHandler.asm
 
-$(BUILD_DIR)/asm68k-linkable/Debugger.asm $(BUILD_DIR)/asm68k-linkable/Debugger.obj &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.obj | $(BUILD_DIR)
+$(BUILD_DIR)/asm68k-linkable/Debugger.asm $(BUILD_DIR)/asm68k-linkable/Debugger.obj &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.obj $(BUILD_DIR)/ErrorHandler.Refs.asm | $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)/asm68k-linkable
 	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def LINKABLE -out $(BUILD_DIR)/asm68k-linkable/Debugger.asm
 	cp $(CORE_BUILD_DIR)/ErrorHandler.obj $(BUILD_DIR)/asm68k-linkable/Debugger.obj
@@ -64,11 +64,11 @@ $(BUILD_DIR)/as-extsym/Debugger.asm $(BUILD_DIR)/as-extsym/ErrorHandler.asm &: $
 	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-AS -def EXTSYM -out $(BUILD_DIR)/as-extsym/ErrorHandler.asm
 
 
+$(CORE_BUILD_DIR)/ErrorHandler.obj $(BUILD_DIR)/ErrorHandler.Refs.asm &:	$(CORE_SRC_FILES)
+	$(MAKE) -C ../errorhandler-core release-linkable
+
 $(CORE_BUILD_DIR)/ErrorHandler.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Globals.asm &:	$(CORE_SRC_FILES)
 	$(MAKE) -C ../errorhandler-core release
-
-$(CORE_BUILD_DIR)/ErrorHandler.obj:	$(CORE_SRC_FILES)
-	$(MAKE) -C ../errorhandler-core release-linkable
 
 $(CORE_BUILD_DIR)/ErrorHandler.Debug.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Debug.Globals.asm &:	$(CORE_SRC_FILES)
 	$(MAKE) -C ../errorhandler-core debug

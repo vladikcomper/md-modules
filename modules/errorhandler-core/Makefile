@@ -15,7 +15,7 @@ all:	release release-linkable debug extsym
 
 release:	$(BUILD_DIR)/ErrorHandler.bin $(BUILD_DIR)/ErrorHandler.Blob.asm $(BUILD_DIR)/ErrorHandler.Globals.asm
 
-release-linkable:	$(BUILD_DIR)/ErrorHandler.obj
+release-linkable:	$(BUILD_DIR)/ErrorHandler.obj $(BUILD_DIR)/ErrorHandler.Refs.asm
 
 debug:	$(BUILD_DIR)/ErrorHandler.Debug.bin $(BUILD_DIR)/ErrorHandler.Debug.Blob.asm $(BUILD_DIR)/ErrorHandler.Debug.Globals.asm
 
@@ -32,8 +32,8 @@ clean:
 
 # ASM68K-linkable object file
 
-$(BUILD_DIR)/ErrorHandler.obj:	$(wildcard $(SRC_DIR)/*.asm) $(wildcard $(CORE_DIR)/*.asm) | $(BUILD_DIR)
-	$(ASM68K) $(ASFLAGS) /l /e __LINKABLE__ $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.obj, , $(BUILD_DIR)/ErrorHandler.Linkable.lst
+$(BUILD_DIR)/ErrorHandler.obj $(BUILD_DIR)/ErrorHandler.Linkable.sym &:	$(wildcard $(SRC_DIR)/*.asm) $(wildcard $(CORE_DIR)/*.asm) | $(BUILD_DIR)
+	$(ASM68K) $(ASFLAGS) /l /e __LINKABLE__ $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.obj, $(BUILD_DIR)/ErrorHandler.Linkable.sym, $(BUILD_DIR)/ErrorHandler.Linkable.lst
 
 # Raw unlinked binaries
 
@@ -47,7 +47,7 @@ $(BUILD_DIR)/ErrorHandler.ExtSymbols.bin $(BUILD_DIR)/ErrorHandler.ExtSymbols.sy
 	$(ASM68K) $(ASFLAGS) /p /e __EXTSYM__ /e SymbolData_Ptr=0 $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.ExtSymbols.bin, $(BUILD_DIR)/ErrorHandler.ExtSymbols.sym, $(BUILD_DIR)/ErrorHandler.ExtSymbols.lst
 
 
-# Global symbol tables
+# Symbol tables
 
 $(BUILD_DIR)/ErrorHandler.Globals.asm:	$(BUILD_DIR)/ErrorHandler.sym | $(BUILD_DIR) $(CONVSYM)
 	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "MDDBG_.+"
@@ -57,6 +57,9 @@ $(BUILD_DIR)/ErrorHandler.Debug.Globals.asm:	$(BUILD_DIR)/ErrorHandler.Debug.sym
 
 $(BUILD_DIR)/ErrorHandler.ExtSymbols.Globals.asm:	$(BUILD_DIR)/ErrorHandler.ExtSymbols.sym | $(BUILD_DIR) $(CONVSYM)
 	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "MDDBG_.+"
+
+$(BUILD_DIR)/ErrorHandler.Refs.asm:	$(BUILD_DIR)/ErrorHandler.Linkable.sym | $(BUILD_DIR) $(CONVSYM)
+	$(CONVSYM) $^ $@ -output asm -outopt "	xref	%s" -inopt "/processLocals-" -filter "MDDBG_.+"
 
 
 # Linkable blobs in assembly format

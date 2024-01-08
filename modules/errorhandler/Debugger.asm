@@ -15,7 +15,12 @@
 
 #ifdef LINKABLE
 #ifdef BUNDLE-ASM68K
-#include Debugger.Refs.ASM68K.asm
+; ===============================================================
+; ---------------------------------------------------------------
+; Symbols imported from the object file
+; ---------------------------------------------------------------
+
+#include ../../build/modules/errorhandler-core/ErrorHandler.Refs.asm
 #else
 ## AS bundle doesn't support linkable builds!
 #endif
