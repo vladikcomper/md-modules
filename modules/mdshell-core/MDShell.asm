@@ -1,15 +1,23 @@
 
-; ===============================================================
-; ---------------------------------------------------------------
-; MD-Shell 2.5
+; =============================================================================
+; -----------------------------------------------------------------------------
+; MD Shell
 ; A custom shell for running M68K code as Mega-Drive ROM
-; ---------------------------------------------------------------
-; (c) 2023, Vladikcomper
-; ---------------------------------------------------------------
+;
+; (c) 2023-2024, Vladikcomper
+; -----------------------------------------------------------------------------
+
+MDSHELL_VERSION:	equs	"MD Shell v.2.6"
+
+; -----------------------------------------------------------------------------
+
+	if def(__LINKABLE__)
+		section	rom
+	endc
 
 	include	"..\core\Macros.asm"
 
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
 Vectors:
 	dc.l	$FFFFF0,		EntryPoint,		BusError,		AddressError
 	dc.l	IllegalInstr,	ZeroDivide,		ChkInstr,		TrapvInstr
@@ -28,7 +36,7 @@ Vectors:
 	dc.l	ErrorTrap,		ErrorTrap,		ErrorTrap,		ErrorTrap
 	dc.l	ErrorTrap,		ErrorTrap,		ErrorTrap,		ErrorTrap
 
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
 ROMHeader:
 	dc.b	'SEGA MEGA DRIVE ' 										; Hardware system ID
 	dc.b	'(C)VLAD 2023.JAN'										; Release date
@@ -43,25 +51,17 @@ ROMHeader:
 	dc.b	'                                                    '	; Notes
 	dc.b	'JUE             ' 										; Supported regions
 
-; ---------------------------------------------------------------
-; Symbol data pointer to be inserted by ConvSym
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
+SymbolData_Ptr:					; NOTICE: This should be at offset $200
+	dc.l	$00000000			; symbol table pointer inserted by ConvSym
 
-SymbolData_Ptr:		dc.l	$00000000
+VersionString:
+	dc.b	"\MDSHELL_VERSION", 0	; MD Shell version magic string
+	even
 
-	if SymbolData_Ptr <> $200
-		inform 2, "SymbolData_Ptr should be on offset $200."
-	endc
-
-; ---------------------------------------------------------------
-; Injectable symbols (will be overriden in blob)
-; ---------------------------------------------------------------
-
-Injectable_Main:		equ		MDShell_SelfCheck
-
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
 ; Entry Point : Initializes hardware
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
 
 EntryPoint:
 	move	#$2700, sr					; disable interrupts, reset CCR
@@ -154,7 +154,7 @@ EntryPoint:
 @Init_Done:
 	bra.s	ProgramStart
 
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
 @SetupValues:
 	dc.l	$C00004			; a2 = VDP Control Port
 	dc.l	$A11100			; a3 = Z80 bus request
@@ -202,9 +202,9 @@ EntryPoint:
 	dc.l	$40000010		; VSRAM access request
 	dc.w	$13				; VSRAM length in longwords, minus one
 
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
 ; Statup code
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
 
 ProgramStart:
 	movea.l	0.w, sp
@@ -239,8 +239,17 @@ ProgramStart:
 	move.l	d5, a5
 	move.l	d6, a6
 
+	; For non-linkable builds, put a stub pointer, which should be
+	; overriden by Blob2Asm utility (poor man's linker)
+	if def(__LINKABLE__)=0
 __inject_main:
-	jsr		(Injectable_Main).l				; should be defined
+	jsr		(StubMain).l				; should be defined
+
+	; For linkable builds, define use XREF'ed `Main`
+	else
+	xref	Main
+	jsr		(Main).l
+	endif
 	;fallthrough
 
 ErrorTrap:
@@ -248,49 +257,81 @@ ErrorTrap:
 	bra.s	ErrorTrap
 
 
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
 ; Interrupts handling
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
 
 IdleInt:	__global
 	rte
 
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
 ; Error Handler bundle
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
 
 ; Tell error handler that we want to inject Symbol table pointer from outside
 __EXTSYM__: equ 1
 
-	include	'..\errorhandler-core\Main.asm'
+	include	'..\errorhandler-core\ErrorHandler.asm'
 
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
+; Data
+; -----------------------------------------------------------------------------
+
+	include	'..\errorhandler-core\Font.asm'
+
+; -----------------------------------------------------------------------------
+; Core modules
+; -----------------------------------------------------------------------------
+
+	include	'..\core\Symbols.asm'
+	include	'..\core\Formatter_Hex.asm'
+	include	'..\core\Formatter_Bin.asm'
+	include	'..\core\Formatter_Dec.asm'
+	include	'..\core\Formatter_Sym.asm'
+	include	'..\core\Format_String.asm'
+	include	'..\core\Console.asm'
+	include	'..\core\1bpp_Decompress.asm'
+
+; -----------------------------------------------------------------------------
+; Extensions
+; -----------------------------------------------------------------------------
+
+	include	'..\core\KDebug.asm'
+	include	'..\errorhandler-core\Extensions.asm'
+	include	'..\errorhandler-core\Debugger_AddressRegisters.asm'
+	include	'..\errorhandler-core\Debugger_Backtrace.asm'
+
+; -----------------------------------------------------------------------------
 ; Non-headless builds end here and override data below
-	if def(_HEADLESS_)=0
+
+	if (def(__HEADLESS__)=0) & (def(__LINKABLE__)=0)
 __blob_end:
-	endc
+	endif
 
-; ---------------------------------------------------------------
-; Exception vectors
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
+; Pre-defined exception vectors
+; -----------------------------------------------------------------------------
 
-	include	"..\errorhandler-core\Exceptions.asm"
+	include	'..\errorhandler-core\Exceptions.asm'
 
-; ---------------------------------------------------------------
+; -----------------------------------------------------------------------------
 ; Headless builds end here
-	if def(_HEADLESS_)
+
+	if def(__HEADLESS__) & (def(__LINKABLE__)=0)
 __blob_end:
-	endc
+	endif
 
-; ---------------------------------------------------------------
-; Self-check routine
-; ---------------------------------------------------------------
+	if def(__LINKABLE__)=0
+; -----------------------------------------------------------------------------
+; Main program stub
+; -----------------------------------------------------------------------------
 
-MDShell_SelfCheck:
-	lea		@Str_InitialTest(pc), a0
+StubMain:
+	lea		@Str_Stub(pc), a0
 	jmp		Console_Write(pc)
 
-; ---------------------------------------------------------------
-@Str_InitialTest:
-	dc.b	_pal1, _newl, _setx, 1, _setw, 38, 'MD Shell Self-Diagnostics', _newl, 0
+; -----------------------------------------------------------------------------
+@Str_Stub:
+	dc.b	_pal1, _newl, _setx, 1, _setw, 38, "\MDSHELL_VERSION", _newl, 0
 	even
+	endif

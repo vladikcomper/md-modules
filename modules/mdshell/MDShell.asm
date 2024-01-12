@@ -1,8 +1,8 @@
 ; ===============================================================
 ; ---------------------------------------------------------------
-; MD Shell 2.5
+; MD Shell v.2.6
 ;
-; (c) 2023, Vladikcomper
+; (c) 2023-2024, Vladikcomper
 ; ---------------------------------------------------------------
 
 
@@ -11,14 +11,19 @@
 
 #include ../errorhandler/Debugger.Constants.asm
 
-
+#ifdef LINKABLE
 #ifdef BUNDLE-ASM68K
+; ===============================================================
 ; ---------------------------------------------------------------
-; Import global functions
+; Symbols imported from the object file
 ; ---------------------------------------------------------------
 
-#include ../../build/modules/mdshell-core/MDShell.Globals.asm
+#include ../../build/modules/mdshell-core/MDShell.Refs.asm
+#else
+## AS bundle doesn't support linkable builds!
 #endif
+#endif
+
 
 ; ---------------------------------------------------------------
 ; Macros
@@ -35,6 +40,7 @@
 ##
 
 
+#ifndef LINKABLE
 ; ---------------------------------------------------------------
 ; MD-Shell blob
 ; ---------------------------------------------------------------
@@ -43,12 +49,11 @@ MDShell:
 #include ../../build/modules/mdshell-core/MDShell.Blob.asm
 
 
-#ifdef BUNDLE-AS
 ; ---------------------------------------------------------------
-; Import global functions
+; MD-Shell's exported symbols
 ; ---------------------------------------------------------------
 
 #include ../../build/modules/mdshell-core/MDShell.Globals.asm
-#endif
 
 #include ../errorhandler/ErrorHandler.Exceptions.asm
+#endif

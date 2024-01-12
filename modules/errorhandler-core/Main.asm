@@ -44,7 +44,7 @@
 
 	if def(__LINKABLE__)
 ; -----------------------------------------------------------------------------
-; Linkable builds include pre-defined exceiption vectors
+; Linkable builds include pre-defined exception vectors
 ; -----------------------------------------------------------------------------
 
 	include	'..\errorhandler-core\Exceptions.asm'

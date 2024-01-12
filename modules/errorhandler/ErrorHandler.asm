@@ -27,7 +27,7 @@ ErrorHandler:
 #endif
 
 ; ---------------------------------------------------------------
-; MD Debugger's symbol table
+; MD Debugger's exported symbols
 ; ---------------------------------------------------------------
 
 #ifdef EXTSYM

@@ -1,7 +1,7 @@
 
 ; ===============================================================
 ; ---------------------------------------------------------------
-; Error handling and debugging modules
+; MD Shell
 ;
 ; (c) 2016-2024, Vladikcomper
 ; ---------------------------------------------------------------
@@ -11,12 +11,11 @@
 	section rom
 
 	xdef	SymbolData_Ptr
+	xdef	Main
 
 ; --------------------------------------------------------------
 
-	include	"..\..\..\build\modules\mdshell\headless\MDShell.asm"
-
-	include	"..\..\..\build\modules\errorhandler\asm68k-linkable\Debugger.asm"
+	include	"..\..\..\build\modules\mdshell\asm68k-linkable\MDShell.asm"
 
 ; --------------------------------------------------------------
 
