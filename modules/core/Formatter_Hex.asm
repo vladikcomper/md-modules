@@ -43,7 +43,7 @@ FormatHex_Byte:
 	lsr.w	#4,d2
 	and.w	d3,d2						; get nibble
 	move.b	HexDigitToChar(pc,d2), (a0)+
-	
+
 	dbf		d7, FormatHex_Word_WriteLastNibble2
 	jsr		(a4)
 	bcc.s	FormatHex_Word_WriteLastNibble2
@@ -102,7 +102,7 @@ FormatHex_LongWord_Trim:
 FormatHex_LongWord_Trim_Swapped_NonZero:
 	bsr.s	FormatHex_Word_Trim
 	bcs.s	FormatHex_Return				; if buffer terminated, branch
-	bra		FormatHex_Word_Swapped			; should display a word without trimming now
+	bra.s		FormatHex_Word_Swapped			; should display a word without trimming now
 
 FormatHex_Word_Trim_Swapped:
 	swap	d1

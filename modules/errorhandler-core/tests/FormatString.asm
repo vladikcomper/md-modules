@@ -58,11 +58,11 @@ Main:
 
 		lea		(a5), a2						; a2 = Got string
 		lea		(a1), a3						; a3 = Expected string
-		
-		sub.l	a5, a0	
-		move.w	a0, d3							; d3 = actual output size  
+
+		sub.l	a5, a0
+		move.w	a0, d3							; d3 = actual output size
 		cmp.w	d3, d4							; compare actual output size to the expected
-		bne		@SizeMismatch					; if they don't match, branch
+		bne.w		@SizeMismatch					; if they don't match, branch
 
 		subq.w	#1, d4
 		bmi.w	@NextTest
@@ -77,42 +77,42 @@ Main:
 		adda.w	8(a6), a6						; a6 => Next test
 		tst.w	(a6)							; is test header valid?
 		bpl.w	@RunTest						; if yes, keep doing tests
-		
+
 	Console.WriteLine 'Number of completed tests: %<.b d1 dec>'
 	Console.WriteLine '%<pal1>ALL TESTS HAVE PASSED SUCCESSFULLY'
 	rts
 
-	; -------------------------------------------------------------------------		
+	; -------------------------------------------------------------------------
 	@PrintFailureHeader:
 		Console.WriteLine '%<pal2>Test #%<.b d1 dec> FAILED'
 		rts
 
-	; -------------------------------------------------------------------------		
+	; -------------------------------------------------------------------------
 	@PrintFailureDiff:
 		Console.WriteLine '%<pal0>Got:%<endl>%<pal2>"%<.l a2 str>"'
 		Console.WriteLine '%<pal0>Expected:%<endl>%<pal2>"%<.l a3 str>"'
-		
+
 	@HaltTests:
 		Console.WriteLine '%<pal1>TEST FAILURE, STOPPING'
 		rts
 
-	; -------------------------------------------------------------------------		
+	; -------------------------------------------------------------------------
 	@BufferOverflow:
-		bsr	@PrintFailureHeader
+		bsr.w	@PrintFailureHeader
 		Console.WriteLine '%<pal1>Error: Writting past the end of buffer'
-		bra @HaltTests
+		bra.s @HaltTests
 
-	; -------------------------------------------------------------------------		
+	; -------------------------------------------------------------------------
 	@SizeMismatch:
-		bsr	@PrintFailureHeader
+		bsr.w	@PrintFailureHeader
 		Console.WriteLine '%<pal1>Error: Size mismatch (%<.b d3> != %<.b d4>)'
-		bra	@PrintFailureDiff
+		bra.w	@PrintFailureDiff
 
-	; -------------------------------------------------------------------------		
+	; -------------------------------------------------------------------------
 	@ByteMismatch:
-		bsr	@PrintFailureHeader
+		bsr.w	@PrintFailureHeader
 		Console.WriteLine '%<pal1>Error: Byte mismatch (%<.b -1(a1)> != %<.b -1(a5)>)'
-		bra	@PrintFailureDiff
+		bra.w	@PrintFailureDiff
 
 ; --------------------------------------------------------------
 ; Buffer flush function
@@ -130,7 +130,7 @@ dcs	macro
 	@end\@:
 		dc.b	0				; also put a null-terminator, so MDShell may print it as C-string also ...
 	endm
-	
+
 addTest macro args,source_str,compare_str
 	@test_header\@:
 		dc.l	@source_string\@						; (a6) => Source string absolute pointer
@@ -148,7 +148,7 @@ addTest macro args,source_str,compare_str
 	@compare_string\@:
 		dcs <\compare_str>								; this string also includes "length" byte for correct computations
 		even
-		
+
 	@test_end\@:
 	endm
 
@@ -158,124 +158,124 @@ addTest macro args,source_str,compare_str
 	; NOTICE: Null-terminator is not included in the output string compared here.
 	;	While FormatString *does* add null-ternimator, returned buffer position
 	;	points *before* null-terminator, not *after* it (if no overflows occured).
-	
+
 	; TODOh: Replace numbers with literal constants ...
 
 	; #00: Simple test
 	addTest { <.l 0> }, &
 			<'Simple string',$00>, &
 			<'Simple string'>
-			
+
 	; #01: Buffer limit test #1 ($20 bytes)
 	addTest { <.l 0> }, &
 			<'This string might overflow the buffer!',$00>, &
 			<'This string might overflow the b'>
-			
-	; #02: Buffer limit test #2  
+
+	; #02: Buffer limit test #2
 	addTest { <.l 0> }, &
 			<'This string might overflow the b',$00>, &
 			<'This string might overflow the b'>
 
-	; #03: Buffer limit test #3               
+	; #03: Buffer limit test #3
 	addTest { <.l 0> }, &
 			<'This string might overflow the ',$00>, &
 			<'This string might overflow the '>
-			
-	; #04: Formatters test #1              
+
+	; #04: Formatters test #1
 	addTest { <.w 1234>, <.l $01234567>, <.l $89ABCDEF> }, &
 			<$91,$83,$83,$00>, &
 			<'12340123456789ABCDEF'>
 
-	; #05: Formatters test #2               
+	; #05: Formatters test #2
 	addTest { <.w 1234>, <.l $01234567>, <.l $89ABCDEF> }, &
 			<$91,' ',$83,' ',$83,$00>, &
 			<'1234 01234567 89ABCDEF'>
 
-	; #06: Formatters test #3            
+	; #06: Formatters test #3
 	addTest { <.w 1234>, <.l $01234567>, <.l $89ABCDEF> }, &
 			<'--',$91,' ',$83,' ',$83,'--',$00>, &
 			<'--1234 01234567 89ABCDEF--'>
 
-	; #07: Buffer limit + formatters test #1  
+	; #07: Buffer limit + formatters test #1
 	addTest { <.w 1234>, <.l $01234567>, <.l $89ABCDEF> }, &
 			<'--------',$91,' ',$83,' ',$83,'--',$00>, &
-			<'--------1234 01234567 89ABCDEF--'>   
-			
-	; #08: Buffer limit + formatters test #2         
+			<'--------1234 01234567 89ABCDEF--'>
+
+	; #08: Buffer limit + formatters test #2
 	addTest { <.w 1234>, <.l $01234567>, <.l $89ABCDEF> }, &
 			<'----------',$91,' ',$83,' ',$83,'--',$00>, &
-			<'----------1234 01234567 89ABCDEF'>   
+			<'----------1234 01234567 89ABCDEF'>
 
-	; #09: Buffer limit + formatters test #3   
+	; #09: Buffer limit + formatters test #3
 	addTest { <.w 1234>, <.l $01234567>, <.l $89ABCDEF> }, &
 			<'-----------',$91,' ',$83,' ',$83,'--',$00>, &
-			<'-----------1234 01234567 89ABCDE'>   
+			<'-----------1234 01234567 89ABCDE'>
 
-	; #10: Multiple formatters test     
+	; #10: Multiple formatters test
 	addTest { <.w 1234>, <.l $01234567>, <.l $89ABCDEF> }, &
 			<$99,' ',$A0,' ',$88,$00>, &
 			<'+1234 00100011 +67'>
-								
+
 	; #11: String decoding test #1
 	addTest { <.l @SampleString1> }, &
 			<$D0,$00>, &
 			<'<String insertion test>'>
-			
+
 	; #12: Buffer limit + String decoding test #1
 	addTest { <.l @SampleString1>, <.l @SampleString1> }, &
 			<$D0,$D0,$00>, &
 			<'<String insertion test><String i'>
-			
+
 	; #13: Buffer limit + String decoding test #2
 	addTest { <.l @SampleString2> }, &
 			<$D0,$00>, &
 			<'This string takes all the buffer'>
-			
+
 	; #14: Buffer limit + String decoding test #3
 	addTest { <.l @SampleString2>, <.l @SampleString2> }, &
 			<$D0,$D0,$00>, &
 			<'This string takes all the buffer'>
-			
+
 	; #15: Zero-length string decoding test #1
 	addTest { <.l @EmptyString> }, &
 			<'[',$D0,']',$00>, &
 			<'[]'>
-						
+
 	; #16: Zero-length string decoding test #2
 	addTest { <.l @EmptyString>, <.l @EmptyString>, <.l @EmptyString>, <.l @EmptyString> }, &
 			<$D0,$D0,'-',$D0,$D0,$00>, &
 			<'-'>
-			
+
 	; #17: Zero-length string decoding test #3
 	addTest { <.l @EmptyString>, <.l @EmptyString> }, &
 			<'[',$D0,$D0,']',$00>, &
 			<'[]'>
-	
+
 	; #18: Character decoding test #1
 	addTest { <.l @OneCharacterString> }, &
 			<$D0,$00>, &
 			<'a'>
-			
+
 	; #19: Character decoding test #2
 	addTest { <.l @OneCharacterString>, <.l @OneCharacterString> }, &
 			<$D0,$D0,$00>, &
 			<'aa'>
-			
+
 	; #20: Buffer limit + Character decoding test #1
 	addTest { <.l @OneCharacterString> }, &
 			<'This string takes all the buffer',$D0,$00>, &
 			<'This string takes all the buffer'>
-			
+
 	; #21: Buffer limit + Character decoding test #2
 	addTest { <.l @OneCharacterString> }, &
 			<'This string takes almost all ..',$D0,$00>, &
-			<'This string takes almost all ..a'>    
-			
+			<'This string takes almost all ..a'>
+
 	; #22: Buffer limit + Character decoding test #3
 	addTest { <.l @OneCharacterString>, <.l @OneCharacterString> }, &
 			<'This string takes almost all ..',$D0,$D0,$00>, &
 			<'This string takes almost all ..a'>
-			
+
 	; #23: Buffer limit + Character decoding test #4
 	addTest { <.l @OneCharacterString> }, &
 			<'This string takes almost all ..',$D0,'!',$00>, &
@@ -457,20 +457,20 @@ addTest macro args,source_str,compare_str
 			<'long_data_chunk+100010'>
 
 	dc.w	-1
-	 
+
 ; --------------------------------------------------------------
 @SampleString1:
 	dc.b	'<String insertion test>',0
-	
+
 @SampleString2:
 	dc.b	'This string takes all the buffer',0
-	
+
 @EmptyString:
 	dc.b	0
-	
+
 @OneCharacterString:
 	dc.b	'a',0
-	
+
 	even
 
 ; --------------------------------------------------------------

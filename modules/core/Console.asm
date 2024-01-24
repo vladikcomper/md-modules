@@ -43,7 +43,6 @@ Console_Init:	__global
 	addq.w	#2, a1					; skip end marker
 
 	; Load palette
-	lea		Console_FillTile(pc), a0
 	cram	$00, (a5)				; VDP => Setup CRAM write at offset $00
 	moveq	#0, d0					; d0 = black color
 	moveq	#4-1, d3				; d3 = number of palette lines - 1
@@ -56,7 +55,7 @@ Console_Init:	__global
 		bpl.s	@0					; if color, branch
 
 		moveq	#0, d1
-		jsr		$10(a0,d2)			; fill the rest of cram by a clever jump (WARNING! Precision required!)
+		jsr		Console_FillTile+$10(pc,d2)			; fill the rest of cram by a clever jump (WARNING! Precision required!)
 		dbf		d3, @fill_palette_line
 	; fallthrough
 
@@ -234,7 +233,7 @@ Console_SetBasePattern: __global
 	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
 	move.w	d1, Console.BasePattern(a3)
-	
+
 @quit:
 	move.l	(sp)+, a3
 	rts
@@ -252,7 +251,7 @@ Console_SetWidth: __global
 	move.l	usp, a3
 	cmp.b	#_ConsoleMagic, Console.Magic(a3)
 	bne.s	@quit
-	addq.w	#4, a3
+	addq.w	#8, a3
 	move.w	d1, (a3)+
 	move.w	d1, (a3)+
 
@@ -312,7 +311,7 @@ Console_Write: __global
 	movem.w	d2-d4, (a3)			; save d2-d4 (ignore d6 as it won't get changes anyways ...)
 	swap	d5
 	movem.l	d5/d7, -(a3)		; save current and start-of-line positions
-	
+
 @quit:
 	movem.l	(sp)+, d1-d7/a3/a6
 	rts
@@ -440,7 +439,7 @@ Console_Write_Formatted: __global
 	moveq	#@buffer_size-2, d7			; d7 = number of characters before flush -1
 	jsr		FormatString(pc)
 	lea		@buffer_size(sp), sp		; free string buffer
-	
+
 	move.l	(sp)+, a4
 	rts
 

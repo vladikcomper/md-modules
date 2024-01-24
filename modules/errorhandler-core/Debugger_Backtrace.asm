@@ -111,7 +111,7 @@ Debugger_Backtrace:	__global
 	@try_next_offset:
 		addq.l	#2, @stack_curr
 		cmpa.l	@stack_curr, @stack_top
-		bhs		@try_offset_loop
+		bhs.s		@try_offset_loop
 
 @done:
 	rts
