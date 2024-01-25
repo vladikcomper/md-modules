@@ -7,7 +7,7 @@ SRC_DIR ?= .
 CORE_DIR ?= ../core
 
 ASM68K ?= wine ../exec/asm68k.exe
-ASFLAGS = /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae-
+ASFLAGS := /q /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae-
 
 .PHONY:	all release release-linkable debug extsym tests clean
 
