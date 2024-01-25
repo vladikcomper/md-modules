@@ -241,10 +241,10 @@ Console_SetBasePattern: __global
 
 ; ===============================================================
 ; ---------------------------------------------------------------
-; Subroutine to set console's base pattern
+; Subroutine to set console's width
 ; ---------------------------------------------------------------
 ; INPUT:
-;		d1	.w	Base pattern
+;		d1	.w	Width to set
 ; ---------------------------------------------------------------
 
 Console_SetWidth: __global
@@ -340,7 +340,7 @@ Console_Write: __global
 
 	; Process drawing flag
 @flag:
-	and.w	#$1E, d1					; d2 = $00, $02, $04, $06, $08, $0A, $0C, $0E, $10, $12, $14, $16, $18, $1A, $1C, $1E
+	and.w	#$1E, d1					; d1 = $00, $02, $04, $06, $08, $0A, $0C, $0E, $10, $12, $14, $16, $18, $1A, $1C, $1E
 	jmp		@CommandHandlers(pc, d1)
 
 ; ---------------------------------------------------------------
