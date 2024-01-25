@@ -7,7 +7,7 @@ _ValidHeader = $DEB2
 ; ---------------------------------------------------------------
 
 	if def(__LINKABLE__)
-	xref	SymbolData_Ptr
+	global	SymbolData_Ptr	; `global` instead of `xdef` so MDShell can inline it
 	endc
 
 GetSymbolTablePtr:	macro	opDestReg, injIndex
