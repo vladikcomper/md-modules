@@ -241,10 +241,10 @@ Console_SetBasePattern: __global
 
 ; ===============================================================
 ; ---------------------------------------------------------------
-; Subroutine to set console's base pattern
+; Subroutine to set console's width
 ; ---------------------------------------------------------------
 ; INPUT:
-;		d1	.w	Base pattern
+;		d1	.w	Width to set
 ; ---------------------------------------------------------------
 
 Console_SetWidth: __global
@@ -340,7 +340,7 @@ Console_Write: __global
 
 	; Process drawing flag
 @flag:
-	and.w	#$1E, d1					; d2 = $00, $02, $04, $06, $08, $0A, $0C, $0E, $10, $12, $14, $16, $18, $1A, $1C, $1E
+	and.w	#$1E, d1					; d1 = $00, $02, $04, $06, $08, $0A, $0C, $0E, $10, $12, $14, $16, $18, $1A, $1C, $1E
 	jmp		@CommandHandlers(pc, d1)
 
 ; ---------------------------------------------------------------
@@ -435,7 +435,7 @@ Console_Write_Formatted: __global
 
 	if def(__DEBUG__)
 		move.l	a0, -4
-	endc
+	endif
 
 	moveq	#@buffer_size-2, d7			; d7 = number of characters before flush -1
 	jsr		FormatString(pc)
@@ -473,7 +473,7 @@ Console_Write_Formatted: __global
 		move.l	-4, d0
 		illegal
 	@align_ok:
-	endc
+	endif
 
 	move.l	a0, -(sp)
 	jsr		Console_Write(pc)		; call the real flush function

@@ -1,20 +1,33 @@
 
 ; ===============================================================
 ; ---------------------------------------------------------------
-; Error handling and debugging modules
+; MD Debugger and Error Handler v.2.6
 ;
-; (c) 2016-2023, Vladikcomper
+; (c) 2016-2024, Vladikcomper
 ; ---------------------------------------------------------------
-; Debugging macros definitions file
+; Debugger definitions
 ; ---------------------------------------------------------------
 
-#include Debugger.Extensions.asm
+#include Debugger.Config.asm
 
 
 #include Debugger.Constants.asm
 
+#ifdef LINKABLE
+#ifdef BUNDLE-ASM68K
+; ===============================================================
+; ---------------------------------------------------------------
+; Symbols imported from the object file
+; ---------------------------------------------------------------
+
+#include ../../build/modules/errorhandler-core/ErrorHandler.Refs.asm
+#else
+## AS bundle doesn't support linkable builds!
+#endif
+#endif
 
 
+; ===============================================================
 ; ---------------------------------------------------------------
 ; Macros
 ; ---------------------------------------------------------------

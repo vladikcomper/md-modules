@@ -13,17 +13,19 @@ EH_CORE_SRC_FILES = $(wildcard ../errorhandler-core/*.asm) $(wildcard ../core/*.
 EXT_SRC_FILES ?= $(wildcard ../debuggers/*.asm) $(wildcard ../core/*.asm)
 
 
-.PHONY:	all asm68k as headless tests clean
+.PHONY:	all asm68k asm68k-linkable as headless tests clean
 
-all:	asm68k as headless
+all:	asm68k asm68k-linkable as headless
 
 asm68k:	$(BUILD_DIR)/asm68k/MDShell.asm
+
+asm68k-linkable:	$(BUILD_DIR)/asm68k-linkable/MDShell.obj $(BUILD_DIR)/asm68k-linkable/MDShell.asm
 
 as:	$(BUILD_DIR)/as/MDShell.asm
 
 headless:	$(BUILD_DIR)/headless/MDShell.asm
 
-tests:	asm68k as headless
+tests:	all
 	$(MAKE) -C tests -f .Makefile
 
 clean:
@@ -34,6 +36,11 @@ $(BUILD_DIR)/asm68k/MDShell.asm:	$(SRC_FILES) $(EH_SRC_FILES) $(CORE_BUILD_DIR)/
 	mkdir -p $(BUILD_DIR)/asm68k
 	$(CBUNDLE) $(SRC_DIR)/MDShell.asm -def MD-SHELL -def BUNDLE-ASM68K -out $@
 
+$(BUILD_DIR)/asm68k-linkable/MDShell.asm $(BUILD_DIR)/asm68k-linkable/MDShell.obj &:	$(SRC_FILES) $(EH_SRC_FILES) $(CORE_BUILD_DIR)/MDShell.Refs.asm $(CORE_BUILD_DIR)/MDShell.obj | $(BUILD_DIR) $(CBUNDLE)
+	mkdir -p $(BUILD_DIR)/asm68k-linkable
+	$(CBUNDLE) $(SRC_DIR)/MDShell.asm -def MD-SHELL -def BUNDLE-ASM68K -def LINKABLE -out $(BUILD_DIR)/asm68k-linkable/MDShell.asm
+	cp $(CORE_BUILD_DIR)/MDShell.obj $(BUILD_DIR)/asm68k-linkable/MDShell.obj
+
 $(BUILD_DIR)/as/MDShell.asm:	$(SRC_FILES) $(EH_SRC_FILES) $(CORE_BUILD_DIR)/MDShell.Globals.asm $(CORE_BUILD_DIR)/MDShell.Blob.asm | $(BUILD_DIR) $(CBUNDLE)
 	mkdir -p $(BUILD_DIR)/as
 	$(CBUNDLE) $(SRC_DIR)/MDShell.asm -def MD-SHELL -def BUNDLE-AS -out $@
@@ -43,6 +50,8 @@ $(BUILD_DIR)/headless/MDShell.asm:	$(SRC_FILES) $(EH_SRC_FILES) $(CORE_BUILD_DIR
 	$(CBUNDLE) $(SRC_DIR)/MDShell.Headless.asm -def MD-SHELL -def HEADLESS -out $@
 
 
+$(CORE_BUILD_DIR)/MDShell.Refs.asm $(CORE_BUILD_DIR)/MDShell.obj &: $(CORE_SRC_FILES) $(EH_CORE_SRC_FILES)
+	$(MAKE) -C ../mdshell-core release-linkable	
 
 $(CORE_BUILD_DIR)/MDShell.Globals.asm $(CORE_BUILD_DIR)/MDShell.Blob.asm &: $(CORE_SRC_FILES) $(EH_CORE_SRC_FILES)
 	$(MAKE) -C ../mdshell-core release

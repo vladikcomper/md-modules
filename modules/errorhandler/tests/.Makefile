@@ -5,6 +5,7 @@
 include ../../../utils/.Makefile # For $(CONVSYM), $(CBUNDLE) etc
 
 ASM68K := wine ../../exec/asm68k.exe
+PSYLINK := wine ../../exec/psylink.exe
 ASL := wine ../../exec/as/asl.exe
 P2BIN := wine ../../exec/as/p2bin.exe
 
@@ -12,22 +13,29 @@ MDSHELL_HEADLESS := ../../../build/mdshell/headless/MDShell.asm
 
 TEST_BUILD_DIR := ../../../build/modules/errorhandler/tests
 
+BUILD_DIR := ../../../build/modules/errorhandler
 
-.PHONY:	all console-run console-utils flow-test raise-error clean
 
-all:	console-run console-utils flow-test raise-error
+.PHONY:	all console-run console-utils flow-test raise-error linkable clean
+
+all:	console-run console-utils flow-test raise-error linkable
 
 clean:
 	rm -f $(TEST_BUILD_DIR)/*
 
 
 console-run:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM)
-	$(ASM68K) /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- /e __DEBUG__ console-run.asm, $(TEST_BUILD_DIR)/console-run.gen, $(TEST_BUILD_DIR)/console-run.sym, $(TEST_BUILD_DIR)/console-run.lst
+	$(ASM68K) /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae- /p /e __DEBUG__ console-run.asm, $(TEST_BUILD_DIR)/console-run.gen, $(TEST_BUILD_DIR)/console-run.sym, $(TEST_BUILD_DIR)/console-run.lst
 	$(CONVSYM) $(TEST_BUILD_DIR)/console-run.sym $(TEST_BUILD_DIR)/console-run.gen -input asm68k_sym -output deb2 -a -ref 200
 
 raise-error:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM)
-	$(ASM68K) /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- /e __DEBUG__ raise-error.asm, $(TEST_BUILD_DIR)/raise-error.gen, $(TEST_BUILD_DIR)/raise-error.sym, $(TEST_BUILD_DIR)/raise-error.lst
+	$(ASM68K) /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae- /p /e __DEBUG__ raise-error.asm, $(TEST_BUILD_DIR)/raise-error.gen, $(TEST_BUILD_DIR)/raise-error.sym, $(TEST_BUILD_DIR)/raise-error.lst
 	$(CONVSYM) $(TEST_BUILD_DIR)/raise-error.sym $(TEST_BUILD_DIR)/raise-error.gen -input asm68k_sym -output deb2 -a -ref 200
+
+linkable:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM)
+	$(ASM68K) /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae- /g /l /e __DEBUG__ linkable.asm, $(TEST_BUILD_DIR)/linkable.obj, , $(TEST_BUILD_DIR)/linkable.lst
+	$(PSYLINK) /p $(TEST_BUILD_DIR)/linkable.obj $(BUILD_DIR)/asm68k-linkable/Debugger.obj,$(TEST_BUILD_DIR)/linkable.gen,$(TEST_BUILD_DIR)/linkable.sym
+	$(CONVSYM) $(TEST_BUILD_DIR)/linkable.sym $(TEST_BUILD_DIR)/linkable.gen -input asm68k_sym -output deb2 -a -ref 200
 
 console-utils:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM) $(CBUNDLE)
 	$(CBUNDLE) console-utils.asm -def ASM68K -out $(TEST_BUILD_DIR)/console-utils-asm68k.asm

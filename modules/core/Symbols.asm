@@ -3,6 +3,27 @@ _ValidHeader = $DEB2
 
 ; ===============================================================
 ; ---------------------------------------------------------------
+; Special macro to get symbol table's pointer
+; ---------------------------------------------------------------
+
+	if def(__LINKABLE__)
+	global	SymbolData_Ptr	; `global` instead of `xdef` so MDShell can inline it
+	endif
+
+GetSymbolTablePtr:	macro	opDestReg, injIndex
+	if def(__EXTSYM__)|def(__LINKABLE__)
+	if def(__EXTSYM__)
+__inject_symboldata_ptr_\injIndex:	; used for injection by Blob2Asm
+	endif
+		movea.l	(SymbolData_Ptr).l, \opDestReg
+	else
+		lea		SymbolData(pc), \opDestReg
+	endif
+	endm
+
+
+; ===============================================================
+; ---------------------------------------------------------------
 ; Subroutine to find nearest symbol for given offset
 ; ---------------------------------------------------------------
 ; INPUT:
@@ -18,13 +39,7 @@ _ValidHeader = $DEB2
 ; ---------------------------------------------------------------
 
 GetSymbolByOffset:
-	if def(_USE_SYMBOL_DATA_REF_)
-__inject_symboldata_ptr_1:	; can be used by Blob2Asm, a symbol injector (aka poor man's linker)
-		movea.l	(SymbolData_Ptr).l, a1
-	else
-		lea		SymbolData(pc), a1
-	endc
-
+	GetSymbolTablePtr	a1, 1
 	cmp.w	#_ValidHeader, (a1)+	; verify header
 	bne.s	@return_error
 
@@ -143,12 +158,7 @@ __inject_symboldata_ptr_1:	; can be used by Blob2Asm, a symbol injector (aka poo
 ; ---------------------------------------------------------------
 
 DecodeSymbol:
-	if def(_USE_SYMBOL_DATA_REF_)
-__inject_symboldata_ptr_2:	; can be used by Blob2Asm, a symbol injector (aka poor man's linker)
-		movea.l	(SymbolData_Ptr).l, a3
-	else
-		lea		SymbolData(pc), a3
-	endc
+	GetSymbolTablePtr	a3, 2
 	cmp.w	#_ValidHeader, (a3)+			; verify the header
 	bne.s	@return_cc
 	add.w	(a3), a3						; a3 = Huffman code table

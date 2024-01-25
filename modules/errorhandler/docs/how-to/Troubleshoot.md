@@ -61,7 +61,7 @@ MyFunction:
 		beq.s 	@skip
 		KDebug.WriteLine "Calling MyFunction when SomeFlag is set!"
 	@skip:
-	endc					; endif in AS
+	endif
 ```
 
 ## Problem: Using `KDebug` or `Console` alongside VRAM writes has side effects
