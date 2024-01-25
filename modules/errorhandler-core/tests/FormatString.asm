@@ -11,6 +11,9 @@
 
 ; ---------------------------------------------------------------
 
+; Disable "__global" macro to avoid naming conflicts with MDShell
+__NOGLOBALS__:	equ 1
+
 	include	"..\..\core\Macros.asm"
 	include	"..\..\core\Format_String.defs.asm"
 

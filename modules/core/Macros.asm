@@ -19,7 +19,7 @@ vram	macro	offset,operand
 				move.l	#($40000000+(((\offset)&$3FFF)<<16)+(((\offset)&$C000)>>14)),VDP_Ctrl
 		else
 				move.l	#($40000000+(((\offset)&$3FFF)<<16)+(((\offset)&$C000)>>14)),\operand
-		endc
+		endif
 		endm
 
 ; Generate dc.l constant with VRAM write command
@@ -34,19 +34,22 @@ cram	macro	offset,operand
 				move.l	#($C0000000+((\offset)<<16)),VDP_Ctrl
 		else
 				move.l	#($C0000000+((\offset)<<16)),\operand
-		endc
+		endif
 		endm
 		
 ; A special macro to define externally visible symbols
 __global macro	*
+		; __NOGLOBALS__ compile option suppresses global symbols, mostly used by tests
+		if def(__NOGLOBALS__)=0
 		; For linkable builds, use `xdef` to export symbol
 		if def(__LINKABLE__)
 		xdef	MDDBG__\*
-		endc
+		endif ; __LINKABLE__
 
 MDDBG__\*:	; full global symbol name uses "MD Debugger" prefix to minimize naming conflicts
+		endif ; __NOGLOBALS__=0
 
 \*:	; place the original symbol itself
 		endm
 
-	endc	; _MACRO_DEFS
+	endif	; _MACRO_DEFS
