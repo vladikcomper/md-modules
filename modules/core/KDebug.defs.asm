@@ -35,7 +35,7 @@ KDebug &
 				lea		__sp(sp), sp
 			elseif (__sp>0)
 				addq.w	#__sp, sp
-			endc
+			endif
 
 		; ... Otherwise, use direct write as an optimization
 		else
@@ -43,7 +43,7 @@ KDebug &
 			lea		@str\@(pc), a0
 			jsr		KDebug_\0(pc)
 			move.l	(sp)+, a0
-		endc
+		endif
 
 		move.w	(sp)+, sr
 		bra.w	@instr_end\@
@@ -75,8 +75,8 @@ KDebug &
 	else
 		inform	2,"""\0"" isn't a member of ""KDebug"""
 
-	endc
-	endc
+	endif
+	endif
 	endm
 
 
@@ -96,7 +96,7 @@ __FSTRING_GenerateArgumentsCode &
     	__midpos:	set		instr(__pos+5,\string,' ')
     	if (__midpos<1)|(__midpos>__endpos)
 			__midpos: = __endpos
-    	endc
+    	endif
 		__substr:	substr	__pos+1+1,__endpos-1,\string			; .type ea param
 		__type:		substr	__pos+1+1,__pos+1+1+1,\string			; .type
 
@@ -123,8 +123,8 @@ __FSTRING_GenerateArgumentsCode &
 
 			else
 				fatal 'Unrecognized type in string operand: %<\__substr>'
-			endc
-		endc
+			endif
+		endif
 
 		__pos:	set		instr(__pos+1,\string,'%<')
 	endw
@@ -155,7 +155,7 @@ __FSTRING_GenerateDecodedString &
     	__midpos:	set		instr(__pos+5,\string,' ')
     	if (__midpos<1)|(__midpos>__endpos)
 			__midpos: = __endpos
-    	endc
+    	endif
 		__type:		substr	__pos+1+1,__pos+1+1+1,\string			; .type
 
 		; Expression is an effective address (e.g. %<.w d0 hex> )
@@ -167,11 +167,11 @@ __FSTRING_GenerateDecodedString &
 				__param: substr ,,"hex"			; if param is ommited, set it to "hex"
 			elseif strcmp("\__param","signed")
 				__param: substr ,,"hex+signed"	; if param is "signed", correct it to "hex+signed"
-			endc
+			endif
 
 			if (\__param < $80)
 				inform	2,"Illegal operand format setting: ""\__param\"". Expected ""hex"", ""dec"", ""bin"", ""sym"", ""str"" or their derivatives."
-			endc
+			endif
 
 			if "\__type"=".b"
 				dc.b	\__param
@@ -179,13 +179,13 @@ __FSTRING_GenerateDecodedString &
 				dc.b	\__param|1
 			else
 				dc.b	\__param|3
-			endc
+			endif
 
 		; Expression is an inline constant (e.g. %<endl> )
 		else
 			__substr:	substr	__pos+1+1,__endpos-1,\string
 			dc.b	\__substr
-		endc
+		endif
 
 		__lpos:	set		__endpos+1
 		__pos:	set		instr(__pos+1,\string,'%<')
@@ -198,4 +198,4 @@ __FSTRING_GenerateDecodedString &
 
 	endm
 
-	endc
+	endif

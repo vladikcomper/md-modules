@@ -435,7 +435,7 @@ Console_Write_Formatted: __global
 
 	if def(__DEBUG__)
 		move.l	a0, -4
-	endc
+	endif
 
 	moveq	#@buffer_size-2, d7			; d7 = number of characters before flush -1
 	jsr		FormatString(pc)
@@ -473,7 +473,7 @@ Console_Write_Formatted: __global
 		move.l	-4, d0
 		illegal
 	@align_ok:
-	endc
+	endif
 
 	move.l	a0, -(sp)
 	jsr		Console_Write(pc)		; call the real flush function

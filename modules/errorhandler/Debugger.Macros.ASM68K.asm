@@ -17,12 +17,12 @@ assert	macro	src, cond, dest
 		cmp.\0	\dest, \src
 	else narg=2
 		tst.\0	\src
-	endc
+	endif
 		b\cond\.s	@skip\@
 		RaiseError	"Assertion failed:%<endl>\src \cond \dest"
 	@skip\@:
 #ifndef MD-SHELL
-	endc
+	endif
 #endif
 	endm
 
@@ -51,7 +51,7 @@ RaiseError &
 			jmp		MDDBG__ErrorHandler_PagesController
 		else
 			jmp		\console_program										; ... an aligned "jmp" instruction that calls console program itself
-		endc
+		endif
 	else
 		if DEBUGGER__EXTENSIONS__ENABLE
 			dc.b	\opts+_eh_return|(((*&1)^1)*_eh_align_offset)			; add flag "_eh_align_offset" if the next byte is at odd offset ...
@@ -60,8 +60,8 @@ RaiseError &
 		else
 			dc.b	\opts+0						; otherwise, just specify \opts for error handler, +0 will generate dc.b 0 ...
 			even								; ... in case \opts argument is empty or skipped
-		endc
-	endc
+		endif
+	endif
 	even
 
 	endm
@@ -99,7 +99,7 @@ Console &
 				lea		__sp(sp), sp
 			else
 				addq.w	#__sp, sp
-			endc
+			endif
 
 		; ... Otherwise, use direct write as an optimization
 		else
@@ -107,7 +107,7 @@ Console &
 			lea		@str\@(pc), a0
 			jsr		MDDBG__Console_\0
 			move.l	(sp)+, a0
-		endc
+		endif
 
 		move.w	(sp)+, sr
 		bra.w	@instr_end\@
@@ -167,7 +167,7 @@ Console &
 	else
 		inform	2,"""\0"" isn't a member of ""Console"""
 
-	endc
+	endif
 	endm
 
 ; ---------------------------------------------------------------
@@ -196,7 +196,7 @@ KDebug &
 				lea		__sp(sp), sp
 			elseif (__sp>0)
 				addq.w	#__sp, sp
-			endc
+			endif
 
 		; ... Otherwise, use direct write as an optimization
 		else
@@ -204,7 +204,7 @@ KDebug &
 			lea		@str\@(pc), a0
 			jsr		MDDBG__KDebug_\0
 			move.l	(sp)+, a0
-		endc
+		endif
 
 		move.w	(sp)+, sr
 		bra.w	@instr_end\@
@@ -236,9 +236,9 @@ KDebug &
 	else
 		inform	2,"""\0"" isn't a member of ""KDebug"""
 
-	endc
+	endif
 #ifndef MD-SHELL
-	endc
+	endif
 #endif
 	endm
 
@@ -255,7 +255,7 @@ __ErrorMessage &
 		else
 			dc.b	\opts+0
 			even
-		endc
+		endif
 	endm
 
 ; ---------------------------------------------------------------
@@ -274,7 +274,7 @@ __FSTRING_GenerateArgumentsCode &
     	__midpos:	set		instr(__pos+5,\string,' ')
     	if (__midpos<1)|(__midpos>__endpos)
 			__midpos: = __endpos
-    	endc
+    	endif
 		__substr:	substr	__pos+1+1,__endpos-1,\string			; .type ea param
 		__type:		substr	__pos+1+1,__pos+1+1+1,\string			; .type
 
@@ -301,8 +301,8 @@ __FSTRING_GenerateArgumentsCode &
 
 			else
 				fatal 'Unrecognized type in string operand: %<\__substr>'
-			endc
-		endc
+			endif
+		endif
 
 		__pos:	set		instr(__pos+1,\string,'%<')
 	endw
@@ -333,7 +333,7 @@ __FSTRING_GenerateDecodedString &
     	__midpos:	set		instr(__pos+5,\string,' ')
     	if (__midpos<1)|(__midpos>__endpos)
 			__midpos: = __endpos
-    	endc
+    	endif
 		__type:		substr	__pos+1+1,__pos+1+1+1,\string			; .type
 
 		; Expression is an effective address (e.g. %<.w d0 hex> )
@@ -345,11 +345,11 @@ __FSTRING_GenerateDecodedString &
 				__param: substr ,,"hex"			; if param is ommited, set it to "hex"
 			elseif strcmp("\__param","signed")
 				__param: substr ,,"hex+signed"	; if param is "signed", correct it to "hex+signed"
-			endc
+			endif
 
 			if (\__param < $80)
 				inform	2,"Illegal operand format setting: ""\__param\"". Expected ""hex"", ""dec"", ""bin"", ""sym"", ""str"" or their derivatives."
-			endc
+			endif
 
 			if "\__type"=".b"
 				dc.b	\__param
@@ -357,13 +357,13 @@ __FSTRING_GenerateDecodedString &
 				dc.b	\__param|1
 			else
 				dc.b	\__param|3
-			endc
+			endif
 
 		; Expression is an inline constant (e.g. %<endl> )
 		else
 			__substr:	substr	__pos+1+1,__endpos-1,\string
 			dc.b	\__substr
-		endc
+		endif
 
 		__lpos:	set		__endpos+1
 		__pos:	set		instr(__pos+1,\string,'%<')

@@ -10,7 +10,7 @@
 
 	if def(__LINKABLE__)
 		section	rom
-	endc
+	endif
 
 	include	'..\core\Macros.asm'
 	include	'..\core\KDebug.defs.asm'
@@ -354,7 +354,7 @@ Error_DrawOffsetLocation2:	__global
 	; using Blob2Asm (poor man's linker)
 	if def(__LINKABLE__)=0
 Error_DrawOffsetLocation__inj:	__global
-	endc
+	endif
 	lea		Str_OffsetLocation_24bit(pc), a1
 
 	jsr		Console_WriteLine_Formatted(pc)

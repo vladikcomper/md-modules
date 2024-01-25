@@ -8,17 +8,17 @@ _ValidHeader = $DEB2
 
 	if def(__LINKABLE__)
 	global	SymbolData_Ptr	; `global` instead of `xdef` so MDShell can inline it
-	endc
+	endif
 
 GetSymbolTablePtr:	macro	opDestReg, injIndex
 	if def(__EXTSYM__)|def(__LINKABLE__)
 	if def(__EXTSYM__)
 __inject_symboldata_ptr_\injIndex:	; used for injection by Blob2Asm
-	endc
+	endif
 		movea.l	(SymbolData_Ptr).l, \opDestReg
 	else
 		lea		SymbolData(pc), \opDestReg
-	endc
+	endif
 	endm
 
 

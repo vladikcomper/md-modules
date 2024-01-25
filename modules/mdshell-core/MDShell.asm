@@ -13,7 +13,7 @@ MDSHELL_VERSION:	equs	"MD Shell v.2.6"
 
 	if def(__LINKABLE__)
 		section	rom
-	endc
+	endif
 
 	include	"..\core\Macros.asm"
 

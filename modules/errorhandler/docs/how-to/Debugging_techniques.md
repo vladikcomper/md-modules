@@ -103,7 +103,7 @@ MyHeavyFunction:
 		tst.w 	d0
 		beq.s 	DebugOnlyError
 		jsr	SomeOtherDebugFunction
-	endc
+	endif
 
 	move.w 	d0, (a0)+
 	move.w 	d1, (a0)+

@@ -45,4 +45,4 @@ _setx	equ		$FA
 
 _ConsoleMagic	equ	$5D
 
-	endc	; _CONSOLE_DEFS
+	endif	; _CONSOLE_DEFS
