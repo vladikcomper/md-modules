@@ -70,7 +70,7 @@ Test_ExtendedFlags:
 	moveq	#24, d0				; X
 	moveq	#2, d1				; Y
 	jsr		MDDBG__Console_SetPosAsXY
-	move	#10, d1
+	moveq	#10, d1
 	jsr		MDDBG__Console_SetWidth
 	Console.Write "%<pal3>Paragraph fill test with %<pal2>direct API%<pal3> calls...%<pal0>"
 	movem.l	(sp)+, d0-d1
