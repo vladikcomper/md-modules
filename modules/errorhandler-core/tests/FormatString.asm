@@ -62,7 +62,7 @@ Main:
 		sub.l	a5, a0
 		move.w	a0, d3							; d3 = actual output size
 		cmp.w	d3, d4							; compare actual output size to the expected
-		bne.w		@SizeMismatch					; if they don't match, branch
+		bne.w	@SizeMismatch					; if they don't match, branch
 
 		subq.w	#1, d4
 		bmi.w	@NextTest
@@ -98,21 +98,21 @@ Main:
 
 	; -------------------------------------------------------------------------
 	@BufferOverflow:
-		bsr.w	@PrintFailureHeader
+		bsr		@PrintFailureHeader
 		Console.WriteLine '%<pal1>Error: Writting past the end of buffer'
-		bra.s @HaltTests
+		bra		@HaltTests
 
 	; -------------------------------------------------------------------------
 	@SizeMismatch:
-		bsr.w	@PrintFailureHeader
+		bsr		@PrintFailureHeader
 		Console.WriteLine '%<pal1>Error: Size mismatch (%<.b d3> != %<.b d4>)'
-		bra.w	@PrintFailureDiff
+		bra		@PrintFailureDiff
 
 	; -------------------------------------------------------------------------
 	@ByteMismatch:
-		bsr.w	@PrintFailureHeader
+		bsr		@PrintFailureHeader
 		Console.WriteLine '%<pal1>Error: Byte mismatch (%<.b -1(a1)> != %<.b -1(a5)>)'
-		bra.w	@PrintFailureDiff
+		bra		@PrintFailureDiff
 
 ; --------------------------------------------------------------
 ; Buffer flush function

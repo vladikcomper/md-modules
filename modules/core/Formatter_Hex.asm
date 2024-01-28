@@ -102,7 +102,7 @@ FormatHex_LongWord_Trim:
 FormatHex_LongWord_Trim_Swapped_NonZero:
 	bsr.s	FormatHex_Word_Trim
 	bcs.s	FormatHex_Return				; if buffer terminated, branch
-	bra.s		FormatHex_Word_Swapped			; should display a word without trimming now
+	bra		FormatHex_Word_Swapped			; should display a word without trimming now
 
 FormatHex_Word_Trim_Swapped:
 	swap	d1
