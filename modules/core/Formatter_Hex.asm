@@ -43,7 +43,7 @@ FormatHex_Byte:
 	lsr.w	#4,d2
 	and.w	d3,d2						; get nibble
 	move.b	HexDigitToChar(pc,d2), (a0)+
-	
+
 	dbf		d7, FormatHex_Word_WriteLastNibble2
 	jsr		(a4)
 	bcc.s	FormatHex_Word_WriteLastNibble2

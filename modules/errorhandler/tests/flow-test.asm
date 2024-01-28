@@ -64,12 +64,24 @@ Test_ExtendedFlags:
 	Console.Write "%<setx>%<1>%<setw>%<20>"
 #endif
 	Console.Write "Testing paragraph fill with 'setx' and 'setw' flags...%<pal0>"
+
+	; Using "Console_SetXY" and "Console_SetWidth" ...
+	movem.l	d0-d1, -(sp)
+	moveq	#24, d0				; X
+	moveq	#2, d1				; Y
+	jsr		MDDBG__Console_SetPosAsXY
+	moveq	#10, d1
+	jsr		MDDBG__Console_SetWidth
+	Console.Write "%<pal3>Paragraph fill test with %<pal2>direct API%<pal3> calls...%<pal0>"
+	movem.l	(sp)+, d0-d1
+
 #ifdef ASM68K
 	Console.Write "%<endl,setx,0,setw,40>"
 #else
 ##	; AS assembler implementation has limitations on formatting capabilities
 	Console.Write "%<endl>%<setx>%<0>%<setw>%<40>"
 #endif
+
 	jsr		CheckRegisterIntergity
 
 ; --------------------------------------------------------------
@@ -118,7 +130,7 @@ Test_ConsoleWriteExtended:
 ; --------------------------------------------------------------
 Test_MiscCommands:
 	; Using misc. commands related to Console enitity ...
-	Console.SetXY #3, #20
+	Console.SetXY #3, #22
 	Console.Write "Positioning test #1 ..."
 	Console.BreakLine
 	Console.Write "Positioning test #2 ..."

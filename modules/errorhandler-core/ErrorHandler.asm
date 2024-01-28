@@ -372,7 +372,7 @@ Error_DrawOffsetLocation__inj:	__global
 ;		a2		Registers buffer
 ; -----------------------------------------------------------------------------
 
-Error_DrawRegisters:     
+Error_DrawRegisters:
 	lea		-$10(sp), sp				; allocate string buffaro
 	moveq	#-1, d7						; size of the buffer for formatter functions (we assume buffer will never overflow)
 
@@ -486,12 +486,9 @@ ErrorHandler_SetupVDP:	__global
 	lea 	VDP_Ctrl, a5 			; a5 = VDP_Ctrl
 	lea 	-4(a5), a6				; a6 = VDP_Data
 
-	; Make sure there are no pending writes to VDP
-	tst.w	(a5)
-
-	; Make sure there are no DMA's occuring, otherwise wait
+	; Make sure there are no DMA's occurring, otherwise wait
 	@wait_dma:
-		move.w	(a5), ccr				; is DMA occuring?
+		move.w	(a5), ccr				; is DMA occurring? (also clears VDP write flag)
 		bvs.s	@wait_dma				; wait until it's finished
 
 	; Setup VDP registers for Error Handler screen
@@ -511,7 +508,7 @@ ErrorHandler_SetupVDP:	__global
 	move.l	d0, (a6)				; ''
 	move.l	#$40000010, (a5) 		; reset vertical scrolling
 	move.l	d0, (a6)				; ''
-	
+
 	; Fill screen with black
 	cram	$00, (a5)
 	move.w	d0, (a6)
