@@ -104,7 +104,7 @@ CheckRegisterIntergity:
 	movem.l	d0-a6, -(sp)
 
 	lea		(sp), a0				; a0 = registers dump pointer
-	lea		RegisterData(pc), a1		; a1 = source registers pointer
+	lea		RegisterData(pc), a1	; a1 = source registers pointer
 	moveq	#15-1, d0				; d0 = number of registers minus 1
 
 __loop:
