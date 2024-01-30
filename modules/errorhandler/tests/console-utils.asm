@@ -23,7 +23,7 @@ __DEBUG__:		equ	1		; enable KDebug
 Main:
 	; Initialize registers with pseudo-random values,
 	; found at "RegisterData" byte-array (see below)
-	movem.l	RegisterData, d0-a6
+	movem.l	RegisterData(pc), d0-a6
 
 	Console.Run TestProgram
 
@@ -50,7 +50,7 @@ TestProgram:
 	Console.WriteLine "Minimal sleep... #3"
 	Console.Sleep #30
 
-	jsr		CheckRegisterIntergity
+	jsr		CheckRegisterIntergity(pc)
 
 	Console.Write "Paused. Press A/B/C/Start to continue..."
 	KDebug.WriteLine "Prepare to call Console.Pause..."
@@ -59,7 +59,7 @@ TestProgram:
 	Console.WriteLine "WELL PRESSED!"
 	KDebug.WriteLine "Printed success message to the console"
 
-	jsr		CheckRegisterIntergity
+	jsr		CheckRegisterIntergity(pc)
 
 	KDebug.WriteLine "Testing KDebug writes exclusively..."
 	KDebug.Write "You should see "
@@ -93,8 +93,6 @@ TestProgram:
 	Console.BreakLine
 	Console.WriteLine "ALL DONE!"
 
-	jmp		CheckRegisterIntergity
-
 
 ; ==============================================================
 ; --------------------------------------------------------------
@@ -106,7 +104,7 @@ CheckRegisterIntergity:
 	movem.l	d0-a6, -(sp)
 
 	lea		(sp), a0				; a0 = registers dump pointer
-	lea		RegisterData, a1		; a1 = source registers pointer
+	lea		RegisterData(pc), a1	; a1 = source registers pointer
 	moveq	#15-1, d0				; d0 = number of registers minus 1
 
 __loop:
