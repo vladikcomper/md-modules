@@ -8,7 +8,7 @@ The base disassembly used for this installation is available here: https://githu
 ## Step 1. Download and unpack the debugger
 
 1. Open the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.5
-2. Download the ASM68K version of MD Debugger (`errorhandler-asm68k.7z`);
+2. Download the ASM68K version of MD Debugger (`errorhandler-axm68k.7z`);
 3. Extract its files into disassembly's root directory.
 
 ## Steps 2-5

@@ -301,16 +301,16 @@ __ErrorMessage &
 __FSTRING_GenerateArgumentsCode &
 	macro	string
 
-	__pos:	set 	instr(\string,'%<')		; token position
-	__stack:set		0						; size of actual stack
-	__sp:	set		0						; stack displacement
+	__pos:	= instr(\string,'%<')		; token position
+	__stack:= 0						; size of actual stack
+	__sp:	= 0						; stack displacement
 
 	; Parse string itself
 	while (__pos)
 
 		; Retrive expression in brackets following % char
-    	__endpos:	set		instr(__pos+1,\string,'>')
-    	__midpos:	set		instr(__pos+5,\string,' ')
+    	__endpos:	= instr(__pos+1,\string,'>')
+    	__midpos:	= instr(__pos+5,\string,' ')
     	if (__midpos<1)|(__midpos>__endpos)
 			__midpos: = __endpos
     	endif
@@ -343,7 +343,7 @@ __FSTRING_GenerateArgumentsCode &
 			endif
 		endif
 
-		__pos:	set		instr(__pos+1,\string,'%<')
+		__pos:	= instr(__pos+1,\string,'%<')
 	endw
 
 	; Generate stack code
@@ -358,8 +358,8 @@ __FSTRING_GenerateArgumentsCode &
 __FSTRING_GenerateDecodedString &
 	macro string
 
-	__lpos:	set		1						; start position
-	__pos:	set 	instr(\string,'%<')		; token position
+	__lpos:	= 1							; start position
+	__pos:	= instr(\string,'%<')		; token position
 
 	while (__pos)
 
@@ -368,8 +368,8 @@ __FSTRING_GenerateDecodedString &
 		dc.b	"\__substr"
 
 		; Retrive expression in brakets following % char
-    	__endpos:	set		instr(__pos+1,\string,'>')
-    	__midpos:	set		instr(__pos+5,\string,' ')
+    	__endpos:	= instr(__pos+1,\string,'>')
+    	__midpos:	= instr(__pos+5,\string,' ')
     	if (__midpos<1)|(__midpos>__endpos)
 			__midpos: = __endpos
     	endif
@@ -387,7 +387,12 @@ __FSTRING_GenerateDecodedString &
 			endif
 
 			if (\__param < $80)
+#ifdef BUNDLE-AXM68K
+## For AXM68K compatibility, we replace "dec" with "deci"
+				inform	2,"Illegal operand format setting: ""\__param\"". Expected ""hex"", ""deci"", ""bin"", ""sym"", ""str"" or their derivatives."
+#else
 				inform	2,"Illegal operand format setting: ""\__param\"". Expected ""hex"", ""dec"", ""bin"", ""sym"", ""str"" or their derivatives."
+#endif
 			endif
 
 			if "\__type"=".b"
@@ -404,8 +409,8 @@ __FSTRING_GenerateDecodedString &
 			dc.b	\__substr
 		endif
 
-		__lpos:	set		__endpos+1
-		__pos:	set		instr(__pos+1,\string,'%<')
+		__lpos:	= __endpos+1
+		__pos:	= instr(__pos+1,\string,'%<')
 	endw
 
 	; Write part of string before the end

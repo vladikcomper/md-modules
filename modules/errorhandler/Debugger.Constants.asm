@@ -9,7 +9,12 @@
 
 ; General arguments format flags
 hex		equ		$80				; flag to display as hexadecimal number
+#ifdef BUNDLE-AXM68K
+## For AXM68K compatibility, we replace "dec" with "deci"
+deci	equ		$90				; flag to display as decimal number
+#else
 dec		equ		$90				; flag to display as decimal number
+#endif
 bin		equ		$A0				; flag to display as binary number
 sym		equ		$B0				; flag to display as symbol (treat as offset, decode into symbol +displacement, if present)
 symdisp	equ		$C0				; flag to display as symbol's displacement alone (DO NOT USE, unless complex formatting is required, see notes below)
@@ -21,7 +26,11 @@ str		equ		$D0				; flag to display as string (treat as offset, insert string fro
 ;		use "sym|split", so the displacement won't be displayed until symdisp is met
 ;	* The "symdisp" can only be used after the "sym|split" instance, which decodes offset, otherwise, it'll
 ;		display a garbage offset.
+#ifdef BUNDLE-AXM68K
 ;	* No other argument format flags (hex, dec, bin, str) are allowed between "sym|split" and "symdisp",
+#else
+;	* No other argument format flags (hex, deci, bin, str) are allowed between "sym|split" and "symdisp",
+#endif
 ;		otherwise, the "symdisp" results are undefined.
 ;	* When using "str" flag, the argument should point to string offset that will be inserted.
 ;		Arguments format flags CAN NOT be used in the string (as no arguments are meant to be here),
@@ -29,7 +38,11 @@ str		equ		$D0				; flag to display as string (treat as offset, insert string fro
 
 
 ; Additional flags ...
+#ifdef BUNDLE-AXM68K
+; ... for number formatters (hex, deci, bin)
+#else
 ; ... for number formatters (hex, dec, bin)
+#endif
 signed	equ		8				; treat number as signed (display + or - before the number depending on sign)
 
 ; ... for symbol formatter (sym)
