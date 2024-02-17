@@ -50,7 +50,7 @@ $(BUILD_DIR)/asm68k-extsym/Debugger.asm $(BUILD_DIR)/asm68k-extsym/ErrorHandler.
 
 $(BUILD_DIR)/asm68k-linkable/Debugger.asm $(BUILD_DIR)/asm68k-linkable/Debugger.obj &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.obj $(BUILD_DIR)/ErrorHandler.Refs.asm | $(BUILD_DIR) $(CBUNDLE)
 	mkdir -p $(BUILD_DIR)/asm68k-linkable
-	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def LINKABLE -out $(BUILD_DIR)/asm68k-linkable/Debugger.asm
+	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def LINKABLE -def LINKABLE-WITH-DATA-SECTION -out $(BUILD_DIR)/asm68k-linkable/Debugger.asm
 	cp $(CORE_BUILD_DIR)/ErrorHandler.obj $(BUILD_DIR)/asm68k-linkable/Debugger.obj
 
 $(BUILD_DIR)/as/Debugger.asm $(BUILD_DIR)/as/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
