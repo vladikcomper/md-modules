@@ -45,4 +45,12 @@ _setx	equ		$FA
 
 _ConsoleMagic	equ	$5D
 
+; Default size of a text buffer used by `FormatString`, allocated
+; on the stack.
+; MD Debugger uses a smaller buffer, because the stack is usually
+; quite busy by the time exception is thrown.
+	if def(__CONSOLE_TEXT_BUFFER_SIZE__)=0
+__CONSOLE_TEXT_BUFFER_SIZE__:	equ	$30
+	endif
+
 	endif	; _CONSOLE_DEFS

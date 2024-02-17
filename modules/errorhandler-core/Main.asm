@@ -6,6 +6,11 @@
 ; (c) 2016-2024, Vladikcomper
 ; -----------------------------------------------------------------------------
 
+; Use smaller text buffers in `Console` and `KDebug` modules, because those are
+; stack-allocated and we can be short on stack space during exceptions.
+__CONSOLE_TEXT_BUFFER_SIZE__:	equ	$10
+__KDEBUG_TEXT_BUFFER_SIZE__:	equ	$10
+
 ; -----------------------------------------------------------------------------
 ; Main Error Handler module
 ; -----------------------------------------------------------------------------

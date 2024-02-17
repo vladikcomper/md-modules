@@ -26,7 +26,7 @@ KDebug_WriteLine_Formatted: __global
 ; -----------------------------------------------------------------------------
 KDebug_Write_Formatted: __global
 
-@buffer_size = $10
+@buffer_size = __KDEBUG_TEXT_BUFFER_SIZE__
 
 	move.l	a4, -(sp)
 	lea		@FlushBuffer(pc), a4		; flushing function

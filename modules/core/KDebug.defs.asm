@@ -15,6 +15,15 @@ _KDEBUG_DEFS:	equ	1
 ; debugger itself.
 ; ---------------------------------------------------------------
 
+; Default size of a text buffer used by `FormatString`, allocated
+; on the stack.
+; MD Debugger uses a smaller buffer, because the stack is usually
+; quite busy by the time exception is thrown.
+	if def(__KDEBUG_TEXT_BUFFER_SIZE__)=0
+__KDEBUG_TEXT_BUFFER_SIZE__:	equ	$30
+	endif
+
+
 KDebug &
 	macro
 
