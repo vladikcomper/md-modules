@@ -19,6 +19,19 @@
 ; --------------------------------------------------------------
 
 Main:
+	; In linkable builds, `.Write[Line]` functions store strings
+	; in `dbgstrings` section and they switch back and forth
+	; between `rom` and `dbgstrings` in macro invocation.
+	; In this stress test we ensure
+	; both ASM68K and PSYLINK are able to handle many section
+	; switches without issues.
+	KDebug.WriteLine "Linkable KDebug stress test..."
+	@counter: = 0
+	rept 1024
+		@counter: = @counter + 1
+		KDebug.WriteLine "Wrote stored string \#@counter/1024."
+	endr
+
 	KDebug.WriteLine "Entering Main..."
 
 	moveq	#$5F, d7
