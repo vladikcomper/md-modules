@@ -432,10 +432,6 @@ Console_Write_Formatted: __global
 	lea		-@buffer_size(sp), sp		; allocate string buffer
 	lea		(sp), a0					; a0 = string buffer
 
-	if def(__DEBUG__)
-		move.l	a0, -4
-	endif
-
 	moveq	#@buffer_size-2, d7			; d7 = number of characters before flush -1
 	jsr		FormatString(pc)
 	lea		@buffer_size(sp), sp		; free string buffer
@@ -465,14 +461,6 @@ Console_Write_Formatted: __global
 	neg.w	d7
 	add.w	#@buffer_size-1, d7
 	sub.w	d7, a0					; a0 = start of the buffer
-
-	if def(__DEBUG__)
-		cmpa.l	-4, a0
-		beq.s	@align_ok
-		move.l	-4, d0
-		illegal
-	@align_ok:
-	endif
 
 	move.l	a0, -(sp)
 	jsr		Console_Write(pc)		; call the real flush function
