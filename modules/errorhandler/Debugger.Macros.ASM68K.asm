@@ -92,7 +92,11 @@ Console &
 		if (__sp>0)
 			movem.l	a0-a2/d7, -(sp)
 			lea		4*4(sp), a2
+#ifndef LINKABLE-WITH-DATA-SECTION
 			lea		@str\@(pc), a1
+#else
+			lea		@str\@, a1
+#endif
 			jsr		MDDBG__Console_\0\_Formatted
 			movem.l	(sp)+, a0-a2/d7
 			if (__sp>8)
@@ -104,7 +108,11 @@ Console &
 		; ... Otherwise, use direct write as an optimization
 		else
 			move.l	a0, -(sp)
+#ifndef LINKABLE-WITH-DATA-SECTION
 			lea		@str\@(pc), a0
+#else
+			lea		@str\@, a0
+#endif
 			jsr		MDDBG__Console_\0
 			move.l	(sp)+, a0
 		endif
@@ -201,7 +209,11 @@ KDebug &
 		if (__sp>0)
 			movem.l	a0-a2/d7, -(sp)
 			lea		4*4(sp), a2
+#ifndef LINKABLE-WITH-DATA-SECTION
 			lea		@str\@(pc), a1
+#else
+			lea		@str\@, a1
+#endif
 			jsr		MDDBG__KDebug_\0\_Formatted
 			movem.l	(sp)+, a0-a2/d7
 			if (__sp>8)
@@ -213,7 +225,11 @@ KDebug &
 		; ... Otherwise, use direct write as an optimization
 		else
 			move.l	a0, -(sp)
+#ifndef LINKABLE-WITH-DATA-SECTION
 			lea		@str\@(pc), a0
+#else
+			lea		@str\@, a0
+#endif
 			jsr		MDDBG__KDebug_\0
 			move.l	(sp)+, a0
 		endif
