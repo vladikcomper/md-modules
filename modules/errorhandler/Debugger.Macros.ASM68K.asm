@@ -92,7 +92,11 @@ Console &
 		if (__sp>0)
 			movem.l	a0-a2/d7, -(sp)
 			lea		4*4(sp), a2
+#ifndef LINKABLE-WITH-DATA-SECTION
 			lea		@str\@(pc), a1
+#else
+			lea		@str\@, a1
+#endif
 			jsr		MDDBG__Console_\0\_Formatted
 			movem.l	(sp)+, a0-a2/d7
 			if (__sp>8)
@@ -104,17 +108,33 @@ Console &
 		; ... Otherwise, use direct write as an optimization
 		else
 			move.l	a0, -(sp)
+#ifndef LINKABLE-WITH-DATA-SECTION
 			lea		@str\@(pc), a0
+#else
+			lea		@str\@, a0
+#endif
 			jsr		MDDBG__Console_\0
 			move.l	(sp)+, a0
 		endif
 
 		move.w	(sp)+, sr
+
+#ifndef LINKABLE-WITH-DATA-SECTION
 		bra.w	@instr_end\@
 	@str\@:
 		__FSTRING_GenerateDecodedString \1
 		even
 	@instr_end\@:
+#else
+		; Store string data in a separate section
+		section dbgstrings
+	@str\@:
+		__FSTRING_GenerateDecodedString \1
+		even
+
+		; Back to previous section (it should be 'rom' for this trick to work)
+		section	rom
+#endif
 
 #ifndef MD-SHELL
 	elseif strcmp("\0","run")|strcmp("\0","Run")
@@ -189,7 +209,11 @@ KDebug &
 		if (__sp>0)
 			movem.l	a0-a2/d7, -(sp)
 			lea		4*4(sp), a2
+#ifndef LINKABLE-WITH-DATA-SECTION
 			lea		@str\@(pc), a1
+#else
+			lea		@str\@, a1
+#endif
 			jsr		MDDBG__KDebug_\0\_Formatted
 			movem.l	(sp)+, a0-a2/d7
 			if (__sp>8)
@@ -201,17 +225,32 @@ KDebug &
 		; ... Otherwise, use direct write as an optimization
 		else
 			move.l	a0, -(sp)
+#ifndef LINKABLE-WITH-DATA-SECTION
 			lea		@str\@(pc), a0
+#else
+			lea		@str\@, a0
+#endif
 			jsr		MDDBG__KDebug_\0
 			move.l	(sp)+, a0
 		endif
 
 		move.w	(sp)+, sr
+#ifndef LINKABLE-WITH-DATA-SECTION
 		bra.w	@instr_end\@
 	@str\@:
 		__FSTRING_GenerateDecodedString \1
 		even
 	@instr_end\@:
+#else
+		; Store string data in a separate section
+		section dbgstrings
+	@str\@:
+		__FSTRING_GenerateDecodedString \1
+		even
+
+		; Back to previous section (it should be 'rom' for this trick to work)
+		section	rom
+#endif
 
 	elseif strcmp("\0","breakline")|strcmp("\0","BreakLine")
 		move.w	sr, -(sp)
