@@ -38,7 +38,7 @@ $(BUILD_DIR)/asm68k/MDShell.asm:	$(SRC_FILES) $(EH_SRC_FILES) $(CORE_BUILD_DIR)/
 
 $(BUILD_DIR)/asm68k-linkable/MDShell.asm $(BUILD_DIR)/asm68k-linkable/MDShell.obj &:	$(SRC_FILES) $(EH_SRC_FILES) $(CORE_BUILD_DIR)/MDShell.Refs.asm $(CORE_BUILD_DIR)/MDShell.obj | $(BUILD_DIR) $(CBUNDLE)
 	mkdir -p $(BUILD_DIR)/asm68k-linkable
-	$(CBUNDLE) $(SRC_DIR)/MDShell.asm -def MD-SHELL -def BUNDLE-ASM68K -def LINKABLE -out $(BUILD_DIR)/asm68k-linkable/MDShell.asm
+	$(CBUNDLE) $(SRC_DIR)/MDShell.asm -def MD-SHELL -def BUNDLE-ASM68K -def LINKABLE -def LINKABLE-WITH-DATA-SECTION -out $(BUILD_DIR)/asm68k-linkable/MDShell.asm
 	cp $(CORE_BUILD_DIR)/MDShell.obj $(BUILD_DIR)/asm68k-linkable/MDShell.obj
 
 $(BUILD_DIR)/as/MDShell.asm:	$(SRC_FILES) $(EH_SRC_FILES) $(CORE_BUILD_DIR)/MDShell.Globals.asm $(CORE_BUILD_DIR)/MDShell.Blob.asm | $(BUILD_DIR) $(CBUNDLE)
