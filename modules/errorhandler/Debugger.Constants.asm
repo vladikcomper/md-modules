@@ -27,9 +27,9 @@ str		equ		$D0				; flag to display as string (treat as offset, insert string fro
 ;	* The "symdisp" can only be used after the "sym|split" instance, which decodes offset, otherwise, it'll
 ;		display a garbage offset.
 #ifdef BUNDLE-AXM68K
-;	* No other argument format flags (hex, dec, bin, str) are allowed between "sym|split" and "symdisp",
-#else
 ;	* No other argument format flags (hex, deci, bin, str) are allowed between "sym|split" and "symdisp",
+#else
+;	* No other argument format flags (hex, dec, bin, str) are allowed between "sym|split" and "symdisp",
 #endif
 ;		otherwise, the "symdisp" results are undefined.
 ;	* When using "str" flag, the argument should point to string offset that will be inserted.
