@@ -19,7 +19,7 @@ _eh_address_error	equ	$01		; use for address and bus errors only (tells error ha
 _eh_show_sr_usp		equ	$02		; displays SR and USP registers content on error screen
 
 ; Advanced execution flags
-; WARNING! For experts only, DO NOT USES them unless you know what you're doing
+; WARNING! For experts only, DO NOT USE them unless you know what you're doing
 _eh_return			equ	$20
 _eh_enter_console	equ	$40
 _eh_align_offset	equ	$80
