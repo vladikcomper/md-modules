@@ -1,7 +1,7 @@
 
-# MD Debugger Formatted Strings Reference
+# MD Shell Formatted Strings Reference
 
-MD Debugger comes with its own powerful formatted strings syntax.
+MD Shell comes with its own powerful formatted strings syntax.
 
 Every macro that you can pass a string/message to supports this syntax and allows you to format text and display various arguments.
 
