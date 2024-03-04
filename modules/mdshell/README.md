@@ -32,7 +32,7 @@ The following bundles are currently provided:
 * `bundle-as` - a complete header with blob targetting the _AS Macroassembler_ (v.1.42 Bld 55 and above);
 * `headless` - blob-only version, that should be compatible with any ASM68K assembler; it's mostly useless since macros aren't included.
 
-> **Warning**
+> [!WARNING]
 >
 > The AS Macroassembler version has limited support for some features!
 
@@ -230,7 +230,7 @@ Formatted strings may include flags or formatted values, which are encapsulated 
 
 Flags can be merged into a single token, for example: instead of `"%<endl>%<setx,2>%<pal0>"` you can just write `"%<endl,setx,2,pal0>"`.
 
-> **Warning**
+> [!WARNING]
 >
 > Merging flags is only supported in ASM68K version.
 
@@ -284,13 +284,13 @@ SomeString:
    dc.b   "Apples!", 0
 ```
 
-> **Warning**
+> [!WARNING]
 >
 > Trying to display the value of register SP (also known as A7) or address using it (e.g. %<.l -4(sp)>) leads to unexpected results. This is because formatted strings arguments are stored on stack at run-time, so stack pointer's value is different by the time it's requested.
 > 
 > Do not try to print SP directly, the results are unreliable.
 
-> **Warning**
+> [!WARNING]
 > AS version doesn't support some of the addressing modes in formatted strings. Only the following modes are supported:
 >
 > - __Absolute__ (`MyAddress`, `$FF0000`), but `(xxx).w`/`(xxx).l` syntax is not recognized;

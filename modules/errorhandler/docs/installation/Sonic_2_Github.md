@@ -25,7 +25,7 @@ Don't try to build the ROM just yet. We're still missing one important component
 
 The `Debugger.asm` file you've included earlier is just a set of macros definitions. You cannot actually use them unless there's real code that handles exceptions, debug text rendering etc. So you must now include the Error Handler itself (the `ErrorHandler.asm` file that you've also copied).
 
-> **Note**
+> [!NOTE]
 >
 > Why cannot we just have both definitions and code in one file? It's because we need Error Handler's code at the very end of the ROM, but debugger macros should be available from the beginning. In C/C++ terms, one is a header, and the other is an actual object file that is linked (included) the last. While it's technically possible to include Error Handler anywhere after the ROM header (e.g. in the middle), it's absolutely required that the debug symbol table is included after it, which is only possible at the end of ROM.
 
@@ -231,7 +231,7 @@ index 2699ff3..0c9903b 100755
 
 This will produce two builds for you: the RELEASE build (`s2built.bin`) and the DEBUG one (`s2built.debug.bin`). They should be identical for now, but if you start using some of the advanced debugger features, like assertions and `KDebug` interface, these features will be compiled and enabled only in DEBUG builds to avoid performance penalties when not debugging.
 
-> **Note**
+> [!NOTE]
 >
 > AS compiles code in _case-insensitive mode_ by default. This means all symbols will be converted to upper-case. If you want to preserve case, add `-U` to compile flags to enable the _case-sensitive mode_. Beware that you may need to fix a lot of labels if their casing differs!
 
@@ -289,7 +289,7 @@ Include your new file somewhere in `s2.asm`. I recommend including it right abov
     include   "SampleDebugger.asm"
 ```
 
-> **Warning**
+> [!WARNING]
 >
 > Remember not to include anything **after** `include "ErrorHandler.asm"` not to break debug symbol support.
 
@@ -313,7 +313,7 @@ DEBUGGER__EXTENSIONS__BTN_C_DEBUGGER:	equ		0		; disabled
 
 Try to change the value of `DEBUGGER__EXTENSIONS__BTN_C_DEBUGGER` from `0` to `SampleDebugger`. Now pressing any the C button on any exception will call this debugger separately. Press Start to return to the main exception.
 
-> **Note**
+> [!NOTE]
 >
 > You may notice that the screen contents are slightly different when `SampleDebugger` is called separately. This is because we don't have an exception header rendered and text itself is aligned differently when a debugger is invoked directly. If you want to align text the same way exception screen does it, you can add `Console.Write "%<setx>%<1>%<setw>%<38>"` at the beginning of the debugger.
 

@@ -124,7 +124,7 @@ convsym listing.lst rom.bin -input as_lst -output deb2 -a
 
 ## Converting SGDK symbols
 
-> **Warning**
+> [!WARNING]
 > 
 > SGDK isn't officially supported by the "Advanced Error Handler and Debugger", which makes use of the converted symbols, hence no installation instructions are provided.
 > At this point, you'll have to figure out installation on your own.
@@ -172,7 +172,7 @@ This parser expects a symbol file produced by the **ASM68K** assembler for input
 
 It also supports local symbols, if produced by the assembler.
 
-> **Note**
+> [!NOTE]
 > 
 > In order to include local labels in the symbol file, `/o v+` assembly option should be used.
 
@@ -200,7 +200,7 @@ Default parser options can be expressed as follows:
 
 This parser expects a listing file produced by the **ASM68K** assembler for input. Local symbols are also supported by default.
 
-> **Note**
+> [!NOTE]
 >
 > In order for some macro-related parsing options to work correctly, `/m` argument should be used on the assembler side to properly expand macros in the listing file (please consult the assembler manual for more information).
 

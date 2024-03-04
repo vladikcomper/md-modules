@@ -116,7 +116,7 @@ MyHeavyFunction:
 
 In DEBUG builds, you can roughly measure number of cycles a call of any function takes using `KDebug.StartTimer` and `KDebug.EndTimer`.
 
-> **Warning**
+> [!WARNING]
 >
 > This recipe only properly works in Blastem-nightly!
 

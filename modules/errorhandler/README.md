@@ -88,7 +88,7 @@ Currently, the *MD Debugger and Error Handler* supports integration with the fol
   * __AXM68K__, a hacked ASM68K usually bundled with macros for Z80 assembly support (`bundle-axm68k`)
 * __The AS Macroassembler__ v.1.42 Bld 55 and above (`bundle-as`)
 
-> **Warning**
+> [!WARNING]
 >
 > The AS Macroassembler version has limited support for some features
 

@@ -13,6 +13,6 @@ The base disassembly used for this installation is available here: https://githu
 
 ## Steps 2-5
 
-> **WARNING**
+> [!WARNING]
 >
 > This guide isn't finished yet. Please refer to Sonic 1 Github (ASM68K) guide to see this issue for Hivebrain 2022: https://github.com/vladikcomper/md-modules/issues/2

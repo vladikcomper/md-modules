@@ -1,7 +1,7 @@
 
 # Installing MD Debugger in Sonic 1 Hivebrain 2005 Disassembly
 
-> **Warning**
+> [!WARNING]
 >
 > Sonic 1 Hivebrain 2005 Disassembly is outdated and its usage is generally not recommended for newer projects. If you're looking to start a fresh project, consider using modern disassemblies like Sonic 1 GitHub Disassembly instead.
 
@@ -45,7 +45,7 @@ Your project should now build fine, so it's time to install the Error Handler it
 
 The `Debugger.asm` file you've included earlier is just a set of macros definitions. You cannot actually use them unless there's real code that handles exceptions, debug text rendering etc. So you must now include the Error Handler itself (the `ErrorHandler.asm` file that you've also copied).
 
-> **Note**
+> [!NOTE]
 >
 > Why cannot we just have both definitions and code in one file? It's because we need Error Handler's code at the very end of the ROM, but debugger macros should be available from the beginning. In C/C++ terms, one is a header, and the other is an actual object file that is linked (included) the last. While it's technically possible to include Error Handler anywhere after the ROM header (e.g. in the middle), it's absolutely required that the debug symbol table is included after it, which is only possible at the end of ROM.
 
@@ -120,7 +120,7 @@ Now, go back to `Kos_Z80:` and on the next few lines replace `EndOfRom` with `Se
 
 Now run `built.bat` again make sure SEGA sounds clean again.
 
-> **Note**
+> [!NOTE]
 >
 > If your disassembly has diverged from the original quite a lot, you may still have glitches in SEGA PCM. This is likely because the sample crosses 32 KB ROM boundary, which the native DAC driver cannot handle. The easiest (but often not the most space-efficient) way to fix this is to add `align $8000` before `SegaPCM:` to align it again.
 
@@ -159,7 +159,7 @@ Now run `built.bat` again make sure SEGA sounds clean again.
 
 This will produce two builds for you: the RELEASE build (`s1built.bin`) and the DEBUG one (`s1built.debug.bin`). They should be identical for now, but if you start using some of the advanced debugger features, like assertions and `KDebug` interface, these features will be compiled and enabled only in DEBUG builds to avoid performance penalties when not debugging.
 
-> **Note**
+> [!NOTE]
 >
 > ASM68K compiles code in _case-insensitive mode_ by default. This means all symbols will be converted to lower-case. If you want to preserve case, add `/o c+` to compile flags to enable the _case-sensitive mode_. Beware that you may need to fix a lot of labels if their casing differs!
 
@@ -217,7 +217,7 @@ Include your new file somewhere in `sonic1.asm`. I recommend including it right 
     include   "SampleDebugger.asm"
 ```
 
-> **Warning**
+> [!WARNING]
 >
 > Remember not to include anything **after** `include "ErrorHandler.asm"` not to break debug symbol support.
 
@@ -241,7 +241,7 @@ DEBUGGER__EXTENSIONS__BTN_C_DEBUGGER:	equ		0		; disabled
 
 Try to change the value of `DEBUGGER__EXTENSIONS__BTN_C_DEBUGGER` from `0` to `SampleDebugger`. Now pressing any the C button on any exception will call this debugger separately. Press Start to return to the main exception.
 
-> **Note**
+> [!NOTE]
 >
 > You may notice that the screen contents are slightly different when `SampleDebugger` is called separately. This is because we don't have an exception header rendered and text itself is aligned differently when a debugger is invoked directly. If you want to align text the same way exception screen does it, you can add `Console.Write "%<setx,1>%<setw,38>"` at the beginning of the debugger.
 
