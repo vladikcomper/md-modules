@@ -1,13 +1,13 @@
 
 # MD Shell
 
-**MD Shell** is a stand-alone easy to use "assembly header" for creating small console-based programs on Sega Mega-Drive / Genesis. It provides minimal but robust run-time environment with the ROM header, entry point and "high-level" macros for printing formatted texts.
-
-![Hello world](docs/.images/mdshell-hello-world.png)
+**MD Shell** is a stand-alone easy to use "assembly header" for creating small console-based programs on Sega Mega-Drive / Genesis. It provides minimal but robust run-time environment with the ROM header, entry point and "high-level" macros for printing formatted text.
 
 MD Shell can be used for quickly sketching test ROMs or learning M68K assembly in a friendly environment with accessible debug printing (without side-effects). It has all the features of MD Debugger and Error Handler built-in.
 
 ## Simple Hello World
+
+![Hello world](docs/.images/mdshell-hello-world.png)
 
 Once you include `MDShell.asm` header/object, you can write a simple console program in 3 lines of code:
 
@@ -21,18 +21,18 @@ Main:
 
 Each program should define "Main:" as an entry point.
 
-Anywhere in your code you can access `Console` and `KDebug` objects and call `RaiseError`.
+Anywhere in your code you can access `Console` and `KDebug` objects and call `RaiseError`. For full reference on macros and formatted strings, see "Documentation" section below.
 
 ## Building from source code
 
-Please refer to [BUILD.md] for build instructions.
+Please refer to [BUILD.md](BUILD.md) for build instructions.
 
 ## Bundles and supported assemblers
 
 **MD Shell** provides several flavors of headers/objects dubbed "bundles" (similarly to MD Debugger) that target various popular 68K assemblers. Currently, the following bundles are provided:
 
 * `asm68k` (recommended) - a complete header with blob targetting the _ASM68K assembler_;
-* `asm68k-linkable` - header and an object file for the _ASM68K assembler_, for with advanced build systems where _Psy-Q Linker_ is required;
+* `asm68k-linkable` - header and an object file for the _ASM68K assembler_, for use with advanced build systems where _Psy-Q Linker_ is required;
 * `as` - a complete header with blob targetting the _AS Macroassembler_ (v.1.42 Bld 55 and above);
 * `headless` - blob-only version, that should be compatible with any ASM68K assembler; it's mostly useless since macros aren't included.
 
