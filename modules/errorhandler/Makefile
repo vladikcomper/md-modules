@@ -39,33 +39,33 @@ clean:
 
 $(BUILD_DIR)/asm68k/Debugger.asm $(BUILD_DIR)/asm68k/ErrorHandler.asm &:	$(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
 	mkdir -p $(BUILD_DIR)/asm68k
-	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -out $(BUILD_DIR)/asm68k/Debugger.asm
-	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-ASM68K -out $(BUILD_DIR)/asm68k/ErrorHandler.asm
+	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def ASM68K-DOT-COMPAT -out $(BUILD_DIR)/asm68k/Debugger.asm
+	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-ASM68K -def ASM68K-DOT-COMPAT -out $(BUILD_DIR)/asm68k/ErrorHandler.asm
 
 $(BUILD_DIR)/asm68k-debug/Debugger.asm $(BUILD_DIR)/asm68k-debug/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Debug.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Debug.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
 	mkdir -p $(BUILD_DIR)/asm68k-debug
-	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def DEBUG -out $(BUILD_DIR)/asm68k-debug/Debugger.asm
-	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-ASM68K -def DEBUG -out $(BUILD_DIR)/asm68k-debug/ErrorHandler.asm
+	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def ASM68K-DOT-COMPAT -def DEBUG -out $(BUILD_DIR)/asm68k-debug/Debugger.asm
+	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-ASM68K -def ASM68K-DOT-COMPAT -def DEBUG -out $(BUILD_DIR)/asm68k-debug/ErrorHandler.asm
 
 $(BUILD_DIR)/asm68k-extsym/Debugger.asm $(BUILD_DIR)/asm68k-extsym/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
 	mkdir -p $(BUILD_DIR)/asm68k-extsym
-	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def EXTSYM -out $(BUILD_DIR)/asm68k-extsym/Debugger.asm
-	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-ASM68K -def EXTSYM -out $(BUILD_DIR)/asm68k-extsym/ErrorHandler.asm
+	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def ASM68K-DOT-COMPAT -def EXTSYM -out $(BUILD_DIR)/asm68k-extsym/Debugger.asm
+	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-ASM68K -def ASM68K-DOT-COMPAT -def EXTSYM -out $(BUILD_DIR)/asm68k-extsym/ErrorHandler.asm
 
 $(BUILD_DIR)/asm68k-linkable/Debugger.asm $(BUILD_DIR)/asm68k-linkable/Debugger.obj &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.obj $(BUILD_DIR)/ErrorHandler.Refs.asm | $(BUILD_DIR) $(CBUNDLE)
 	mkdir -p $(BUILD_DIR)/asm68k-linkable
-	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def LINKABLE -def LINKABLE-WITH-DATA-SECTION -out $(BUILD_DIR)/asm68k-linkable/Debugger.asm
+	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-ASM68K -def ASM68K-DOT-COMPAT -def LINKABLE -def LINKABLE-WITH-DATA-SECTION -out $(BUILD_DIR)/asm68k-linkable/Debugger.asm
 	cp $(CORE_BUILD_DIR)/ErrorHandler.obj $(BUILD_DIR)/asm68k-linkable/Debugger.obj
 
 $(BUILD_DIR)/axm68k/Debugger.asm $(BUILD_DIR)/axm68k/ErrorHandler.asm &: 	$(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
 	mkdir -p $(BUILD_DIR)/axm68k
-	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-AXM68K -out $(BUILD_DIR)/axm68k/Debugger.asm
-	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-AXM68K -out $(BUILD_DIR)/axm68k/ErrorHandler.asm
+	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-AXM68K -def ASM68K-DOT-COMPAT -out $(BUILD_DIR)/axm68k/Debugger.asm
+	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-AXM68K -def ASM68K-DOT-COMPAT -out $(BUILD_DIR)/axm68k/ErrorHandler.asm
 
 $(BUILD_DIR)/axm68k-extsym/Debugger.asm $(BUILD_DIR)/axm68k-extsym/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
 	mkdir -p $(BUILD_DIR)/axm68k-extsym
-	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-AXM68K -def EXTSYM -out $(BUILD_DIR)/axm68k-extsym/Debugger.asm
-	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-AXM68K -def EXTSYM -out $(BUILD_DIR)/axm68k-extsym/ErrorHandler.asm
+	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-AXM68K -def ASM68K-DOT-COMPAT -def EXTSYM -out $(BUILD_DIR)/axm68k-extsym/Debugger.asm
+	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-AXM68K -def ASM68K-DOT-COMPAT -def EXTSYM -out $(BUILD_DIR)/axm68k-extsym/ErrorHandler.asm
 
 $(BUILD_DIR)/as/Debugger.asm $(BUILD_DIR)/as/ErrorHandler.asm &: $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
 	mkdir -p $(BUILD_DIR)/as

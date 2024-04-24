@@ -18,9 +18,16 @@ assert	macro	src, cond, dest
 	else narg=2
 		tst.\0	\src
 	endif
+#ifdef ASM68K-DOT-COMPAT
+	pusho
+	opt l-
+#endif
 		b\cond\.s	@skip\@
 		RaiseError	"Assertion failed:%<endl>\src \cond \dest"
 	@skip\@:
+#ifdef ASM68K-DOT-COMPAT
+	popo
+#endif
 #ifndef MD-SHELL
 	endif
 #endif
@@ -88,6 +95,11 @@ Console &
 
 		__FSTRING_GenerateArgumentsCode \1
 
+#ifdef ASM68K-DOT-COMPAT
+		pusho
+		opt l-
+#endif
+
 		; If we have any arguments in string, use formatted string function ...
 		if (__sp>0)
 			movem.l	a0-a2/d7, -(sp)
@@ -134,6 +146,9 @@ Console &
 
 		; Back to previous section (it should be 'rom' for this trick to work)
 		section	rom
+#endif
+#ifdef ASM68K-DOT-COMPAT
+		popo	
 #endif
 
 #ifndef MD-SHELL
@@ -205,6 +220,11 @@ KDebug &
 
 		__FSTRING_GenerateArgumentsCode \1
 
+#ifdef ASM68K-DOT-COMPAT
+		pusho
+		opt l-
+#endif
+
 		; If we have any arguments in string, use formatted string function ...
 		if (__sp>0)
 			movem.l	a0-a2/d7, -(sp)
@@ -250,6 +270,9 @@ KDebug &
 
 		; Back to previous section (it should be 'rom' for this trick to work)
 		section	rom
+#endif
+#ifdef ASM68K-DOT-COMPAT
+		popo	
 #endif
 
 	elseif strcmp("\0","breakline")|strcmp("\0","BreakLine")
