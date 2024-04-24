@@ -21,6 +21,10 @@
 
 __DEBUG__:	equ	1	; turn on assertions
 
+#ifdef ASM68K
+	opt	l+		; use "." for local labels
+#endif
+
 	include	"..\..\..\build\modules\mdshell\headless\MDShell.asm"
 
 #ifdef ASM68K
@@ -166,15 +170,15 @@ CheckRegisterIntergity:
 	lea		RegisterData, a1		; a1 = source registers pointer
 	moveq	#15-1, d0				; d0 = number of registers minus 1
 
-__loop:
+.loop:
 	cmpm.l	(a0)+, (a1)+
-	dbne	d0, __loop
-	bne.s	__corrupted
+	dbne	d0, .loop
+	bne.s	.corrupted
 	movem.l	(sp)+, d0-a6
 	rts
 
 ; --------------------------------------------------------------
-__corrupted:
+.corrupted:
 	subq.w	#4, a0
 	subq.w	#4, a1
 	lea		RegisterNames-RegisterData(a1), a2
