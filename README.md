@@ -29,9 +29,36 @@ This repository aims to be cross-platform, designed with Linux, Windows, MacOS (
 
 - **Modules** fully depend on *utilities*, so they require all the dependencies listed above. Non-Windows systems also require *Wine* to run assemblers (they're 32-bit Windows executables).
 
-### Linux (Ubuntu/Debian)
+### Windows
 
-Make sure you have the necessary dependencies:
+> [!NOTE]
+>
+> Only Windows 7 or newer is supported because of Python 3.8 and C++20 requirements. This guide targets Windows 10 or later; for Windows 7 you need alternative ways to install dependencies which are not covered here.
+
+Make sure you have all the dependencies. This example uses Chocolatey to automate dependency installation, but you may choose any other option that works for you:
+
+```sh
+choco install mingw python3 make
+```
+
+Once dependencies are installed, build process is the same as on Unix-like systems. In Command Prompt (`cmd.exe`), use one of the following commands:
+
+```sh
+make
+# or separately:
+make utils
+make modules
+```
+
+> [!NOTE]
+>
+> You must have `make.exe`, `gcc.exe`, `python3.exe` and a few others available via `PATH` environment variable for all commands to work properly. Chocolatey and other package managers usually take care of that, but if you get "XXX is not recognized as an internal or external command ..." errors, then your shell cannot locate those executables, so you have to find their installation paths and append to the `PATH` variable manually.
+
+If you want to invoke `make` from individual directories however (not root), be sure to use `make -f Makefile.win` instead (the root Makefile does it automatically).
+
+### Linux
+
+Make sure you have the necessary dependencies using your package manager (this following example uses `apt` under Debian/Ubuntu):
 
 ```sh
 apt install g++ make python3 wine
@@ -74,15 +101,15 @@ gmake modules
 
 ### MacOS
 
+> [!WARNING]\
+> Since MacOS Catalina 10.15, 32-bit software is no longer supported. You may not be able to build *Modules* which require 32-bit Wine. The only proper workaround (at the time of writing) is to use a VM.
+
 Make sure you have Wine:
 
 ```sh
 brew tap homebrew/cask-versions
 brew install --cask --no-quarantine wine-stable
 ```
-
-> [!WARNING]\
-> Since MacOS Catalina 10.15, 32-bit software is no longer supported. You may not be able to build *Modules* which require 32-bit Wine.
 
 To build everything, use one of the following commands:
 
@@ -91,21 +118,4 @@ make
 # or separately:
 make utils
 make modules
-```
-
-### Windows
-
-Make sure you have all the dependencies. This examples uses Chocolatey to automate dependency installation, but you may choose any other option that works for you:
-
-```sh
-choco install mingw python3 make
-```
-
-On Windows, you must always use `Makefile.win` instead of `Makefile`, so you have to pass `-f Makefile.win` option to every invocation of `make`:
-
-```sh
-make -f Makefile.win
-# or separately:
-make -f Makefile.win utils
-make -f Makefile.win modules
 ```
