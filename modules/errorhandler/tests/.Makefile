@@ -16,9 +16,9 @@ TEST_BUILD_DIR := ../../../build/modules/errorhandler/tests
 BUILD_DIR := ../../../build/modules/errorhandler
 
 
-.PHONY:	all console-run console-utils flow-test raise-error linkable clean
+.PHONY:	all console-run console-utils flow-test raise-error linkable asm68k-dot-compat clean
 
-all:	console-run console-utils flow-test raise-error linkable
+all:	console-run console-utils flow-test raise-error linkable asm68k-dot-compat
 
 clean:
 	rm -f $(TEST_BUILD_DIR)/*
@@ -37,11 +37,16 @@ linkable:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM)
 	$(PSYLINK) /p $(TEST_BUILD_DIR)/linkable.obj $(BUILD_DIR)/asm68k-linkable/Debugger.obj,$(TEST_BUILD_DIR)/linkable.gen,$(TEST_BUILD_DIR)/linkable.sym
 	$(CONVSYM) $(TEST_BUILD_DIR)/linkable.sym $(TEST_BUILD_DIR)/linkable.gen -input asm68k_sym -output deb2 -a -ref 200
 
+asm68k-dot-compat:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM)
+	$(ASM68K) /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae-,v+ /g /l /e __DEBUG__ asm68k-dot-compat.asm, $(TEST_BUILD_DIR)/asm68k-dot-compat.obj, , $(TEST_BUILD_DIR)/asm68k-dot-compat.lst
+	$(PSYLINK) /p $(TEST_BUILD_DIR)/asm68k-dot-compat.obj $(BUILD_DIR)/asm68k-linkable/Debugger.obj,$(TEST_BUILD_DIR)/asm68k-dot-compat.gen,$(TEST_BUILD_DIR)/asm68k-dot-compat.sym
+	$(CONVSYM) $(TEST_BUILD_DIR)/asm68k-dot-compat.sym $(TEST_BUILD_DIR)/asm68k-dot-compat.gen -input asm68k_sym -output deb2 -inopt '/localSign=.' -a -ref 200
+
 console-utils:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM) $(CBUNDLE)
 	$(CBUNDLE) console-utils.asm -def ASM68K -out $(TEST_BUILD_DIR)/console-utils-asm68k.asm
 	$(CBUNDLE) console-utils.asm -def AS -out $(TEST_BUILD_DIR)/console-utils-as.asm
 
-	$(ASM68K) /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- $(TEST_BUILD_DIR)/console-utils-asm68k.asm, $(TEST_BUILD_DIR)/console-utils-asm68k.gen, $(TEST_BUILD_DIR)/console-utils-asm68k.sym, $(TEST_BUILD_DIR)/console-utils-asm68k.lst
+	$(ASM68K) /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae- /p $(TEST_BUILD_DIR)/console-utils-asm68k.asm, $(TEST_BUILD_DIR)/console-utils-asm68k.gen, $(TEST_BUILD_DIR)/console-utils-asm68k.sym, $(TEST_BUILD_DIR)/console-utils-asm68k.lst
 	$(CONVSYM) $(TEST_BUILD_DIR)/console-utils-asm68k.sym $(TEST_BUILD_DIR)/console-utils-asm68k.gen -in asm68k_sym -a -ref 200 -debug
 	
 	set AS_MSGPATH="..\..\exec\as"
