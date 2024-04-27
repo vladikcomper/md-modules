@@ -46,7 +46,7 @@ console-utils:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM) $(CBUNDLE)
 	$(CBUNDLE) console-utils.asm -def ASM68K -out $(TEST_BUILD_DIR)\console-utils-asm68k.asm
 	$(CBUNDLE) console-utils.asm -def AS -out $(TEST_BUILD_DIR)\console-utils-as.asm
 
-	$(ASM68K) /k /m /o c+ /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /p /o ae- $(TEST_BUILD_DIR)\console-utils-asm68k.asm, $(TEST_BUILD_DIR)\console-utils-asm68k.gen, $(TEST_BUILD_DIR)\console-utils-asm68k.sym, $(TEST_BUILD_DIR)\console-utils-asm68k.lst
+	$(ASM68K) /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae- /p $(TEST_BUILD_DIR)\console-utils-asm68k.asm, $(TEST_BUILD_DIR)\console-utils-asm68k.gen, $(TEST_BUILD_DIR)\console-utils-asm68k.sym, $(TEST_BUILD_DIR)\console-utils-asm68k.lst
 	$(CONVSYM) $(TEST_BUILD_DIR)\console-utils-asm68k.sym $(TEST_BUILD_DIR)\console-utils-asm68k.gen -in asm68k_sym -a -ref 200 -debug
 	
 	set AS_MSGPATH="..\..\exec\as"
