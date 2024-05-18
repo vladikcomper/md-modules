@@ -129,6 +129,10 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 
 ## Step 4. Install ConvSym to generate debug symbols
 
+> [!NOTE]
+>
+> This step involves changing Lua build system, which can get updated every now and then. If that happens, code changes may differ for you. If you find out that this guide is not up-to-date with the disassembly, please open an issue in this repository or create a pull request with the update.
+
 1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.5
 
 2. Download the ConvSym utility for your platform: Windows, Linux, FreeBSD or MacOS;
@@ -237,7 +241,7 @@ This will produce two builds for you: the RELEASE build (`s2built.bin`) and the 
 
 That's it! Save `build.lua` and run it (or `build.bat` on Windows as its launcher). Make sure the are no errors in the output.
 
-## Step 5. Testing the debugger with an intentional crash
+## Step 5. Testing the debugger with an intentional crash (optional)
 
 Now, let's try your freshly installed debugger in action. For testing purposes, let's make it so the game shows custom exception if you press A playing as Sonic. We then extend and customize our exception a little.
 

@@ -189,7 +189,7 @@ This will produce two builds for you: the RELEASE build (`s1built.bin`) and the 
 
 That's it! Save `build.lua` and run it (or `build.bat` on Windows as its launcher). Make sure the are no errors in the output.
 
-## Step 5. Testing the debugger with an intentional crash
+## Step 5. Testing the debugger with an intentional crash (optional)
 
 Now, let's try your freshly installed debugger in action. For testing purposes, let's make it so the game shows custom exception if you press A playing as Sonic. We then extend and customize our exception a little.
 

@@ -3,9 +3,9 @@
 
 > [!NOTE]
 >
-> This guide assumes your project is using a newer version of Sonic 1 GitHub disassembly after June 2023. It's when it switched to Lua-based build system introduced and it was then refactored.
+> This guide assumes your project is using a newer version of Sonic 1 GitHub disassembly after June 2023. It's when it switched to Lua-based build system and it was in turn refactored.
 >
-> For older versions, see the other guides.
+> For older projects, see the [old version](Sonic_1_Github_AS_old_2022.md) of this guide.
 
 This guide describes a step-by-step installation process of the MD Error Handler and Debugger 2.5 and above in Sonic 1 GitHub Disassembly.
 
@@ -76,6 +76,10 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 
 ## Step 4. Install ConvSym to generate debug symbols
 
+> [!NOTE]
+>
+> Sonic 1 Disassembly's Lua build system was refactored in July 2023, but still changes every now and then. At the time of writing, it was last touched in August 2023. If your project is based on the disasembly from an earlier date, code changes may differ for you. Try seeing this file's history in Github to track these changes or use the [old guide](Sonic_1_Github_AS_old_2022.md).
+
 1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.5
 
 2. Download the ConvSym utility for your platform: Windows, Linux, FreeBSD or MacOS;
@@ -92,14 +96,14 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 	```lua
 	-- Assemble the ROM.
 	local compression = improved_dac_driver_compression and "kosinski-optimised" or "kosinski"
-	local success, continue = common.build_rom("sonic", "s1built", "", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
+	local message, abort = common.build_rom("sonic", "s1built", "", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
 
-	if not success then
-		exit_code = false
+	if message then
+	    exit_code = false
 	end
 
-	if not continue then
-		os.exit(false)
+	if abort then
+	    os.exit(exit_code, true)
 	end
 	```
 
@@ -107,37 +111,26 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 
 	```lua
 	-- Buld DEBUG ROM
-	local success, continue = common.build_rom("sonic", "s1built.debug", "-D __DEBUG__ -OLIST sonic.debug.lst", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
+	message, abort = common.build_rom("sonic", "s1built.debug", "-D __DEBUG__ -OLIST sonic.debug.lst", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
 
-	if not success then
-		exit_code = false
+	if message then
+	    exit_code = false
 	end
 
-	if not continue then
-		os.exit(false)
+	if abort then
+	    os.exit(exit_code, true)
 	end
-	```
 
-6. Now, locate these lines in the same file:
-
-	```lua
-	-- Correct the ROM's header with a proper checksum and end-of-ROM value.
-	common.fix_header("s1built.bin")
-	```
-
-7. Just **before** the above lines, insert this:
-
-	```lua
 	-- Append symbol table to the ROM.
 	local extra_tools = common.find_tools("debug symbol generator", "https://github.com/vladikcomper/md-modules", "https://github.com/sonicretro/s1disasm", "convsym")
 	if not extra_tools then
-		os.exit(false)
+	    os.exit(false)
 	end
-	os.execute(extra_tools.convsym .. " sonic.lst s1built.bin -input as_lst -exclude -filter \"z[A-Z].+\" -a")
-	os.execute(extra_tools.convsym .. " sonic.debug.lst s1built.debug.bin -input as_lst -exclude -filter \"z[A-Z].+\" -a")
+	os.execute(extra_tools.convsym .. " sonic.lst s1built.bin -input as_lst -range 0 FFFFFF -exclude -filter \"z[A-Z].+\" -a")
+	os.execute(extra_tools.convsym .. " sonic.debug.lst s1built.debug.bin -input as_lst -range 0 FFFFFF -exclude -filter \"z[A-Z].+\" -a")
 	```
 
-8. Finally, **after** the `common.fix_header("s1built.bin")` line, add this:
+6. Finally, **after** the `common.fix_header("s1built.bin")` line, add this:
 
 	```lua
 	common.fix_header("s1built.debug.bin")
@@ -150,22 +143,22 @@ If you're having issues with insertions listed above or want to double-check, he
 
 ```diff
 diff --git a/build.lua b/build.lua
-index 18d6f39..39ea9ff 100755
+index 1af412a..8786caa 100755
 --- a/build.lua
 +++ b/build.lua
-@@ -26,7 +26,27 @@ if not continue then
- 	os.exit(false)
+@@ -26,7 +26,27 @@ if abort then
+ 	os.exit(exit_code, true)
  end
  
 +-- Buld DEBUG ROM
-+local success, continue = common.build_rom("sonic", "s1built.debug", "-D __DEBUG__ -OLIST sonic.debug.lst", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
++message, abort = common.build_rom("sonic", "s1built.debug", "-D __DEBUG__ -OLIST sonic.debug.lst", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
 +
-+if not success then
++if message then
 +	exit_code = false
 +end
 +
-+if not continue then
-+	os.exit(false)
++if abort then
++	os.exit(exit_code, true)
 +end
 +
 +-- Append symbol table to the ROM.
@@ -173,14 +166,14 @@ index 18d6f39..39ea9ff 100755
 +if not extra_tools then
 +	os.exit(false)
 +end
-+os.execute(extra_tools.convsym .. " sonic.lst s1built.bin -input as_lst -exclude -filter \"z[A-Z].+\" -a")
-+os.execute(extra_tools.convsym .. " sonic.debug.lst s1built.debug.bin -input as_lst -exclude -filter \"z[A-Z].+\" -a")
++os.execute(extra_tools.convsym .. " sonic.lst s1built.bin -input as_lst -range 0 FFFFFF -exclude -filter \"z[A-Z].+\" -a")
++os.execute(extra_tools.convsym .. " sonic.debug.lst s1built.debug.bin -input as_lst -range 0 FFFFFF -exclude -filter \"z[A-Z].+\" -a")
 +
  -- Correct the ROM's header with a proper checksum and end-of-ROM value.
  common.fix_header("s1built.bin")
 +common.fix_header("s1built.debug.bin")
  
- os.exit(exit_code)
+ os.exit(exit_code, false)
 ```
 </details>
 
@@ -192,7 +185,7 @@ This will produce two builds for you: the RELEASE build (`s1built.bin`) and the 
 
 That's it! Save `build.lua` and run it (or `build.bat` on Windows as its launcher). Make sure the are no errors in the output.
 
-## Step 5. Testing the debugger with an intentional crash
+## Step 5. Testing the debugger with an intentional crash (optional)
 
 Now, let's try your freshly installed debugger in action. For testing purposes, let's make it so the game shows custom exception if you press A playing as Sonic. We then extend and customize our exception a little.
 
