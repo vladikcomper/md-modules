@@ -29,7 +29,7 @@ _eh_default			equ	0 ;_eh_show_sr_usp
 
 ; -----------------------------------------------------------------------------
 __ErrorMessage: macro	string, opts
-	jsr		ErrorHandler
+	jsr		ErrorHandler(pc)
 	dc.b	\string, 0
 	dc.b	\opts+_eh_return|(((*&1)^1)*_eh_align_offset)	; add flag "_eh_align_offset" if the next byte is at odd offset ...
 	even													; ... to tell Error handler to skip this byte, so it'll jump to ...
