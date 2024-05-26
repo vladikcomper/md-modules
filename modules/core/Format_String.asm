@@ -51,7 +51,7 @@ FormatString:	__global
 		bra.s	@quit_no_flush
 
 @quit:
-	subq.w	#1, a0		; because D7 wasn't decremented?
+	subq.w	#1, a0							; set pointer to null character
 	jsr		(a4)							; call flush buffer function
 	movem.l	(sp)+, FormatString_reglist
 
@@ -134,9 +134,9 @@ FormatString_CodeHandlers:
 	move.l	(a2)+, d1						; $08 :$0C	; code 4 : ## invalid ##: displays word, but loads longword
 	jmp		(a3)							; $0A :$0E	; code 5 : ## invalid ##: displays garbage word
 ; --------------------------------------------------------------
-	; codes F0..FF : Drawing command, one-byte argument (ignore)
-	addq.w	#1, a0							; $0C :$00	; code 6 : ## invalid ##: restores control character and puts another one
-	bra.s	@AfterRestoreCharacter2			; $0E :$02	; code 7 : ## invalid ##: does nothing
+	; codes F0..FF : Drawing command, one-byte argument (ignore, cut early if no enough space to fit argument)
+	subq.w	#2, d7							; $0C :$00	; code 6 : ## invalid ##: restores 2 control characters if enough space
+	bra.s	@RestoreTwoCharacters			; $0E :$02	; code 7 : ## invalid ##: restores 2 control characters, but check is broken
 ; --------------------------------------------------------------
 	addq.w	#8, a3							; $10		; code 8 : Display signed byte
 	move.w	(a2)+, d1						; $12		; code 9 : Display signed word
@@ -164,14 +164,19 @@ FormatString_CodeHandlers:
 	jmp		(a3)							; draw the actual value using an appropriate handler
 
 ; --------------------------------------------------------------
-@AfterRestoreCharacter2:
-	dbf		d7, @AfterRestoreCharacter3
-	jsr		(a4)
-	bcs.s	@return2  
-
-@AfterRestoreCharacter3:
-	move.b	(a1)+, (a0)+
-
 @AfterRestoreCharacter:
 	dbf		d7, @return2
+	jmp		(a4)
+
+; --------------------------------------------------------------
+@RestoreTwoCharacters:
+	bcs.s	@FlushBufferEarly				; if we had less than 2 characters remaining in buffer, cut it early: we'll fit it in the next buffer instead
+	addq.w	#1, a0							; restore control character
+	move.b	(a1)+, (a0)+					; store argument (next byte)
+	rts										; return Carry=0
+
+; --------------------------------------------------------------
+@FlushBufferEarly:
+	addq.w	#2, d7							; don't store last 2 characters: we won't fit them
+	subq.w	#1, a1							; rewind source string to fetch flag again
 	jmp		(a4)
