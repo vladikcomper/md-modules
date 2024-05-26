@@ -14,8 +14,12 @@
 ; Disable "__global" macro to avoid naming conflicts with MDShell
 __NOGLOBALS__:	equ 1
 
+; Enable "KDebug" logging
+__DEBUG__:		equ 1
+
 	include	"..\..\core\Macros.asm"
 	include	"..\..\core\Format_String.defs.asm"
+	include	"..\..\core\Console.defs.asm"
 
 	include	"..\..\core\Symbols.asm"
 	include	"..\..\core\Formatter_Sym.asm"
@@ -42,6 +46,8 @@ Main:
 	moveq	#0, d1					; d1 will be tests counter
 
 	@RunTest:
+		KDebug.WriteLine "Running test #%<.b d1 dec>..."
+
 		lea		(a5), a0						; a0 = buffer
 		movea.l	(a6), a1						; a1 = source string
 		lea		$A(a6), a2						; a2 = arguments stack
@@ -122,7 +128,16 @@ Main:
 ; --------------------------------------------------------------
 
 @IdleFlush:
-	addq.w	#8, d7				; set Carry flag, so FormatString is terminated after this flush
+	; Make sure buffer starts where expected
+	move.l	a0, -(sp)
+	neg.w	d7
+	add.w	#_bufferSize-1, d7
+	sub.w	d7, a0					; a0 = start of the buffer
+	assert.l a0, eq, a5				; buffer should start at the expected location
+	move.l	(sp)+, a0
+
+	moveq	#0, d7
+	subq.w	#1, d7					; set Carry flag, so FormatString is terminated after this flush
 	rts
 
 ; --------------------------------------------------------------
@@ -458,6 +473,31 @@ addTest macro args,source_str,compare_str
 	addTest { <.l long_data_chunk+$100010> }, &
 			<_sym|long,$00>, &
 			<'long_data_chunk+100010'>
+
+	; #59: Control character with argument flow: Fits buffer
+	addTest { <.l 0> }, &
+			<'We should be able to fit it ',_setw,40,$00>, &
+			<'We should be able to fit it ',_setw,40>
+
+	; #60: Control character with argument flow: Fits buffer's edge
+	addTest { <.l 0> }, &
+			<'We should be able to fit it: ',_setw,40,$00>, &
+			<'We should be able to fit it: ',_setw,40>
+
+	; #61: Control character with argument flow: On buffer's edge
+	addTest { <.l 0> }, &
+			<"We shouldn't truncate argument ",_setw,40,$00>, &
+			<"We shouldn't truncate argument ">
+
+	; #62: Control character with argument flow: Controls only test #1
+	addTest { <.l 0> }, &
+			<_setw,40,$00>, &
+			<_setw,40>
+
+	; #63: Control character with argument flow: Controls only test #2
+	addTest { <.l 0> }, &
+			<_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,$00>, &
+			<_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40,_setw,40>
 
 	dc.w	-1
 
