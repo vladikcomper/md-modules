@@ -77,7 +77,10 @@ KDebug_Write_Formatted: __global
 		beq.s	@write_buffer_done		; if null-terminator, branch
 		sub.b	#_newl, d7				; is flag "new line"?
 		beq.s	@write_buffer			; if yes, branch
-		bra.s	@write_buffer_next		; otherwise, skip writing
+		cmp.b	#_setw-_newl, d7		; is is it flag without arguments?
+		blt.s	@write_buffer_next		; if yes, only skip the flag itself
+		addq.w	#1, a0					; otherwise, skip argument as well
+		bra.s	@write_buffer_next		; ''
 
 	; -----------------------------------------------------------------------------
 	@write_buffer_done:
@@ -133,7 +136,10 @@ KDebug_Write:	__global
 		beq.s	@write_buffer_done		; if null-terminator, branch
 		sub.b	#_newl, d7				; is flag "new line"?
 		beq.s	@write_buffer			; if yes, branch
-		bra.s	@write_buffer_next		; otherwise, skip writing
+		cmp.b	#_setw-_newl, d7		; is is it flag without arguments?
+		blt.s	@write_buffer_next		; if yes, only skip the flag itself
+		addq.w	#1, a0					; otherwise, skip argument as well
+		bra.s	@write_buffer_next		; ''
 
 	; -----------------------------------------------------------------------------
 	@write_buffer_done:
