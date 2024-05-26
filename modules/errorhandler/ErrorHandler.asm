@@ -33,7 +33,11 @@ ErrorHandler:
 #ifdef EXTSYM
 #include ../../build/modules/errorhandler-core/ErrorHandler.ExtSymbols.Globals.asm
 #else
+#ifdef DEBUG
+#include ../../build/modules/errorhandler-core/ErrorHandler.Debug.Globals.asm
+#else
 #include ../../build/modules/errorhandler-core/ErrorHandler.Globals.asm
+#endif
 #endif
 
 #ifndef EXTSYM
