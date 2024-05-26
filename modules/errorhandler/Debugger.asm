@@ -20,7 +20,7 @@
 ; Symbols imported from the object file
 ; ---------------------------------------------------------------
 
-#include ../../build/modules/errorhandler-core/ErrorHandler.Refs.asm
+#include ../../build/modules/errorhandler-core/ErrorHandler.Linkable.Refs.asm
 #else
 ## AS bundle doesn't support linkable builds!
 #endif

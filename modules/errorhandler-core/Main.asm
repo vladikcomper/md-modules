@@ -47,7 +47,7 @@ __KDEBUG_TEXT_BUFFER_SIZE__:	equ	$10
 	include	'..\errorhandler-core\Debugger_AddressRegisters.asm'
 	include	'..\errorhandler-core\Debugger_Backtrace.asm'
 
-	if def(__LINKABLE__)
+	if def(__LINKABLE__)|def(__HEADLESS__)
 ; -----------------------------------------------------------------------------
 ; Linkable builds include pre-defined exception vectors
 ; -----------------------------------------------------------------------------

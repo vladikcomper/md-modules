@@ -9,13 +9,15 @@ CORE_DIR ?= ..\core
 ASM68K ?= ..\exec\asm68k.exe
 ASFLAGS := /q /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae-
 
-.PHONY:	all release release-linkable debug extsym tests clean
+.PHONY:	all release release-linkable headless debug extsym tests clean
 
-all:	release release-linkable debug extsym
+all:	release release-linkable headless debug extsym
 
 release:	$(BUILD_DIR)\ErrorHandler.bin $(BUILD_DIR)\ErrorHandler.Blob.asm $(BUILD_DIR)\ErrorHandler.Globals.asm
 
-release-linkable:	$(BUILD_DIR)\ErrorHandler.obj $(BUILD_DIR)\ErrorHandler.Refs.asm
+release-linkable:	$(BUILD_DIR)\ErrorHandler.Linkable.obj $(BUILD_DIR)\ErrorHandler.Linkable.Refs.asm
+
+headless:	$(BUILD_DIR)\ErrorHandler.Headless.bin $(BUILD_DIR)\ErrorHandler.Headless.SymbolTable.log
 
 debug:	$(BUILD_DIR)\ErrorHandler.Debug.bin $(BUILD_DIR)\ErrorHandler.Debug.Blob.asm $(BUILD_DIR)\ErrorHandler.Debug.Globals.asm
 
@@ -32,8 +34,8 @@ clean:
 
 # ASM68K-linkable object file
 
-$(BUILD_DIR)\ErrorHandler.obj $(BUILD_DIR)\ErrorHandler.Linkable.sym &:	$(wildcard $(SRC_DIR)\*.asm) $(wildcard $(CORE_DIR)\*.asm) | $(BUILD_DIR)
-	$(ASM68K) $(ASFLAGS) /l /e __LINKABLE__ $(SRC_DIR)\Main.asm, $(BUILD_DIR)\ErrorHandler.obj, $(BUILD_DIR)\ErrorHandler.Linkable.sym, $(BUILD_DIR)\ErrorHandler.Linkable.lst
+$(BUILD_DIR)\ErrorHandler.Linkable.obj $(BUILD_DIR)\ErrorHandler.Linkable.sym &:	$(wildcard $(SRC_DIR)\*.asm) $(wildcard $(CORE_DIR)\*.asm) | $(BUILD_DIR)
+	$(ASM68K) $(ASFLAGS) /l /e __LINKABLE__ $(SRC_DIR)\Main.asm, $(BUILD_DIR)\ErrorHandler.Linkable.obj, $(BUILD_DIR)\ErrorHandler.Linkable.sym, $(BUILD_DIR)\ErrorHandler.Linkable.lst
 
 # Raw unlinked binaries
 
@@ -46,6 +48,8 @@ $(BUILD_DIR)\ErrorHandler.Debug.bin $(BUILD_DIR)\ErrorHandler.Debug.sym &:	$(wil
 $(BUILD_DIR)\ErrorHandler.ExtSymbols.bin $(BUILD_DIR)\ErrorHandler.ExtSymbols.sym &:	$(wildcard $(SRC_DIR)\*.asm) $(wildcard $(CORE_DIR)\*.asm) | $(BUILD_DIR)
 	$(ASM68K) $(ASFLAGS) /p /e __EXTSYM__=1 /e SymbolData_Ptr=0 $(SRC_DIR)\Main.asm, $(BUILD_DIR)\ErrorHandler.ExtSymbols.bin, $(BUILD_DIR)\ErrorHandler.ExtSymbols.sym, $(BUILD_DIR)\ErrorHandler.ExtSymbols.lst
 
+$(BUILD_DIR)\ErrorHandler.Headless.bin $(BUILD_DIR)\ErrorHandler.Headless.sym &:	$(wildcard $(SRC_DIR)\*.asm) $(wildcard $(CORE_DIR)\*.asm) | $(BUILD_DIR)
+	$(ASM68K) $(ASFLAGS) /p /e __HEADLESS__ $(SRC_DIR)\Main.asm, $(BUILD_DIR)\ErrorHandler.Headless.bin, $(BUILD_DIR)\ErrorHandler.Headless.sym, $(BUILD_DIR)\ErrorHandler.Headless.lst
 
 # Symbol tables
 
@@ -58,7 +62,7 @@ $(BUILD_DIR)\ErrorHandler.Debug.Globals.asm:	$(BUILD_DIR)\ErrorHandler.Debug.sym
 $(BUILD_DIR)\ErrorHandler.ExtSymbols.Globals.asm:	$(BUILD_DIR)\ErrorHandler.ExtSymbols.sym | $(BUILD_DIR) $(CONVSYM)
 	$(CONVSYM) $^ $@ -output asm -outopt "%s: equ ErrorHandler+$$%X" -inopt "/processLocals-" -filter "MDDBG_.+"
 
-$(BUILD_DIR)\ErrorHandler.Refs.asm:	$(BUILD_DIR)\ErrorHandler.Linkable.sym | $(BUILD_DIR) $(CONVSYM)
+$(BUILD_DIR)\ErrorHandler.Linkable.Refs.asm:	$(BUILD_DIR)\ErrorHandler.Linkable.sym | $(BUILD_DIR) $(CONVSYM)
 	$(CONVSYM) $^ $@ -output asm -outopt "	xref	%s" -inopt "/processLocals-" -filter "MDDBG_.+"
 
 
@@ -82,6 +86,9 @@ $(BUILD_DIR)\ErrorHandler.Debug.SymbolTable.log:	$(BUILD_DIR)\ErrorHandler.Debug
 	$(CONVSYM) $^ $@ -output asm -inopt "/processLocals-" -outopt "%s: %X"
 
 $(BUILD_DIR)\ErrorHandler.ExtSymbols.SymbolTable.log:	$(BUILD_DIR)\ErrorHandler.ExtSymbols.sym | $(CONVSYM)
+	$(CONVSYM) $^ $@ -output asm -inopt "/processLocals-" -outopt "%s: %X"
+
+$(BUILD_DIR)\ErrorHandler.Headless.SymbolTable.log:	$(BUILD_DIR)\ErrorHandler.Headless.sym | $(CONVSYM)
 	$(CONVSYM) $^ $@ -output asm -inopt "/processLocals-" -outopt "%s: %X"
 
 
