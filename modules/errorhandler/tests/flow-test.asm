@@ -141,6 +141,21 @@ Test_MiscCommands:
 	jsr		CheckRegisterIntergity
 
 ; --------------------------------------------------------------
+Test_BufferFlushInbetweenControlSequence:
+	; Make sure buffer flushes don't split control sequence in two
+	Console.SetXY #1, #25
+#ifdef ASM68K
+	; Adding a dummy agrument (%<.b #$FA>) to make sure "Console_Write_Formatted" is used.
+	; Since MD Debugger 2.6, any strings without arguments is optimized to use
+	; "Console_Write" directly instead.
+	Console.Write "FLUSH %<.b #$FA>ILED!-%<setx,1>FLUSH SUCCESS!-"
+	bra *
+#else
+##	; AS assembler implementation has limitations on formatting capabilities
+	Console.Write "FLUSH %<.b #$FA>ILED!-%<setx>%<1>FLUSH SUCCESS!-"
+#endif
+
+; --------------------------------------------------------------
 Test_Assertions:
 	Console.SetXY #0, #26
 	Console.Write "Testing assertions..."
