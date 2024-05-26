@@ -5,7 +5,7 @@
 include ../../../utils/.Makefile.win # For $(CONVSYM), $(CBUNDLE) etc
 
 ASM68K := ..\..\exec\asm68k.exe
-ASFLAGS := /q /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae-
+ASFLAGS := /q /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae-,v+
 
 TEST_BUILD_DIR := ..\..\..\build\modules\errorhandler-core\tests
 
@@ -21,7 +21,8 @@ clean:
 
 formatstring:	| $(TEST_BUILD_DIR) $(CONVSYM)
 	$(ASM68K) $(ASFLAGS) /p FormatString.asm, $(TEST_BUILD_DIR)\FormatString.gen, $(TEST_BUILD_DIR)\FormatString.sym, $(TEST_BUILD_DIR)\FormatString.lst
-	$(CONVSYM) FormatString_DummySymbols.log $(TEST_BUILD_DIR)\FormatString.gen -a -range 0 FFFFFF -input log -output deb2 -ref 200
+	$(CONVSYM) FormatString_DummySymbols.log $(TEST_BUILD_DIR)\FormatString.gen -a -range 0 FFFFFF -input log -output deb2
+	$(CONVSYM) $(TEST_BUILD_DIR)\FormatString.sym $(TEST_BUILD_DIR)\FormatString.gen -a -ref 200
 
 fullexception:	| $(TEST_BUILD_DIR) $(CONVSYM)
 	cd .. && tests\$(ASM68K) $(ASFLAGS) /p tests\FullException.asm, tests\$(TEST_BUILD_DIR)\FullException.gen, tests\$(TEST_BUILD_DIR)\FullException.sym, tests\$(TEST_BUILD_DIR)\FullException.lst
