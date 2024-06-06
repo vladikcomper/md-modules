@@ -23,7 +23,14 @@ assert	macro	src, cond, dest
 	opt l-
 #endif
 		b\cond\.s	@skip\@
-		RaiseError	"Assertion failed:%<endl>\src \cond \dest"
+#ifdef ASM68K-DOT-COMPAT
+	popo
+#endif
+		RaiseError	"Assertion failed:%<endl,pal2>> assert.\0 %<pal0>\src,%<pal2>\cond%<pal0>,\dest%<endl,pal1>Got: %<.\0 \src>"
+#ifdef ASM68K-DOT-COMPAT
+	pusho
+	opt l-
+#endif
 	@skip\@:
 #ifdef ASM68K-DOT-COMPAT
 	popo

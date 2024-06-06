@@ -61,7 +61,7 @@ assert	macro	SRC, COND, DEST
 			!error "Unknown condition COND"
 		endcase
 
-		RaiseError	"Assertion failed:%<endl>SRC COND DEST"
+		RaiseError	"Assertion failed:%<endl>%<pal2>> assert.ATTRIBUTE %<pal0>SRC,%<pal2>COND%<pal0>,DEST%<endl>%<pal1>Got: %<.ATTRIBUTE SRC>"
 
 	.skip:
 #ifndef MD-SHELL
