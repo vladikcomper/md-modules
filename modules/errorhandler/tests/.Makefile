@@ -6,7 +6,7 @@ include ../../../utils/.Makefile # For $(CONVSYM), $(CBUNDLE) etc
 
 ASM68K := wine ../../exec/asm68k.exe
 PSYLINK := wine ../../exec/psylink.exe
-ASL := wine ../../exec/as/asl.exe
+AS := wine ../../exec/as/asw.exe
 P2BIN := wine ../../exec/as/p2bin.exe
 
 MDSHELL_HEADLESS := ../../../build/mdshell/headless/MDShell.asm
@@ -51,7 +51,7 @@ console-utils:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM) $(CBUNDLE)
 	
 	set AS_MSGPATH="..\..\exec\as"
 	set USEANSI=n
-	$(ASL) -U -xx -A -L -OLIST $(TEST_BUILD_DIR)/console-utils-as.lst $(TEST_BUILD_DIR)/console-utils-as.asm -o $(TEST_BUILD_DIR)/console-utils-as.p
+	$(AS) -U -xx -i . -A -L -OLIST $(TEST_BUILD_DIR)/console-utils-as.lst $(TEST_BUILD_DIR)/console-utils-as.asm -o $(TEST_BUILD_DIR)/console-utils-as.p
 	$(P2BIN) $(TEST_BUILD_DIR)/console-utils-as.p $(TEST_BUILD_DIR)/console-utils-as.gen -r 0x-0x
 	rm $(TEST_BUILD_DIR)/console-utils-as.p
 	$(CONVSYM) $(TEST_BUILD_DIR)/console-utils-as.lst $(TEST_BUILD_DIR)/console-utils-as.gen -in as_lst -a -ref 200
@@ -65,7 +65,7 @@ flow-test:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM) $(CBUNDLE)
 	
 	set AS_MSGPATH="..\..\exec\as"
 	set USEANSI=n
-	$(ASL) -U -xx -A -L -OLIST $(TEST_BUILD_DIR)/flow-test-as.lst $(TEST_BUILD_DIR)/flow-test-as.asm -o $(TEST_BUILD_DIR)/flow-test-as.p
+	$(AS) -U -xx -i . -A -L -OLIST $(TEST_BUILD_DIR)/flow-test-as.lst $(TEST_BUILD_DIR)/flow-test-as.asm -o $(TEST_BUILD_DIR)/flow-test-as.p
 	$(P2BIN) $(TEST_BUILD_DIR)/flow-test-as.p $(TEST_BUILD_DIR)/flow-test-as.gen -r 0x-0x
 	rm $(TEST_BUILD_DIR)/flow-test-as.p
 	$(CONVSYM) $(TEST_BUILD_DIR)/flow-test-as.lst $(TEST_BUILD_DIR)/flow-test-as.gen -in as_lst -a -ref 200
