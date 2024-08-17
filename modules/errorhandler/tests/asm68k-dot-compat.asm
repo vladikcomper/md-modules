@@ -32,7 +32,11 @@ Main:
 
 ; --------------------------------------------------------------
 .localDebugger:
+	assert.l	SymbolData_Ptr, eq, #$200
+
 	Console.WriteLine "Hello, world! (Console device)"
+
+	Console.Sleep #0
 
 	Console.WriteLine "Local label test: %<.l #.localRef1 sym>"
 	bra.s	.localJump

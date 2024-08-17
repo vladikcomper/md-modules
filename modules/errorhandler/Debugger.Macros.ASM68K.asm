@@ -224,6 +224,11 @@ Console &
 		move.w	d0, -(sp)
 		move.l	a0, -(sp)
 		move.w	\1, d0
+#ifdef ASM68K-DOT-COMPAT
+
+		pusho
+		opt l-
+#endif
 		subq.w	#1, d0
 		bcs.s	@sleep_done\@
 		@sleep_loop\@:
@@ -231,6 +236,10 @@ Console &
 			dbf		d0, @sleep_loop\@
 
 	@sleep_done\@:
+#ifdef ASM68K-DOT-COMPAT
+		popo
+
+#endif
 		move.l	(sp)+, a0
 		move.w	(sp)+, d0
 		move.w	(sp)+, sr
