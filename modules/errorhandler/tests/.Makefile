@@ -16,13 +16,26 @@ TEST_BUILD_DIR := ../../../build/modules/errorhandler/tests
 BUILD_DIR := ../../../build/modules/errorhandler
 
 
-.PHONY:	all console-run console-utils flow-test raise-error linkable asm68k-dot-compat clean
+.PHONY:	all assertions console-run console-utils flow-test raise-error linkable asm68k-dot-compat clean
 
-all:	console-run console-utils flow-test raise-error linkable asm68k-dot-compat
+all:	assertions console-run console-utils flow-test raise-error linkable asm68k-dot-compat
 
 clean:
 	rm -f $(TEST_BUILD_DIR)/*
 
+assertions:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM) $(CBUNDLE)
+	$(CBUNDLE) assertions.asm -def ASM68K -out $(TEST_BUILD_DIR)/assertions-asm68k.asm
+	$(CBUNDLE) assertions.asm -def AS -out $(TEST_BUILD_DIR)/assertions-as.asm
+
+	$(ASM68K) /q /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae- /p $(TEST_BUILD_DIR)/assertions-asm68k.asm, $(TEST_BUILD_DIR)/assertions-asm68k.gen, $(TEST_BUILD_DIR)/assertions-asm68k.sym, $(TEST_BUILD_DIR)/assertions-asm68k.lst
+	$(CONVSYM) $(TEST_BUILD_DIR)/assertions-asm68k.sym $(TEST_BUILD_DIR)/assertions-asm68k.gen -in asm68k_sym -a -ref 200 -debug
+	
+	set AS_MSGPATH="..\..\exec\as"
+	set USEANSI=n
+	$(AS) -U -xx -i . -A -L -OLIST $(TEST_BUILD_DIR)/assertions-as.lst $(TEST_BUILD_DIR)/assertions-as.asm -o $(TEST_BUILD_DIR)/assertions-as.p
+	$(P2BIN) $(TEST_BUILD_DIR)/assertions-as.p $(TEST_BUILD_DIR)/assertions-as.gen -r 0x-0x
+	rm $(TEST_BUILD_DIR)/assertions-as.p
+	$(CONVSYM) $(TEST_BUILD_DIR)/assertions-as.lst $(TEST_BUILD_DIR)/assertions-as.gen -in as_lst -a -ref 200
 
 console-run:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM)
 	$(ASM68K) /q /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae- /p /e __DEBUG__ console-run.asm, $(TEST_BUILD_DIR)/console-run.gen, $(TEST_BUILD_DIR)/console-run.sym, $(TEST_BUILD_DIR)/console-run.lst
