@@ -2,31 +2,37 @@
 ; Creates assertions for debugging
 ; ---------------------------------------------------------------
 ; EXAMPLES:
-;	assert.b	d0, eq, #1		; d0 must be $01, or else crash!
-;	assert.w	d5, eq			; d5 must be $0000!
-;	assert.l	a1, hi, a0		; asert a1 > a0, or else crash!
-;	assert.b	MemFlag, ne		; MemFlag must be non-zero!
+;	assert.b	d0, eq, #1		; d0 must be $01, or else crash
+;	assert.w	d5, pl			; d5 must be positive
+;	assert.l	a1, hi, a0		; asert a1 > a0, or else crash
+;	assert.b	(MemFlag).w, ne	; MemFlag must be set (non-zero)
+;	assert.l	a0, eq, #Obj_Player, MyObjectsDebugger
 ; ---------------------------------------------------------------
 
-assert	macro	src, cond, dest
+assert	macro	src, cond, dest, console_program
 #ifndef MD-SHELL
 	; Assertions only work in DEBUG builds
 	if def(__DEBUG__)
+		move.w	sr, -(sp)
 #endif
-	if narg=3
+	if strlen("\dest")
 		cmp.\0	\dest, \src
-	else narg=2
+	else
 		tst.\0	\src
 	endif
 #ifdef ASM68K-DOT-COMPAT
 	pusho
 	opt l-
 #endif
-		b\cond\.s	@skip\@
+		b\cond\		@skip\@
 #ifdef ASM68K-DOT-COMPAT
 	popo
 #endif
-		RaiseError	"Assertion failed:%<endl,pal2>> assert.\0 %<pal0>\src,%<pal2>\cond%<pal0>,\dest%<endl,pal1>Got: %<.\0 \src>"
+	if strlen("\dest")
+		RaiseError	"Assertion failed:%<endl,pal2>> assert.\0 %<pal0>\src,%<pal2>\cond%<pal0>,\dest%<endl,pal1>Got: %<.\0 \src>", \console_program
+	else
+		RaiseError	"Assertion failed:%<endl,pal2>> assert.\0 %<pal0>\src,%<pal2>\cond%<endl,pal1>Got: %<.\0 \src>", \console_program
+	endif
 #ifdef ASM68K-DOT-COMPAT
 	pusho
 	opt l-
@@ -35,6 +41,7 @@ assert	macro	src, cond, dest
 #ifdef ASM68K-DOT-COMPAT
 	popo
 #endif
+		move.w	(sp)+, sr
 #ifndef MD-SHELL
 	endif
 #endif

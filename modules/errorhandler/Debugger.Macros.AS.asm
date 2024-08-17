@@ -11,24 +11,26 @@
 ; Creates assertions for debugging
 ; ---------------------------------------------------------------
 ; EXAMPLES:
-;	assert.b	d0, eq, #1		; d0 must be $01, or else crash!
-;	assert.w	d5, eq			; d5 must be $0000!
-;	assert.l	a1, hi, a0		; asert a1 > a0, or else crash!
-;	assert.b	MemFlag, ne		; MemFlag must be non-zero!
+;	assert.b	d0, eq, #1		; d0 must be $01, or else crash
+;	assert.w	d5, pl			; d5 must be positive
+;	assert.l	a1, hi, a0		; asert a1 > a0, or else crash
+;	assert.b	(MemFlag).w, ne	; MemFlag must be set (non-zero)
+;	assert.l	a0, eq, #Obj_Player, MyObjectsDebugger
 ; ---------------------------------------------------------------
 
-assert	macro	SRC, COND, DEST
+assert	macro	src, cond, dest, consoleprogram
 #ifndef MD-SHELL
 	; Assertions only work in DEBUG builds
 	ifdef __DEBUG__
 #endif
-		if "DEST"<>""
-			cmp.ATTRIBUTE	DEST, SRC
+		move.w	sr, -(sp)
+		if "dest"<>""
+			cmp.ATTRIBUTE	dest, src
 		else
-			tst.ATTRIBUTE	SRC
+			tst.ATTRIBUTE	src
 		endif
 
-		switch lowstring("COND")
+		switch lowstring("cond")
 		case "eq"
 			beq	.skip
 		case "ne"
@@ -58,12 +60,17 @@ assert	macro	SRC, COND, DEST
 		case "lt"
 			blt	.skip
 		elsecase
-			!error "Unknown condition COND"
+			!error "Unknown condition cond"
 		endcase
 
-		RaiseError	"Assertion failed:%<endl>%<pal2>> assert.ATTRIBUTE %<pal0>SRC,%<pal2>COND%<pal0>,DEST%<endl>%<pal1>Got: %<.ATTRIBUTE SRC>"
+	if "dest"<>""
+		RaiseError	"Assertion failed:%<endl>%<pal2>> assert.ATTRIBUTE %<pal0>src,%<pal2>cond%<pal0>,dest%<endl>%<pal1>Got: %<.ATTRIBUTE src>", consoleprogram
+	else
+		RaiseError	"Assertion failed:%<endl>%<pal2>> assert.ATTRIBUTE %<pal0>src,%<pal2>cond%%<endl>%<pal1>Got: %<.ATTRIBUTE src>", consoleprogram
+	endif
 
 	.skip:
+		move.w	(sp)+, sr
 #ifndef MD-SHELL
 	endif
 #endif
