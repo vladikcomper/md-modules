@@ -40,8 +40,10 @@ _blue2:				equ 	3<<13
 ;		a3		Pointer to additional parameters
 ;		a4		Stack pointer (after exception frame)
 ;
-; NOTE:	It should be called via JSR/BSR exclusively with error
-;		information following the JSR/BSR opcode.
+; NOTE:	It should be called via JSR/BSR exclusively with error information
+;		following the JSR/BSR opcode.
+;		Alternatively, use PEA with pointer to error information followed
+;		by JMP.
 ;
 ; ERROR DATA FORMAT:
 ;		dc.b	"<Error formatted message>", 0
