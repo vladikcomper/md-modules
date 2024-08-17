@@ -52,11 +52,44 @@ assert	macro	src, cond, dest
 RaiseError &
 	macro	string, console_program, opts
 
-	pea		*(pc)
-	move.w	sr, -(sp)
+	pea		*(pc)				; this simulates M68K exception
+	move.w	sr, -(sp)			; ...
 	__FSTRING_GenerateArgumentsCode \string
+
+#ifndef LINKABLE-WITH-DATA-SECTION
 	jsr		MDDBG__ErrorHandler
+#else
+#ifdef ASM68K-DOT-COMPAT
+	pusho
+	opt l-
+	pea		@data\@
+	popo
+#else
+	pea		@data\@
+#endif
+	jmp		MDDBG__ErrorHandler
+#endif
+
+#ifdef LINKABLE-WITH-DATA-SECTION
+
+	; Store string data in a separate section
+	section dbgstrings
+
+#ifdef ASM68K-DOT-COMPAT
+	pusho
+	opt l-
+@data\@:
+	popo
 	__FSTRING_GenerateDecodedString \string
+
+#else
+@data\@:
+	__FSTRING_GenerateDecodedString \string
+
+#endif
+#else
+	__FSTRING_GenerateDecodedString \string
+#endif
 	if strlen("\console_program")			; if console program offset is specified ...
 		dc.b	\opts+_eh_enter_console|(((*&1)^1)*_eh_align_offset)	; add flag "_eh_align_offset" if the next byte is at odd offset ...
 		even															; ... to tell Error handler to skip this byte, so it'll jump to ...
@@ -78,6 +111,10 @@ RaiseError &
 	endif
 	even
 
+#ifdef LINKABLE-WITH-DATA-SECTION
+	; Back to previous section (it should be 'rom' for this trick to work)
+	section	rom
+#endif
 	endm
 
 ; ---------------------------------------------------------------
