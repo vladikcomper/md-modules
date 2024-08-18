@@ -32,7 +32,7 @@ Main:
 
 ; --------------------------------------------------------------
 .localDebugger:
-	assert.l	SymbolData_Ptr, eq, #$200
+	assert.b	SymbolData_Ptr, eq
 
 	Console.WriteLine "Hello, world! (Console device)"
 
