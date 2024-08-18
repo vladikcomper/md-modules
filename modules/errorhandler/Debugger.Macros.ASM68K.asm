@@ -13,8 +13,8 @@ assert	macro	src, cond, dest, console_program
 #ifndef MD-SHELL
 	; Assertions only work in DEBUG builds
 	if def(__DEBUG__)
-		move.w	sr, -(sp)
 #endif
+		move.w	sr, -(sp)
 	if strlen("\dest")
 		cmp.\0	\dest, \src
 	else
