@@ -15,16 +15,18 @@ _CONSOLE_DEFS:	equ	1
 ; ---------------------------------------------------------------
 
 			rsreset
-Console_RAM				equ		__rs
-Console.ScreenPosReq	rs.l	1				;		current on-screen position request for VDP
+Console_RAM:			equ		__rs
+Console.ScreenPosReq:	rs.l	1				;		current on-screen position request for VDP
 Console.ScreenRowReq:	rs.l	1				;		start of row position request for VDP
-Console.CharsPerLine	rs.w	1				; d2	number of characters per line
-Console.CharsRemaining	rs.w	1				; d3	remaining number of characters
-Console.BasePattern		rs.w	1				; d4	base pattern
-Console.ScreenRowSz		rs.w	1				; d6	row size within screen position
-Console.Magic			rs.b	1				;		should contain a magic number to ensure this is valid console memory area
-						rs.b	1				;		<Reserved>
-Console_RAM.size		equ		__rs-Console_RAM
+Console.CharsPerLine:	rs.w	1				; d2	number of characters per line
+Console.CharsRemaining:	rs.w	1				; d3	remaining number of characters
+Console.BasePattern:	rs.w	1				; d4	base pattern
+Console.ScreenRowSz:	rs.w	1				; d6	row size within screen position
+Console.YScrollTile:	rs.b	1				;		start tile for Y-scrolling (e.g. $02 = scroll past first two rows)
+Console.XScrollTile:	rs.b	1				;		start tile for X-scrolling (e.g. $02 = scroll past first two cols)
+Console.Magic:			equ		__rs			;		should contain a magic number to ensure this is valid console memory area (uses MSB of the next longword)
+Console.VRAMConfigPtr:	rs.l	1				;		pointer to Console's initial VRAM config (part of Console config containing VRAM and VSRAM offsets for the screen)
+Console_RAM.size:		equ		__rs-Console_RAM
 
 ; ---------------------------------------------------------------
 ; Constants

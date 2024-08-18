@@ -60,7 +60,30 @@ Console_Init:	__global
 	; fallthrough
 
 ; ---------------------------------------------------------------
-; Clears and resets console to the initial config
+; A shorter initialization sequence used by sub-consoles sharing
+; the same palette and graphics, but using a different nametable
+; 
+; Also clears and resets console to the initial config
+; ---------------------------------------------------------------
+; INPUT:
+;		a1		Initial console config
+;		a3		Console RAM pointer
+;		a5		VDP Control Port ($C00004)
+;		a6		VDP Data Port ($C00000)
+;
+; OUTPUT:
+;		d5	.l	Current on-screen position
+;
+; USES:
+;		d0-d1, a1, a3
+; ---------------------------------------------------------------
+
+Console_InitShared:	__global
+	move.l	a1, Console.VRAMConfigPtr(a3)	; Console RAM => Save VRAM config pointer
+	;fallthrough
+
+; ---------------------------------------------------------------
+; Clears and resets console screen to the initial state
 ; ---------------------------------------------------------------
 ; INPUT:
 ;		a1		Initial console config
@@ -76,52 +99,38 @@ Console_Init:	__global
 ; ---------------------------------------------------------------
 
 Console_Reset:	__global
-	move.l	(a1)+, d5				; d5 = VDP command with start on-screen position
-	; fallthrough
-
-; ---------------------------------------------------------------
-; A shorter initialization sequence used by sub-consoles sharing
-; the same palette and graphics, but using a different nametable
-; ---------------------------------------------------------------
-; INPUT:
-;		a1		Shared console config
-;		a3		Console RAM pointer
-;		a5		VDP Control Port ($C00004)
-;		a6		VDP Data Port ($C00000)
-;		d5	.l	VDP command with start on-screen position
-;
-; OUTPUT:
-;		d5	.l	Current on-screen position
-;
-; USES:
-;		d0-d1, a1, a3
-; ---------------------------------------------------------------
-
-Console_InitShared:	__global
-	; WARNING! Make sure a5 and a6 are properly set when calling this fragment separately
+	move.l	(a1)+, d5						; d5 = VDP command with start on-screen position
+	moveq	#0, d0
+	move.l	(a1)+, (a5)						; VDP => Setup VRAM write to HScroll
+	move.l	d0, (a6)						; VDP => Reset HScroll (both planes)
+	move.l	#$00104000, d1
+	add.w	(a1)+, d1
+	swap	d1
+	move.l	d1, (a5)						; VDP => Setup VSRAM write
+	move.l	d0, (a6)						; VDP => Reset VScroll (both planes)
 
 	; Init Console RAM
-	move.l	a3, usp					; remember Console RAM pointer in USP to restore it in later calls
-	move.l	d5,	(a3)+				; Console RAM => set current position (long)
-	move.l	d5,	(a3)+				; Console RAM => set start-of-line position (long)
-	move.l	(a1)+, (a3)+			; Console RAM => copy number of characters per line (word) + characters remaining for the current line (word)
-	move.l	(a1)+, (a3)+			; Console RAM => copy base pattern (word) + screen row size (word)
-	move.w	#_ConsoleMagic<<8, (a3)+; Console RAM => set magic number, clear reserved byte
+	move.l	a3, usp							; remember Console RAM pointer in USP to restore it in later calls
+	move.l	d5,	(a3)+						; Console RAM => set current position (long)
+	move.l	d5,	(a3)+						; Console RAM => set start-of-line position (long)
+	move.l	(a1)+, (a3)+					; Console RAM => copy number of characters per line (word) + characters remaining for the current line (word)
+	move.l	(a1)+, (a3)+					; Console RAM => copy base pattern (word) + screen row size (word)
+	move.w	d0, (a3)+						; Console RAM => clear Y- and X-tile scrolling
+	move.b	#_ConsoleMagic, (a3)+			; Console RAM => set magic number
 
 	; Clear screen
-	move.l	d5, (a5)				; VDP => Setup VRAM for screen namespace
-	moveq	#0, d0					; d0 = fill pattern
-	move.w	(a1)+, d1				; d1 = size of screen in tiles - 1
-	bsr.s	Console_FillTile		; fill screen
+	move.l	d5, (a5)						; VDP => Setup VRAM for screen namespace
+	;moveq	#0, d0							; d0 = fill pattern		-- OPTIMIZED OUT
+	move.w	(a1)+, d1						; d1 = size of screen in tiles - 1
+	bsr.s	Console_FillTile				; fill screen
 
-	vram	$0000, (a5)				; VDP => Setup VRAM at tile 0
-	;moveq	#0, d0					; d0 = fill pattern		-- OPTIMIZED OUT
-	moveq	#0, d1					; d1 = number of tiles to fill - 1
-	bsr.s	Console_FillTile		; clear first tile
+	vram	$0000, (a5)						; VDP => Setup VRAM at tile 0
+	;moveq	#0, d0							; d0 = fill pattern		-- OPTIMIZED OUT
+	moveq	#0, d1							; d1 = number of tiles to fill - 1
+	bsr.s	Console_FillTile				; clear first tile
 
 	; Finalize
-	move.w	#$8174, (a5)			; VDP => Enable display
-	move.l	d5, (a5)				; VDP => Enable console for writing
+	move.w	#$8174, (a5)					; VDP => Enable display
 	rts
 
 ; ---------------------------------------------------------------
@@ -130,6 +139,105 @@ Console_FillTile:
 		move.l	d0, (a6)
 	endr
 	dbf		d1, Console_FillTile
+	rts
+
+
+; ===============================================================
+; ---------------------------------------------------------------
+; Clears the entire console and reset it to the initial state
+; ---------------------------------------------------------------
+
+Console_Clear:	__global
+	move.l	a3, -(sp)
+	move.l	usp, a3
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
+	bne.s	@quit
+
+	movem.l	d0-d1/d5/a1/a5-a6, -(sp)
+	lea		VDP_Ctrl, a5
+	lea		-4(a5), a6
+	movea.l	Console.VRAMConfigPtr(a3), a1
+	jsr		Console_Reset(pc)
+	movem.l	(sp)+, d0-d1/d5/a1/a5-a6
+
+@quit:
+	move.l	(sp)+, a3
+	rts
+
+; ===============================================================
+; ---------------------------------------------------------------
+;
+; ---------------------------------------------------------------
+; INPUT:
+;		d0	.b	X-tile scrolling
+;		d1	.b	Y-tile scrolling
+; ---------------------------------------------------------------
+
+Console_SetXYTileScrollPosition:	__global
+	KDebug.WriteLine "Console_SetXYTileScrollPosition: x=%<.b d0>, y=%<.b d1>"
+
+	move.l	a3, -(sp)
+	move.l	usp, a3
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
+	bne.s	@quit
+
+	move.l	d2, -(sp)
+	move.l	a6, -(sp)
+	lea		VDP_Data, a6
+
+	move.b	d0, Console.XScrollTile(a3)
+	move.b	d1, Console.YScrollTile(a3)
+
+	move.w	Console.ScreenRowSz(a3), d2			; d2 = number of bytes in a row (usually $80)
+	lsr.w	d2									; d2 = number of tiles in a row (usually $40)
+	subq.w	#1, d2								; d2 = number of tiles in a row as a mask (usually $3F)
+	movea.l	Console.VRAMConfigPtr(a3), a3		; a3 = VRAM config pointer
+	addq.w	#4, a3								; skip screen start address
+	move.l	(a3)+, 4(a6)						; VDP => Set HSRAM address
+	and.b	d0, d2
+	lsl.w	#3, d2								; d2 = HScroll value in pixels
+	neg.w	d2									; ''
+	move.w	d2, (a6)							; VDP => Set HScroll value
+	move.w	d2, (a6)							; ''
+
+	move.l	#$00104000, d2
+	add.w	(a3)+, d2
+	swap	d2
+	move.l	d2, 4(a6)							; VDP => Set VSRAM address
+	moveq	#$3F, d2
+	and.b	d1, d2
+	lsl.w	#3, d2								; d2 = VScroll value in pixels
+	move.w	d2, (a6)							; VDP => Set VScroll value
+	move.w	d2, (a6)							; ''
+	;KDebug.WriteLine "data=%<.w d2>"
+
+	move.l	(sp)+, d2
+	move.l	(sp)+, a6
+
+@quit:
+	move.l	(sp)+, a3
+	rts
+
+; ===============================================================
+; ---------------------------------------------------------------
+; 
+; ---------------------------------------------------------------
+; OUTPUT:
+;		d0	.b	X-tile scrolling
+;		d1	.b	Y-tile scrolling
+; ---------------------------------------------------------------
+
+Console_GetXYTileScrollPosition:	__global
+	move.l	a3, -(sp)
+	move.l	usp, a3
+	cmp.b	#_ConsoleMagic, Console.Magic(a3)
+	bne.s	@quit
+
+	move.b	Console.XScrollTile(a3), d0
+	move.b	Console.YScrollTile(a3), d1
+
+@quit:
+	move.l	(sp)+, a3
 	rts
 
 
