@@ -379,24 +379,24 @@ Console_Write: __global
 
 ; ---------------------------------------------------------------
 @set_palette_line_0:
-	and.w	#$7FF, d4
+	and.w	#$9FFF, d4					; clear palette bits (resets to line 0)
 	bra.s	@nextchar
 
 ; ---------------------------------------------------------------
 @set_palette_line_1:
-	and.w	#$7FF, d4
-	or.w	#$2000, d4
+	and.w	#$9FFF, d4					; clear palette bits
+	or.w	#$2000, d4					; set palette bits to %01 (line 1)
 	bra.s	@nextchar
 
 ; ---------------------------------------------------------------
 @set_palette_line_2:
-	and.w	#$7FF, d4
-	or.w	#$4000, d4
+	and.w	#$9FFF, d4					; clear palette bits
+	or.w	#$4000, d4					; set palette bits to %10 (line 2)
 	bra.s	@nextchar
 
 ; ---------------------------------------------------------------
 @set_palette_line_3:
-	or.w	#$6000, d4
+	or.w	#$6000, d4					; set palette bits to %11 (line 3)
 	bra.s	@nextchar
 
 ; ---------------------------------------------------------------
