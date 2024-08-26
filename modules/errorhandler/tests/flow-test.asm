@@ -149,7 +149,6 @@ Test_BufferFlushInbetweenControlSequence:
 	; Since MD Debugger 2.6, any strings without arguments is optimized to use
 	; "Console_Write" directly instead.
 	Console.Write "FLUSH %<.b #$FA>ILED!-%<setx,1>FLUSH SUCCESS!-"
-	bra *
 #else
 ##	; AS assembler implementation has limitations on formatting capabilities
 	Console.Write "FLUSH %<.b #$FA>ILED!-%<setx>%<1>FLUSH SUCCESS!-"
