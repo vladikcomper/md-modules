@@ -24,6 +24,8 @@
 
 VRAM_Font:			equ 	(('!'-1)*$20)
 VRAM_ErrorScreen:	equ		$8000
+VRAM_ErrorHScroll:	equ		$FC00
+VSRAM_ErrorVScroll:	equ		$00
 
 _white:				equ 	0
 _yellow: 			equ 	1<<13
@@ -528,7 +530,7 @@ ErrorHandler_VDPConfig:	__global
 	dc.w	$8700							; $07, set backdrop color
 	dc.w	$8B00							; $0B, set VScroll=full, HScroll=full
 	dc.w	$8C81							; $0C, use 320 pixels horizontal resolution
-	dc.w	$8D00							; $0D, set HScroll table offset to $0000
+	dc.w	$8D3F							; $0D, set HScroll table offset to $FC00
 	dc.w	$8F02							; $0F, set auto-increment to $02
 	dc.w	$9011							; $10, use 512x512 plane resolution
 	dc.w	$9100							; $11, reset Window X-position
@@ -595,9 +597,9 @@ ErrorHandler_ConsoleConfig:
 
 ErrorHandler_ConsoleConfig_Initial:	__global
 	dcvram	VRAM_ErrorScreen			; screen start address / plane nametable pointer
-	; fallthrough
+	dcvram	VRAM_ErrorHScroll			; HSRAM address
+	dc.w	VSRAM_ErrorVScroll			; VSRAM address
 
-ErrorHandler_ConsoleConfig_Shared:	__global
 	dc.w	40							; number of characters per line
 	dc.w	40							; number of characters on the first line (meant to be the same as the above)
 	dc.w	0							; base font pattern (tile id for ASCII $00 + palette flags)

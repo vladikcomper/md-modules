@@ -119,9 +119,9 @@ __FSTRING_GenerateDecodedString &
 			
 			; Validate format setting ("param")
 			if strlen("\__param")<1
-				__param: substr ,,"hex"			; if param is ommited, set it to "hex"
+				__param: substr ,,"_hex"			; if param is ommited, set it to "hex"
 			elseif strcmp("\__param","signed")
-				__param: substr ,,"hex+signed"	; if param is "signed", correct it to "hex+signed"
+				__param: substr ,,"_hex+signed"		; if param is "signed", correct it to "hex+signed"
 			endif
 
 			if (\__param < $80)
