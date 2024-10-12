@@ -391,6 +391,9 @@ __FSTRING_GenerateArgumentsCode &
 	__stack:= 0						; size of actual stack
 	__sp:	= 0						; stack displacement
 
+	pusho
+	opt	ae-		; make sure "automatic even" is disabled as this disrupts string generation
+
 	; Parse string itself
 	while (__pos)
 
@@ -437,6 +440,8 @@ __FSTRING_GenerateArgumentsCode &
 		popp	__command
 		\__command
 	endr
+
+	popo	; restore previous options
 
 	endm
 
