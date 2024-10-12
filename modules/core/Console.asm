@@ -290,8 +290,8 @@ Console_Write: __global
 	bne.s	@quit
 
 	; Load console variables
-	movem.l	(a3)+, d5/d7		; d5 = VDP request: current position
-								; d7 = VDP request: start-of-line position
+	move.l	(a3)+, d5			; d5 = VDP request: current position
+	move.l	(a3)+, d7			; d7 = VDP request: start-of-line position
 	movem.w	(a3), d2-d4/d6		; d2 = number of characters per line
 
 	swap	d6					; d3 = number of characters remaining until next line
