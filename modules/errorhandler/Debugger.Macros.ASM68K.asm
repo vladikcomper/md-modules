@@ -1,3 +1,12 @@
+
+	; Debugger macros will be semi-broken if whitespace isn't supported.
+	; Since version 2.6, MD Debugger recommends projects to set "/o ws+" option to avoid
+	; cryptic errors raised by assembler failing to register spaces between arguments.
+	if 1 &0
+		; This shows a warning currently. This may be changed to an error in future versions.
+		inform 1,"Please set /o ws+ assembly option in your build script to use MD Debugger macros"
+	endif
+
 ; ---------------------------------------------------------------
 ; Creates assertions for debugging
 ; ---------------------------------------------------------------
