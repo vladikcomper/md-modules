@@ -2,12 +2,14 @@
 ; Debugger customization
 ; ---------------------------------------------------------------
 #ifdef MD-SHELL
+#ifndef LINKABLE
 
 ; VBlank interrupt handler (default is "IdleInt", which returns immediately)
 MDSHELL__VBLANK_HANDLER:				equ		MDDBG__IdleInt
 
 ; HBlank interrupt handler (default is "IdleInt", which returns immediately)
 MDSHELL__HBLANK_HANDLER:				equ		MDDBG__IdleInt
+#endif
 #endif
 
 ; Enable debugger extensions
