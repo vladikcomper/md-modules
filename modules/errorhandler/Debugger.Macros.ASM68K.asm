@@ -213,7 +213,7 @@ Console &
 #endif
 	elseif strcmp("\0","clear")|strcmp("\0","Clear")
 		move.w	sr, -(sp)
-		jsr		MDDBG__ErrorHandler_ClearConsole
+		jsr		MDDBG__Console_Clear
 		move.w	(sp)+, sr
 
 	elseif strcmp("\0","pause")|strcmp("\0","Pause")

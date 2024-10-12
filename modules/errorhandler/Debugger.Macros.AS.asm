@@ -217,7 +217,7 @@ Console	macro	argument1, argument2
 #endif
 	case "clear"
 		move.w	sr, -(sp)
-		jsr		MDDBG__ErrorHandler_ClearConsole
+		jsr		MDDBG__Console_Clear
 		move.w	(sp)+, sr
 
 	case "pause"
