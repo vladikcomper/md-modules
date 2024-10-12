@@ -13,17 +13,36 @@
 ; EXAMPLES:
 ;	assert.b	d0, eq, #1		; d0 must be $01, or else crash
 ;	assert.w	d5, pl			; d5 must be positive
-;	assert.l	a1, hi, a0		; asert a1 > a0, or else crash
+;	assert.l	a1, hi, a0		; assert a1 > a0, or else crash
 ;	assert.b	(MemFlag).w, ne	; MemFlag must be set (non-zero)
 ;	assert.l	a0, eq, #Obj_Player, MyObjectsDebugger
+;
+; NOTICE:
+;	All "assert" saves and restores CCR so it's fully safe
+;	to use in-between any instructions.
+;	Use "_assert" instead if you deliberatly want to disbale
+;	this behavior and safe a few cycles.
 ; ---------------------------------------------------------------
 
-assert	macro	src, cond, dest, console_program
+assert	macro
 #ifndef MD-SHELL
 	; Assertions only work in DEBUG builds
 	if def(__DEBUG__)
 #endif
 		move.w	sr, -(sp)
+		_assert.\0	\_
+		move.w	(sp)+, sr
+#ifndef MD-SHELL
+	endif
+#endif
+	endm
+
+; Same as "assert", but doesn't save/restore CCR (can be used to save a few cycles)
+_assert	macro	src, cond, dest, console_program
+#ifndef MD-SHELL
+	; Assertions only work in DEBUG builds
+	if def(__DEBUG__)
+#endif
 	if strlen("\dest")
 		cmp.\0	\dest, \src
 	else
@@ -50,7 +69,6 @@ assert	macro	src, cond, dest, console_program
 #ifdef ASM68K-DOT-COMPAT
 	popo
 #endif
-		move.w	(sp)+, sr
 #ifndef MD-SHELL
 	endif
 #endif
@@ -65,9 +83,7 @@ assert	macro	src, cond, dest, console_program
 ;	RaiseError	"Module crashed! Extra info:", YourMod_Debugger
 ; ---------------------------------------------------------------
 
-RaiseError &
-	macro	string, console_program, opts
-
+RaiseError	macro	string, console_program, opts
 	pea		*(pc)				; this simulates M68K exception
 	move.w	sr, -(sp)			; ...
 	__FSTRING_GenerateArgumentsCode \string
@@ -143,17 +159,36 @@ RaiseError &
 #endif
 ;	Console.Write "Hello "
 ;	Console.WriteLine "...world!"
-;	Console.SetXY #1, #4
 ;	Console.WriteLine "Your data is %<.b d0>"
 ;	Console.WriteLine "%<pal0>Your code pointer: %<.l a0 sym>"
+;	Console.SetXY #1, #4
+;	Console.SetXY d0, d1
+;	Console.Sleep #60 ; sleep for 1 second
+;	Console.Pause
+;
+; NOTICE:
+;	All "Console.*" calls save and restore CCR so they are fully
+;	safe to use in-between any instructions.
+;	Use "_Console.*" instead if you deliberatly want to disbale
+;	this behavior and safe a few cycles.
 ; ---------------------------------------------------------------
 
-Console &
-	macro
+Console macro
+	; "Console.Run" doesn't have to save/restore CCR, because it's a no-return
+	if strcmp("\0","run")|strcmp("\0","Run")
+		_Console.\0	\_
 
-	if strcmp("\0","write")|strcmp("\0","writeline")|strcmp("\0","Write")|strcmp("\0","WriteLine")
+	; Other Console calls do save/restore CCR
+	else
 		move.w	sr, -(sp)
+		_Console.\0	\_
+		move.w	(sp)+, sr
+	endif
+	endm
 
+; Same as "Console", but doesn't save/restore CCR (can be used to save a few cycles)
+_Console	macro
+	if strcmp("\0","write")|strcmp("\0","writeline")|strcmp("\0","Write")|strcmp("\0","WriteLine")
 		__FSTRING_GenerateArgumentsCode \1
 
 #ifdef ASM68K-DOT-COMPAT
@@ -190,8 +225,6 @@ Console &
 			move.l	(sp)+, a0
 		endif
 
-		move.w	(sp)+, sr
-
 #ifndef LINKABLE-WITH-DATA-SECTION
 		bra.w	@instr_end\@
 	@str\@:
@@ -221,17 +254,12 @@ Console &
 
 #endif
 	elseif strcmp("\0","clear")|strcmp("\0","Clear")
-		move.w	sr, -(sp)
 		jsr		MDDBG__ErrorHandler_ClearConsole
-		move.w	(sp)+, sr
 
 	elseif strcmp("\0","pause")|strcmp("\0","Pause")
-		move.w	sr, -(sp)
 		jsr		MDDBG__ErrorHandler_PauseConsole
-		move.w	(sp)+, sr
 
 	elseif strcmp("\0","sleep")|strcmp("\0","Sleep")
-		move.w	sr, -(sp)
 		move.w	d0, -(sp)
 		move.l	a0, -(sp)
 		move.w	\1, d0
@@ -253,22 +281,17 @@ Console &
 #endif
 		move.l	(sp)+, a0
 		move.w	(sp)+, d0
-		move.w	(sp)+, sr
 
 	elseif strcmp("\0","setxy")|strcmp("\0","SetXY")
-		move.w	sr, -(sp)
 		movem.l	d0-d1, -(sp)
 		move.w	\2, -(sp)
 		move.w	\1, -(sp)
 		jsr		MDDBG__Console_SetPosAsXY_Stack
 		addq.w	#4, sp
 		movem.l	(sp)+, d0-d1
-		move.w	(sp)+, sr
 
 	elseif strcmp("\0","breakline")|strcmp("\0","BreakLine")
-		move.w	sr, -(sp)
 		jsr		MDDBG__Console_StartNewLine
-		move.w	(sp)+, sr
 
 	else
 		inform	2,"""\0"" isn't a member of ""Console"""
@@ -279,16 +302,38 @@ Console &
 ; ---------------------------------------------------------------
 ; KDebug integration interface
 ; ---------------------------------------------------------------
+; EXAMPLES:
+;	KDebug.WriteLine "Look in your debug console!"
+;	KDebug.WriteLine "Your D0 is %<.w d0>"
+;	KDebug.BreakPoint
+;	KDebug.StartTimer
+;	KDebug.EndTimer
+;
+; NOTICE:
+;	All "KDebug.*" calls save and restore CCR so they are fully
+;	safe to use in-between any instructions.
+;	Use "_KDebug.*" instead if you deliberatly want to disbale
+;	this behavior and safe a few cycles.
+; ---------------------------------------------------------------
 
-KDebug &
-	macro
+KDebug	macro
+#ifndef MD-SHELL
+	if def(__DEBUG__)	; KDebug interface is only available in DEBUG builds
+#endif
+		move.w	sr, -(sp)
+		_KDebug.\0	\_
+		move.w	(sp)+, sr
+#ifndef MD-SHELL
+	endif
+#endif
+	endm
 
+; Same as "KDebug", but doesn't save/restore CCR (can be used to save a few cycles)
+_KDebug	macro
 #ifndef MD-SHELL
 	if def(__DEBUG__)	; KDebug interface is only available in DEBUG builds
 #endif
 	if strcmp("\0","write")|strcmp("\0","writeline")|strcmp("\0","Write")|strcmp("\0","WriteLine")
-		move.w	sr, -(sp)
-
 		__FSTRING_GenerateArgumentsCode \1
 
 #ifdef ASM68K-DOT-COMPAT
@@ -325,7 +370,6 @@ KDebug &
 			move.l	(sp)+, a0
 		endif
 
-		move.w	(sp)+, sr
 #ifndef LINKABLE-WITH-DATA-SECTION
 		bra.w	@instr_end\@
 	@str\@:
@@ -348,24 +392,16 @@ KDebug &
 #endif
 
 	elseif strcmp("\0","breakline")|strcmp("\0","BreakLine")
-		move.w	sr, -(sp)
 		jsr		MDDBG__KDebug_FlushLine
-		move.w	(sp)+, sr
 
 	elseif strcmp("\0","starttimer")|strcmp("\0","StartTimer")
-		move.w	sr, -(sp)
 		move.w	#$9FC0, ($C00004).l
-		move.w	(sp)+, sr
 
 	elseif strcmp("\0","endtimer")|strcmp("\0","EndTimer")
-		move.w	sr, -(sp)
 		move.w	#$9F00, ($C00004).l
-		move.w	(sp)+, sr
 
 	elseif strcmp("\0","breakpoint")|strcmp("\0","BreakPoint")
-		move.w	sr, -(sp)
 		move.w	#$9D00, ($C00004).l
-		move.w	(sp)+, sr
 
 	else
 		inform	2,"""\0"" isn't a member of ""KDebug"""

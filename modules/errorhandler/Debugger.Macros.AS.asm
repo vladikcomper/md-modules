@@ -13,9 +13,15 @@
 ; EXAMPLES:
 ;	assert.b	d0, eq, #1		; d0 must be $01, or else crash
 ;	assert.w	d5, pl			; d5 must be positive
-;	assert.l	a1, hi, a0		; asert a1 > a0, or else crash
+;	assert.l	a1, hi, a0		; assert a1 > a0, or else crash
 ;	assert.b	(MemFlag).w, ne	; MemFlag must be set (non-zero)
 ;	assert.l	a0, eq, #Obj_Player, MyObjectsDebugger
+;
+; NOTICE:
+;	All "assert" saves and restores CCR so it's fully safe
+;	to use in-between any instructions.
+;	Use "_assert" instead if you deliberatly want to disbale
+;	this behavior and safe a few cycles.
 ; ---------------------------------------------------------------
 
 assert	macro	src, cond, dest, consoleprogram
@@ -24,6 +30,19 @@ assert	macro	src, cond, dest, consoleprogram
 	ifdef __DEBUG__
 #endif
 		move.w	sr, -(sp)
+		_assert.ATTRIBUTE	src, cond, dest, consoleprogram
+		move.w	(sp)+, sr
+#ifndef MD-SHELL
+	endif
+#endif
+		endm
+
+; Same as "assert", but doesn't save/restore CCR (can be used to save a few cycles)
+_assert	macro	src, cond, dest, consoleprogram
+#ifndef MD-SHELL
+	; Assertions only work in DEBUG builds
+	ifdef __DEBUG__
+#endif
 		if "dest"<>""
 			cmp.ATTRIBUTE	dest, src
 		else
@@ -70,7 +89,6 @@ assert	macro	src, cond, dest, consoleprogram
 	endif
 
 	.skip:
-		move.w	(sp)+, sr
 #ifndef MD-SHELL
 	endif
 #endif
@@ -86,7 +104,6 @@ assert	macro	src, cond, dest, consoleprogram
 ; ---------------------------------------------------------------
 
 RaiseError	macro	string, consoleprogram, opts
-
 	pea		*(pc)
 	move.w	sr, -(sp)
 	__FSTRING_GenerateArgumentsCode string
@@ -122,7 +139,6 @@ RaiseError	macro	string, consoleprogram, opts
 		endif
 	endif
 	!align	2
-
 	endm
 
 
@@ -135,17 +151,38 @@ RaiseError	macro	string, consoleprogram, opts
 #endif
 ;	Console.Write "Hello "
 ;	Console.WriteLine "...world!"
-;	Console.SetXY #1, #4
 ;	Console.WriteLine "Your data is %<.b d0>"
 ;	Console.WriteLine "%<pal0>Your code pointer: %<.l a0 sym>"
+;	Console.SetXY #1, #4
+;	Console.SetXY d0, d1
+;	Console.Sleep #60 ; sleep for 1 second
+;	Console.Pause
+;
+; NOTICE:
+;	All "Console.*" calls save and restore CCR so they are fully
+;	safe to use in-between any instructions.
+;	Use "_Console.*" instead if you deliberatly want to disbale
+;	this behavior and safe a few cycles.
 ; ---------------------------------------------------------------
 
 Console	macro	argument1, argument2
+	switch lowstring("ATTRIBUTE")
+	; "Console.Run" doesn't have to save/restore CCR, because it's a no-return
+	case "run"
+		_Console.ATTRIBUTE	argument1, argument2
 
+	; Other Console calls do save/restore CCR
+	elsecase
+		move.w	sr, -(sp)
+		_Console.ATTRIBUTE	argument1, argument2
+		move.w	(sp)+, sr
+	endcase
+	endm
+
+; Same as "Console", but doesn't save/restore CCR (can be used to save a few cycles)
+_Console	macro	argument1, argument2
 	switch lowstring("ATTRIBUTE")
 	case "write"
-		move.w	sr, -(sp)
-
 		__FSTRING_GenerateArgumentsCode argument1
 
 		; If we have any arguments in string, use formatted string function ...
@@ -169,7 +206,6 @@ Console	macro	argument1, argument2
 			move.l	(sp)+, a0
 		endif
 
-		move.w	(sp)+, sr
 		bra.w	.__leave
 	.__data:
 		__FSTRING_GenerateDecodedString argument1
@@ -177,8 +213,6 @@ Console	macro	argument1, argument2
 	.__leave:
 
 	case "writeline"
-		move.w	sr, -(sp)
-
 		__FSTRING_GenerateArgumentsCode argument1
 
 		; If we have any arguments in string, use formatted string function ...
@@ -200,8 +234,6 @@ Console	macro	argument1, argument2
 			jsr		MDDBG__Console_WriteLine
 			move.l	(sp)+, a0
 		endif
-
-		move.w	(sp)+, sr
 		bra.w	.__leave
 	.__data:
 		__FSTRING_GenerateDecodedString argument1
@@ -216,17 +248,12 @@ Console	macro	argument1, argument2
 
 #endif
 	case "clear"
-		move.w	sr, -(sp)
 		jsr		MDDBG__ErrorHandler_ClearConsole
-		move.w	(sp)+, sr
 
 	case "pause"
-		move.w	sr, -(sp)
 		jsr		MDDBG__ErrorHandler_PauseConsole
-		move.w	(sp)+, sr
 
 	case "sleep"
-		move.w	sr, -(sp)
 		move.w	d0, -(sp)
 		move.l	a0, -(sp)
 		move.w	argument1, d0
@@ -239,22 +266,17 @@ Console	macro	argument1, argument2
 	.__sleep_done:
 		move.l	(sp)+, a0
 		move.w	(sp)+, d0
-		move.w	(sp)+, sr
 
 	case "setxy"
-		move.w	sr, -(sp)
 		movem.l	d0-d1, -(sp)
 		move.w	argument2, -(sp)
 		move.w	argument1, -(sp)
 		jsr		MDDBG__Console_SetPosAsXY_Stack
 		addq.w	#4, sp
 		movem.l	(sp)+, d0-d1
-		move.w	(sp)+, sr
 
 	case "breakline"
-		move.w	sr, -(sp)
 		jsr		MDDBG__Console_StartNewLine
-		move.w	(sp)+, sr
 
 	elsecase
 		!error	"ATTRIBUTE isn't a member of Console"
@@ -265,15 +287,39 @@ Console	macro	argument1, argument2
 ; ---------------------------------------------------------------
 ; KDebug integration interface
 ; ---------------------------------------------------------------
+; EXAMPLES:
+;	KDebug.WriteLine "Look in your debug console!"
+;	KDebug.WriteLine "Your D0 is %<.w d0>"
+;	KDebug.BreakPoint
+;	KDebug.StartTimer
+;	KDebug.EndTimer
+;
+; NOTICE:
+;	All "KDebug.*" calls save and restore CCR so they are fully
+;	safe to use in-between any instructions.
+;	Use "_KDebug.*" instead if you deliberatly want to disbale
+;	this behavior and safe a few cycles.
+; ---------------------------------------------------------------
 
 KDebug	macro	argument1
 #ifndef MD-SHELL
 	ifdef __DEBUG__	; KDebug interface is only available in DEBUG builds
 #endif
+		move.w	sr, -(sp)
+		_KDebug.ATTRIBUTE	argument1
+		move.w	(sp)+, sr
+#ifndef MD-SHELL
+	endif
+#endif
+	endm
+
+; Same as "KDebug", but doesn't save/restore CCR (can be used to save a few cycles)
+_KDebug	macro	argument1
+#ifndef MD-SHELL
+	ifdef __DEBUG__	; KDebug interface is only available in DEBUG builds
+#endif
 	switch lowstring("ATTRIBUTE")
 	case "write"
-		move.w	sr, -(sp)
-
 		__FSTRING_GenerateArgumentsCode argument1
 
 		; If we have any arguments in string, use formatted string function ...
@@ -297,7 +343,6 @@ KDebug	macro	argument1
 			move.l	(sp)+, a0
 		endif
 
-		move.w	(sp)+, sr
 		bra.w	.__leave
 	.__data:
 		__FSTRING_GenerateDecodedString argument1
@@ -305,7 +350,6 @@ KDebug	macro	argument1
 	.__leave:
 
 	case "writeline"
-		move.w	sr, -(sp)
 		__FSTRING_GenerateArgumentsCode argument1
 
 		; If we have any arguments in string, use formatted string function ...
@@ -329,7 +373,6 @@ KDebug	macro	argument1
 			move.l	(sp)+, a0
 		endif
 
-		move.w	(sp)+, sr
 		bra.w	.__leave
 	.__data:
 		__FSTRING_GenerateDecodedString argument1
@@ -337,24 +380,16 @@ KDebug	macro	argument1
 	.__leave:
 
 	case "breakline"
-		move.w	sr, -(sp)
 		jsr		MDDBG__KDebug_FlushLine
-		move.w	(sp)+, sr
 
 	case "starttimer"
-		move.w	sr, -(sp)
 		move.w	#$9FC0, ($C00004).l
-		move.w	(sp)+, sr
 
 	case "endtimer"
-		move.w	sr, -(sp)
 		move.w	#$9F00, ($C00004).l
-		move.w	(sp)+, sr
 
 	case "breakpoint"
-		move.w	sr, -(sp)
 		move.w	#$9D00, ($C00004).l
-		move.w	(sp)+, sr
 
 	elsecase
 		!error	"ATTRIBUTE isn't a member of KDebug"
