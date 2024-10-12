@@ -80,6 +80,7 @@ RaiseError &
 #ifdef LINKABLE-WITH-DATA-SECTION
 
 	; Store string data in a separate section
+	pushs
 	section dbgstrings
 
 #ifdef ASM68K-DOT-COMPAT
@@ -119,8 +120,8 @@ RaiseError &
 	even
 
 #ifdef LINKABLE-WITH-DATA-SECTION
-	; Back to previous section (it should be 'rom' for this trick to work)
-	section	rom
+	; Back to previous section
+	pops
 #endif
 	endm
 
@@ -190,13 +191,14 @@ Console &
 	@instr_end\@:
 #else
 		; Store string data in a separate section
+		pushs
 		section dbgstrings
 	@str\@:
 		__FSTRING_GenerateDecodedString \1
 		even
 
 		; Back to previous section (it should be 'rom' for this trick to work)
-		section	rom
+		pops
 #endif
 #ifdef ASM68K-DOT-COMPAT
 		popo	
@@ -323,13 +325,14 @@ KDebug &
 	@instr_end\@:
 #else
 		; Store string data in a separate section
+		pushs
 		section dbgstrings
 	@str\@:
 		__FSTRING_GenerateDecodedString \1
 		even
 
-		; Back to previous section (it should be 'rom' for this trick to work)
-		section	rom
+		; Back to previous section
+		pops
 #endif
 #ifdef ASM68K-DOT-COMPAT
 		popo	
