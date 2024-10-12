@@ -38,7 +38,7 @@ __inject_symboldata_ptr_\injIndex:	; used for injection by Blob2Asm
 ;		a1-a3 / d0-d3
 ; ---------------------------------------------------------------
 
-GetSymbolByOffset:
+GetSymbolByOffset:	__global
 	GetSymbolTablePtr	a1, 1
 	cmp.w	#_ValidHeader, (a1)+	; verify header
 	bne.s	@return_error
@@ -183,7 +183,7 @@ DecodeSymbol:
 		addq.w	#1, d2							; count this bit
 
 		@code_check_loop:
-			cmp.w	(a2), d1 						; does this node has the same code?
+			cmp.w	(a2), d1 						; does this node have the same code?
 			bhi.s	@code_check_next				; if not, check next
 			blo.s	@code_extend					; if no nodes are found, branch
 			cmp.b	2(a2), d2						; is this code of the same length?
@@ -192,7 +192,7 @@ DecodeSymbol:
 	
 		@code_check_next:
 			addq.w	#4, a2
-			cmp.w	(a2), d1 						; does this node has the same code?
+			cmp.w	(a2), d1 						; does this node have the same code?
 			bhi.s	@code_check_next				; if not, check next
 			blo.s	@code_extend					; if no nodes are found, branch
 			cmp.b	2(a2), d2						; is this code of the same length?
