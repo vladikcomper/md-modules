@@ -100,13 +100,21 @@ Console_Reset:	__global
 Console_InitShared:	__global
 	; WARNING! Make sure a5 and a6 are properly set when calling this fragment separately
 
+	; Place "_ConsolePtrMagic" byte in MSB of Console RAM pointer
+	; This is later used to check if pointer is valid and we're inside the console
+	move.l	a3, d0
+	swap	d0
+	and.w	#$FF, d0
+	or.w	#_ConsolePtrMagic<<8, d0
+	swap	d0
+	move.l	d0, a3
+
 	; Init Console RAM
 	move.l	a3, usp					; remember Console RAM pointer in USP to restore it in later calls
 	move.l	d5,	(a3)+				; Console RAM => set current position (long)
 	move.l	d5,	(a3)+				; Console RAM => set start-of-line position (long)
 	move.l	(a1)+, (a3)+			; Console RAM => copy number of characters per line (word) + characters remaining for the current line (word)
 	move.l	(a1)+, (a3)+			; Console RAM => copy base pattern (word) + screen row size (word)
-	move.w	#_ConsoleMagic<<8, (a3)+; Console RAM => set magic number, clear reserved byte
 
 	; Clear screen
 	move.l	d5, (a5)				; VDP => Setup VRAM for screen namespace
@@ -148,8 +156,8 @@ Console_SetPosAsXY_Stack: __global
 Console_SetPosAsXY: __global
 	movem.l	d1-d2/a3, -(sp)
 	move.l	usp, a3
-	cmp.b	#_ConsoleMagic, Console.Magic(a3)
-	bne.s	@quit
+	Console_ChkRAMPointerValid a3, d2		; is MSB of `usp` set to `_ConsolePtrMagic`?
+	bne.s	@quit							; if not, we don't have a valid Console RAM pointer, we are not in Console mode
 
 	move.w	Console.ScreenRowReq(a3), d2
 	and.w	#$E000, d2						; clear out displacement, leave base offset only
@@ -178,9 +186,11 @@ Console_SetPosAsXY: __global
 
 Console_GetPosAsXY: __global
 	move.l	a3, -(sp)
+
 	move.l	usp, a3
-	cmp.b	#_ConsoleMagic, Console.Magic(a3)
-	bne.s	@quit
+	Console_ChkRAMPointerValid a3, d0		; is MSB of `usp` set to `_ConsolePtrMagic`?
+	bne.s	@quit							; if not, we don't have a valid Console RAM pointer, we are not in Console mode
+
 	moveq	#0, d1
 	move.w	(a3), d1
 	and.w	#$1FFF, d1						; clear out base offset, leave displacement only
@@ -199,22 +209,22 @@ Console_GetPosAsXY: __global
 
 Console_StartNewLine: __global
 	move.l	a3, -(sp)
+	move.l	d0, -(sp)
 	move.l	usp, a3
-	cmp.b	#_ConsoleMagic, Console.Magic(a3)
-	bne.s	@quit
+	Console_ChkRAMPointerValid a3, d0		; is MSB of `usp` set to `_ConsolePtrMagic`?
+	bne.s	@quit							; if not, we don't have a valid Console RAM pointer, we are not in Console mode
 
-	move.w	d0, -(sp)
 	move.w	Console.ScreenRowReq(a3), d0
 	add.w	Console.ScreenRowSz(a3), d0
 	; TODOh: Check if offset is out of plane boundaries
-	and.w	#$5FFF, d0			; make sure line stays within plane
+	and.w	#$5FFF, d0						; make sure line stays within plane
 	move.w	d0, (a3)						; Console RAM => update current position
 	move.w	d0, Console.ScreenRowReq(a3)	; Console RAM => update start-of-line position
 	addq.w	#8, a3
-	move.w	(a3)+, (a3)+		; reset characters on line counter (copy "CharsPerLine" to "CharsRemaining")
+	move.w	(a3)+, (a3)+					; reset characters on line counter (copy "CharsPerLine" to "CharsRemaining")
 
-	move.w	(sp)+, d0
 @quit:
+	move.l	(sp)+, d0
 	move.l	(sp)+, a3
 	rts
 
@@ -229,12 +239,14 @@ Console_StartNewLine: __global
 
 Console_SetBasePattern: __global
 	move.l	a3, -(sp)
+	move.l	d0, -(sp)
 	move.l	usp, a3
-	cmp.b	#_ConsoleMagic, Console.Magic(a3)
-	bne.s	@quit
+	Console_ChkRAMPointerValid a3, d0		; is MSB of `usp` set to `_ConsolePtrMagic`?
+	bne.s	@quit							; if not, we don't have a valid Console RAM pointer, we are not in Console mode
 	move.w	d1, Console.BasePattern(a3)
 
 @quit:
+	move.l	(sp)+, d0
 	move.l	(sp)+, a3
 	rts
 
@@ -248,14 +260,16 @@ Console_SetBasePattern: __global
 
 Console_SetWidth: __global
 	move.l	a3, -(sp)
+	move.l	d0, -(sp)
 	move.l	usp, a3
-	cmp.b	#_ConsoleMagic, Console.Magic(a3)
-	bne.s	@quit
+	Console_ChkRAMPointerValid a3, d0		; is MSB of `usp` set to `_ConsolePtrMagic`?
+	bne.s	@quit							; if not, we don't have a valid Console RAM pointer, we are not in Console mode
 	addq.w	#8, a3
 	move.w	d1, (a3)+
 	move.w	d1, (a3)+
 
 @quit:
+	move.l	(sp)+, d0
 	move.l	(sp)+, a3
 	rts
 
@@ -286,7 +300,7 @@ Console_WriteLine: __global
 Console_Write: __global
 	movem.l	d1-d7/a3/a6, -(sp)
 	move.l	usp, a3
-	cmp.b	#_ConsoleMagic, Console.Magic(a3)
+	Console_ChkRAMPointerValid a3, d2
 	bne.s	@quit
 
 	; Load console variables

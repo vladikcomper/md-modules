@@ -45,19 +45,17 @@ ErrorHandler_ConsoleOnly:	__global
 ; -----------------------------------------------------------------------------
 
 ErrorHandler_ClearConsole:	__global
-	move.l	a3, -(sp)
+	movem.l	d0-d1/d5/a1/a3/a5-a6, -(sp)
 	move.l	usp, a3
-	cmp.b	#_ConsoleMagic, Console.Magic(a3)
+	Console_ChkRAMPointerValid a3, d0
 	bne.s	@quit
 
-	movem.l	d0-d1/d5/a1/a5-a6, -(sp)
 	lea		VDP_Ctrl, a5				; a5 = VDP_Ctrl
 	lea		-4(a5), a6					; a6 = VDP_Data
 	lea		ErrorHandler_ConsoleConfig_Initial(pc), a1
 	jsr		Console_Reset(pc)
-	movem.l	(sp)+, d0-d1/d5/a1/a5-a6
 @quit:
-	move.l	(sp)+, a3
+	movem.l	(sp)+, d0-d1/d5/a1/a3/a5-a6
 	rts
 
 
@@ -69,7 +67,7 @@ ErrorHandler_ClearConsole:	__global
 ErrorHandler_PauseConsole:	__global
 	movem.l	d0-d1/a0-a1/a3, -(sp)
 	move.l	usp, a3
-	cmp.b	#_ConsoleMagic, Console.Magic(a3)
+	Console_ChkRAMPointerValid a3, d0
 	bne.s	@quit
 
 	move.w	#0, -(sp)					; allocate joypad memory

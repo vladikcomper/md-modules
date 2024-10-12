@@ -22,8 +22,6 @@ Console.CharsPerLine	rs.w	1				; d2	number of characters per line
 Console.CharsRemaining	rs.w	1				; d3	remaining number of characters
 Console.BasePattern		rs.w	1				; d4	base pattern
 Console.ScreenRowSz		rs.w	1				; d6	row size within screen position
-Console.Magic			rs.b	1				;		should contain a magic number to ensure this is valid console memory area
-						rs.b	1				;		<Reserved>
 Console_RAM.size		equ		__rs-Console_RAM
 
 ; ---------------------------------------------------------------
@@ -43,7 +41,7 @@ _setoff	equ		$F4
 _setpat	equ		$F8
 _setx	equ		$FA
 
-_ConsoleMagic	equ	$5D
+_ConsolePtrMagic:	equ	$5D
 
 ; Default size of a text buffer used by `FormatString`, allocated
 ; on the stack.
@@ -52,5 +50,24 @@ _ConsoleMagic	equ	$5D
 	if def(__CONSOLE_TEXT_BUFFER_SIZE__)=0
 __CONSOLE_TEXT_BUFFER_SIZE__:	equ	$30
 	endif
+
+; ---------------------------------------------------------------
+; Macros
+; ---------------------------------------------------------------
+
+; This macro checks if `ptrAReg` (e.g. `a3`) has contains a valid Console RAM pointer.
+; The pointer is valid if its MSB contains the value of "_ConsolePtrMagic".
+; This way we usually can test whether we're inside the Console or not.
+;
+; ARGUMENTS:
+;	ptrAReg - any of An registers that stores Console RAM pointer;
+;	scratchDReg - a Dn register that will be used for in-place calculations.
+
+Console_ChkRAMPointerValid: macro ptrAReg, scratchDReg
+	move.l	\ptrAReg, \scratchDReg
+	swap	\scratchDReg
+	clr.b	\scratchDReg
+	cmp.w	#_ConsolePtrMagic<<8, \scratchDReg	; is MSB of `usp` set to `_ConsolePtrMagic`?
+	endm
 
 	endif	; _CONSOLE_DEFS
