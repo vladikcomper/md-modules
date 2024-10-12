@@ -396,6 +396,16 @@ __FSTRING_PushArgument macro OPERAND,DEST
 		.__dval:	set	VAL(substr(OPERAND, 1, 0))
 		.__operand:	set	"#"
 
+	; If OPERAND starts with "(" and ends with ").w", simulate "(XXX).w" mode
+	elseif (strlen(OPERAND)>4)&&(substr(OPERAND, 0, 1)="(")&&(substr(OPERAND, strlen(OPERAND)-3, 3)=").w")
+		.__dval:	set VAL(substr(OPERAND, 1, strlen(OPERAND)-4))
+		.__operand:	set	"x.w"
+
+	; If OPERAND starts with "(" and ends with ").l", simulate "(XXX).l" mode
+	elseif (strlen(OPERAND)>4)&&(substr(OPERAND, 0, 1)="(")&&(substr(OPERAND, strlen(OPERAND)-3, 3)=").l")
+		.__dval:	set VAL(substr(OPERAND, 1, strlen(OPERAND)-4))
+		.__operand:	set	"x.l"
+
 	; If OPERAND ends with "(pc)", simulate "d16(pc)" mode by splitting OPERAND string
 	elseif (strlen(OPERAND)>4)&&(substr(OPERAND, strlen(OPERAND)-4, 4)="(pc)")
 		.__dval:	set	VAL(substr(OPERAND, 0, strlen(OPERAND)-4))
@@ -405,6 +415,7 @@ __FSTRING_PushArgument macro OPERAND,DEST
 	elseif (strlen(OPERAND)>4)&&(substr(OPERAND, strlen(OPERAND)-4, 2)="(a")&&(substr(OPERAND, strlen(OPERAND)-1, 1)=")")
 		.__dval:	set	VAL(substr(OPERAND, 0, strlen(OPERAND)-4))
 		.__operand:	set substr(OPERAND, strlen(OPERAND)-4, 0)
+
 	endif
 
 	switch lowstring(.__operand)
@@ -454,6 +465,12 @@ __FSTRING_PushArgument macro OPERAND,DEST
 		move.ATTRIBUTE	.__dval(a5),DEST
 	case "(a6)"
 		move.ATTRIBUTE	.__dval(a6),DEST
+
+	case "x.w"
+		move.ATTRIBUTE	(.__dval).w,DEST
+
+	case "x.l"
+		move.ATTRIBUTE	(.__dval).l,DEST
 
 	case "(pc)"
 		move.ATTRIBUTE	.__dval(pc),DEST

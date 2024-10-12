@@ -123,8 +123,8 @@ Test_Formatter_SYM_SPLIT:
 ; --------------------------------------------------------------
 Test_ConsoleWriteExtended:
 	Console.WriteLine "%<pal1>EntryPoint: %<pal0>%<.l 4 sym>"
-	Console.WriteLine "%<pal1>Main+0000: %<pal0>%<.l Main>"
-	Console.WriteLine "%<pal1>Main+0004: %<pal0>%<.l Main+4>"
+	Console.WriteLine "%<pal1>Main+0000: %<pal0>%<.l (Main).w>"	; this also tests if (xxx).w operand format is properly parsed by AS
+	Console.WriteLine "%<pal1>Main+0004: %<pal0>%<.l (Main+4).l>"	; this also tests if (xxx).l operand format is properly parsed by AS
 	Console.WriteLine "%<pal1>#Main+0000: %<pal0>%<.l #Main>"
 	Console.WriteLine "%<pal1>#Main+0004: %<pal0>%<.l #Main+4>"
 	Console.WriteLine "%<pal1>Test_MiscCommands+0000: %<pal0>%<.l Test_MiscCommands>"
