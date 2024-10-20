@@ -22,9 +22,8 @@ TestProgram:
 
 	moveq	#8, d0
 
-   	@loop:
-		Console.Write "%<pal0>%<setx,1>Iteration %<pal2>#%<.w d0>%<endl>"
-		dbf		d0, @loop
+   	@loop:	Console.Write "%<pal0>%<setx,1>Iteration %<pal2>#%<.w d0>%<endl>"
+			dbf		d0, @loop
 
 	Console.Write "%<pal0>Label fetch: %<endl>%<pal1>%<.l #GlobalData+$10 sym>"
 	rts
