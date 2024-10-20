@@ -24,13 +24,13 @@
 ;	this behavior and safe a few cycles.
 ; ---------------------------------------------------------------
 
-assert	macro
+assert	macro	src, cond, dest, console_program
 #ifndef MD-SHELL
 	; Assertions only work in DEBUG builds
 	if def(__DEBUG__)
 #endif
 		move.w	sr, -(sp)
-		_assert.\0	\_
+		_assert.\0	\src, \cond, \dest, \console_program
 		move.w	(sp)+, sr
 #ifndef MD-SHELL
 	endif
@@ -176,12 +176,12 @@ RaiseError	macro	string, console_program, opts
 Console macro
 	; "Console.Run" doesn't have to save/restore CCR, because it's a no-return
 	if strcmp("\0","run")|strcmp("\0","Run")
-		_Console.\0	\_
+		_Console.\0	\1, \2
 
 	; Other Console calls do save/restore CCR
 	else
 		move.w	sr, -(sp)
-		_Console.\0	\_
+		_Console.\0	\1, \2
 		move.w	(sp)+, sr
 	endif
 	endm
@@ -321,7 +321,7 @@ KDebug	macro
 	if def(__DEBUG__)	; KDebug interface is only available in DEBUG builds
 #endif
 		move.w	sr, -(sp)
-		_KDebug.\0	\_
+		_KDebug.\0	\1
 		move.w	(sp)+, sr
 #ifndef MD-SHELL
 	endif
