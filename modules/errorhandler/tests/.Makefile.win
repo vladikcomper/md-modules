@@ -45,7 +45,7 @@ shadow-macros: | $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM)
 	set USEANSI=n
 	$(AS) -U -xx -i . -A -L -D __ASM68K__=0 -OLIST $(TEST_BUILD_DIR)\shadow-macros-as.lst shadow-macros.asm -o $(TEST_BUILD_DIR)\shadow-macros-as.p
 	$(P2BIN) $(TEST_BUILD_DIR)\shadow-macros-as.p $(TEST_BUILD_DIR)\shadow-macros-as.gen
-	rm $(TEST_BUILD_DIR)\shadow-macros-as.p
+	del /q /f $(TEST_BUILD_DIR)\shadow-macros-as.p
 	$(CONVSYM) $(TEST_BUILD_DIR)\shadow-macros-as.lst $(TEST_BUILD_DIR)\shadow-macros-as.gen -in as_lst -a -ref 200
 
 console-run:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM)
