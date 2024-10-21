@@ -26,7 +26,13 @@ TestProgram:
 			dbf		d0, @loop
 
 	Console.Write "%<pal0>Label fetch: %<endl>%<pal1>%<.l #GlobalData+$10 sym>"
+	moveq	#2, d0
+	Console.SetXY #1, <@YPositionRef(pc,d0)>
+	Console.WriteLine "SetXY test!"
 	rts
+
+@YPositionRef:
+	dc.w	0, 25
 
 ; --------------------------------------------------------------
 GlobalData:
