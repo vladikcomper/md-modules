@@ -78,6 +78,10 @@ _assert:	macro	src, cond, dest, consoleprogram
 			ble	.skip
 		case "lt"
 			blt	.skip
+		case "vs"
+			bvs	.skip
+		case "vc"
+			bvc	.skip
 		elsecase
 			!error "Unknown condition cond"
 		endcase
