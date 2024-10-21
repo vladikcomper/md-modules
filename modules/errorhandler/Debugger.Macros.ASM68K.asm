@@ -24,7 +24,7 @@
 ;	this behavior and safe a few cycles.
 ; ---------------------------------------------------------------
 
-assert	macro	src, cond, dest, console_program
+assert:	macro	src, cond, dest, console_program
 #ifndef MD-SHELL
 	; Assertions only work in DEBUG builds
 	if def(__DEBUG__)
@@ -38,7 +38,7 @@ assert	macro	src, cond, dest, console_program
 	endm
 
 ; Same as "assert", but doesn't save/restore CCR (can be used to save a few cycles)
-_assert	macro	src, cond, dest, console_program
+_assert:	macro	src, cond, dest, console_program
 #ifndef MD-SHELL
 	; Assertions only work in DEBUG builds
 	if def(__DEBUG__)
@@ -83,7 +83,7 @@ _assert	macro	src, cond, dest, console_program
 ;	RaiseError	"Module crashed! Extra info:", YourMod_Debugger
 ; ---------------------------------------------------------------
 
-RaiseError	macro	string, console_program, opts
+RaiseError:	macro	string, console_program, opts
 	pea		*(pc)				; this simulates M68K exception
 	move.w	sr, -(sp)			; ...
 	__FSTRING_GenerateArgumentsCode \string
@@ -173,7 +173,7 @@ RaiseError	macro	string, console_program, opts
 ;	this behavior and safe a few cycles.
 ; ---------------------------------------------------------------
 
-Console macro
+Console:	macro
 	; "Console.Run" doesn't have to save/restore CCR, because it's a no-return
 	if strcmp("\0","run")|strcmp("\0","Run")
 		_Console.\0	\1, \2
@@ -316,7 +316,7 @@ _Console	macro
 ;	this behavior and safe a few cycles.
 ; ---------------------------------------------------------------
 
-KDebug	macro
+KDebug:	macro
 #ifndef MD-SHELL
 	if def(__DEBUG__)	; KDebug interface is only available in DEBUG builds
 #endif
@@ -329,7 +329,7 @@ KDebug	macro
 	endm
 
 ; Same as "KDebug", but doesn't save/restore CCR (can be used to save a few cycles)
-_KDebug	macro
+_KDebug:	macro
 #ifndef MD-SHELL
 	if def(__DEBUG__)	; KDebug interface is only available in DEBUG builds
 #endif
@@ -413,8 +413,7 @@ _KDebug	macro
 	endm
 
 ; ---------------------------------------------------------------
-__ErrorMessage &
-	macro	string, opts
+__ErrorMessage:	macro	string, opts
 		__FSTRING_GenerateArgumentsCode \string
 		jsr		MDDBG__ErrorHandler
 		__FSTRING_GenerateDecodedString \string
@@ -429,8 +428,7 @@ __ErrorMessage &
 	endm
 
 ; ---------------------------------------------------------------
-__FSTRING_GenerateArgumentsCode &
-	macro	string
+__FSTRING_GenerateArgumentsCode:	macro string
 
 	__pos:	= instr(\string,'%<')		; token position
 	__stack:= 0						; size of actual stack
@@ -500,8 +498,7 @@ __FSTRING_GenerateArgumentsCode &
 	endm
 
 ; ---------------------------------------------------------------
-__FSTRING_GenerateDecodedString &
-	macro string
+__FSTRING_GenerateDecodedString:	macro string
 
 	__lpos:	= 1							; start position
 	__pos:	= instr(\string,'%<')		; token position

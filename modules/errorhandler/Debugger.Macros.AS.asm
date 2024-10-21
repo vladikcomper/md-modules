@@ -24,7 +24,7 @@
 ;	this behavior and safe a few cycles.
 ; ---------------------------------------------------------------
 
-assert	macro	src, cond, dest, consoleprogram
+assert:	macro	src, cond, dest, consoleprogram
 #ifndef MD-SHELL
 	; Assertions only work in DEBUG builds
 	ifdef __DEBUG__
@@ -38,7 +38,7 @@ assert	macro	src, cond, dest, consoleprogram
 		endm
 
 ; Same as "assert", but doesn't save/restore CCR (can be used to save a few cycles)
-_assert	macro	src, cond, dest, consoleprogram
+_assert:	macro	src, cond, dest, consoleprogram
 #ifndef MD-SHELL
 	; Assertions only work in DEBUG builds
 	ifdef __DEBUG__
@@ -103,7 +103,7 @@ _assert	macro	src, cond, dest, consoleprogram
 ;	RaiseError	"Module crashed! Extra info:", YourMod_Debugger
 ; ---------------------------------------------------------------
 
-RaiseError	macro	string, consoleprogram, opts
+RaiseError:	macro	string, consoleprogram, opts
 	pea		*(pc)
 	move.w	sr, -(sp)
 	__FSTRING_GenerateArgumentsCode string
@@ -165,7 +165,7 @@ RaiseError	macro	string, consoleprogram, opts
 ;	this behavior and safe a few cycles.
 ; ---------------------------------------------------------------
 
-Console	macro	argument1, argument2
+Console:	macro	argument1, argument2
 	switch lowstring("ATTRIBUTE")
 	; "Console.Run" doesn't have to save/restore CCR, because it's a no-return
 	case "run"
@@ -180,7 +180,7 @@ Console	macro	argument1, argument2
 	endm
 
 ; Same as "Console", but doesn't save/restore CCR (can be used to save a few cycles)
-_Console	macro	argument1, argument2
+_Console:	macro	argument1, argument2
 	switch lowstring("ATTRIBUTE")
 	case "write"
 		__FSTRING_GenerateArgumentsCode argument1
@@ -301,7 +301,7 @@ _Console	macro	argument1, argument2
 ;	this behavior and safe a few cycles.
 ; ---------------------------------------------------------------
 
-KDebug	macro	argument1
+KDebug:	macro	argument1
 #ifndef MD-SHELL
 	ifdef __DEBUG__	; KDebug interface is only available in DEBUG builds
 #endif
@@ -401,7 +401,7 @@ _KDebug	macro	argument1
 	endm
 
 ; ---------------------------------------------------------------
-__ErrorMessage  macro string, opts
+__ErrorMessage:	macro string, opts
 		__FSTRING_GenerateArgumentsCode string
 		jsr		MDDBG__ErrorHandler
 		__FSTRING_GenerateDecodedString string
@@ -421,7 +421,7 @@ __ErrorMessage  macro string, opts
 ; WARNING: Since AS cannot compile instructions out of strings
 ;	we have to do lots of switch-case bullshit down here..
 
-__FSTRING_PushArgument macro OPERAND,DEST
+__FSTRING_PushArgument: macro OPERAND,DEST
 
 	.__operand:		set	OPERAND
 	.__dval:		set	0
@@ -522,7 +522,7 @@ __FSTRING_PushArgument macro OPERAND,DEST
 
 ; ---------------------------------------------------------------
 ; WARNING! Incomplete!
-__FSTRING_GenerateArgumentsCode macro string
+__FSTRING_GenerateArgumentsCode: macro string
 
 	.__pos:	set 	strstr(string,"%<")		; token position
 	.__sp:	set		0						; stack displacement
@@ -587,7 +587,7 @@ __FSTRING_GenerateArgumentsCode macro string
 	endm
 
 ; ---------------------------------------------------------------
-__FSTRING_GenerateDecodedString macro string
+__FSTRING_GenerateDecodedString:	macro string
 
 	.__lpos:	set		0		; start position
 	.__pos:	set		strstr(string, "%<")
