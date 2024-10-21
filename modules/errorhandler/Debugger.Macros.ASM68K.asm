@@ -444,6 +444,9 @@ __FSTRING_GenerateArgumentsCode &
 
 		; Retrive expression in brackets following % char
     	__endpos:	= instr(__pos+1,\string,'>')
+    	if __endpos=0
+			inform 3,'Missing a closing bracket after %<'
+    	endif
     	__midpos:	= instr(__pos+5,\string,' ')
     	if (__midpos<1)|(__midpos>__endpos)
 			__midpos: = __endpos
@@ -455,6 +458,12 @@ __FSTRING_GenerateArgumentsCode &
 		if "\__type">>8="."
 			__operand:	substr	__pos+1+1,__midpos-1,\string			; .type ea
 			__param:	substr	__midpos+1,__endpos-1,\string			; param
+
+			if instr("\__operand","(sp)")|instr("\__operand","(SP)")
+				; Referring to (SP) may get unexpected results because stack is already shifted at this point
+				; Using -(SP) and (SP)+ will crash because of stack corruption.
+				inform 3,'Cannot use (SP) in a formatted string'
+			endif
 
 			if "\__type"=".b"
 				pushp	"move\__operand\,1(sp)"
@@ -473,7 +482,7 @@ __FSTRING_GenerateArgumentsCode &
 				__sp: = __sp+4
 
 			else
-				fatal 'Unrecognized type in string operand: %<\__substr>'
+				inform 3,'Unrecognized type in string operand: %<\__substr>'
 			endif
 		endif
 
