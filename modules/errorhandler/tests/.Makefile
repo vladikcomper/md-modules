@@ -16,9 +16,9 @@ TEST_BUILD_DIR := ../../../build/modules/errorhandler/tests
 BUILD_DIR := ../../../build/modules/errorhandler
 
 
-.PHONY:	all assertions console-run console-utils flow-test raise-error linkable asm68k-dot-compat shadow-macros clean
+.PHONY:	all assertions addressing-modes console-run console-utils flow-test raise-error linkable asm68k-dot-compat shadow-macros clean
 
-all:	assertions console-run console-utils flow-test raise-error linkable asm68k-dot-compat shadow-macros
+all:	assertions addressing-modes console-run console-utils flow-test raise-error linkable asm68k-dot-compat shadow-macros
 
 clean:
 	rm -f $(TEST_BUILD_DIR)/*
@@ -36,6 +36,17 @@ assertions:	| $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM) $(CBUNDLE)
 	$(P2BIN) $(TEST_BUILD_DIR)/assertions-as.p $(TEST_BUILD_DIR)/assertions-as.gen
 	rm $(TEST_BUILD_DIR)/assertions-as.p
 	$(CONVSYM) $(TEST_BUILD_DIR)/assertions-as.lst $(TEST_BUILD_DIR)/assertions-as.gen -in as_lst -a -ref 200
+
+addressing-modes: | $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM)
+	$(ASM68K) /q /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae- /e __ASM68K__=1 /p addressing-modes.asm, $(TEST_BUILD_DIR)/addressing-modes-asm68k.gen, $(TEST_BUILD_DIR)/addressing-modes-asm68k.sym, $(TEST_BUILD_DIR)/addressing-modes-asm68k.lst
+	$(CONVSYM) $(TEST_BUILD_DIR)/addressing-modes-asm68k.sym $(TEST_BUILD_DIR)/addressing-modes-asm68k.gen -in asm68k_sym -a -ref 200 -debug
+	
+	set AS_MSGPATH="..\..\exec\as"
+	set USEANSI=n
+	$(AS) -U -xx -i . -A -L -D __ASM68K__=0 -OLIST $(TEST_BUILD_DIR)/addressing-modes-as.lst addressing-modes.asm -o $(TEST_BUILD_DIR)/addressing-modes-as.p
+	$(P2BIN) $(TEST_BUILD_DIR)/addressing-modes-as.p $(TEST_BUILD_DIR)/addressing-modes-as.gen
+	rm $(TEST_BUILD_DIR)/addressing-modes-as.p
+	$(CONVSYM) $(TEST_BUILD_DIR)/addressing-modes-as.lst $(TEST_BUILD_DIR)/addressing-modes-as.gen -in as_lst -a -ref 200
 
 shadow-macros: | $(TEST_BUILD_DIR) $(MDSHELL_HEADLESS) $(CONVSYM)
 	$(ASM68K) /q /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae- /e __ASM68K__=1 /p shadow-macros.asm, $(TEST_BUILD_DIR)/shadow-macros-asm68k.gen, $(TEST_BUILD_DIR)/shadow-macros-asm68k.sym, $(TEST_BUILD_DIR)/shadow-macros-asm68k.lst
