@@ -200,8 +200,6 @@ Writes a [_formatted string_](Formatted_strings.md) in the console.
 
 ## `Console.SetXY`
 
-**Added in version 2.5**
-
 **Syntax:**
 
 ```m68k
@@ -263,6 +261,8 @@ Adds a newline.
 ```
 
 ## `Console.Clear`
+
+**Added in version 2.5**
 
 **Syntax:**
 

@@ -90,7 +90,7 @@ Please refer to [BUILD.md](BUILD.md) for build instructions.
   - Support full address range for stack pointer (previous version only correctly worked with $FF8000-$FFFFFF range due to optimizations);
   - Improve readability of offsets and symbols in the exception header;
   - Renamed "Module:" field in exception header to "Offset:" for clarity;
-- Upgraded ConvSym from version 2.0 to 2.9.1. The adds the following major features for debug symbol generation:
+- Upgraded ConvSym from version 2.0 to 2.9.1. This adds the following major features for debug symbol generation:
   - Stable AS support;
   - Improve symbol data compression by force-converting your symbols to upper or lowecase;
   - Support for multiple labels on the same offset;

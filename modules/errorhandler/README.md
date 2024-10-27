@@ -102,7 +102,7 @@ Currently, the *MD Debugger and Error Handler* supports integration with the fol
 - Introduced debugger extensions and the following new built-in debuggers:
   - Backtrace debugger (mapped to the B button by default);
   - Address register debugger (mapped to the A button by default).
-- Upgraded ConvSym from version 2.0 to 2.9.1. The adds the following major features for debug symbol generation:
+- Upgraded ConvSym from version 2.0 to 2.9.1. This adds the following major features for debug symbol generation:
   - Stable AS support;
   - Improve symbol data compression by force-converting your symbols to upper or lowecase;
   - Support for multiple labels on the same offset;
