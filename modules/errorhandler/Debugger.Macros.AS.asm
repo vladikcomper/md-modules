@@ -435,14 +435,14 @@ __FSTRING_PushArgument: macro OPERAND,DEST
 		.__dval:	set	VAL(substr(OPERAND, 1, 0))
 		.__operand:	set	"#"
 
-	; If OPERAND starts with "(" and ends with ").w", simulate "(XXX).w" mode
-	elseif (strlen(OPERAND)>4)&&(substr(OPERAND, 0, 1)="(")&&(substr(OPERAND, strlen(OPERAND)-3, 3)=").w")
-		.__dval:	set VAL(substr(OPERAND, 1, strlen(OPERAND)-4))
+	; If OPERAND ends with ".w", simulate "XXX.w" mode
+	elseif (substr(OPERAND, strlen(OPERAND)-2, 2)=".w")
+		.__dval:	set VAL(substr(OPERAND, 0, strlen(OPERAND)-2))
 		.__operand:	set	"x.w"
 
-	; If OPERAND starts with "(" and ends with ").l", simulate "(XXX).l" mode
-	elseif (strlen(OPERAND)>4)&&(substr(OPERAND, 0, 1)="(")&&(substr(OPERAND, strlen(OPERAND)-3, 3)=").l")
-		.__dval:	set VAL(substr(OPERAND, 1, strlen(OPERAND)-4))
+	; If OPERAND ends with ".l", simulate "XXX.l" mode
+	elseif (substr(OPERAND, strlen(OPERAND)-2, 2)=".l")
+		.__dval:	set VAL(substr(OPERAND, 0, strlen(OPERAND)-2))
 		.__operand:	set	"x.l"
 
 	; If OPERAND ends with "(pc)", simulate "d16(pc)" mode by splitting OPERAND string
