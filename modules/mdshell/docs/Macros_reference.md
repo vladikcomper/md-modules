@@ -263,6 +263,7 @@ This set of macros provides a convenient interface for debug logging, timing cod
 
 Currently, the only emulators to support KDebug are:
 - Blastem-nightly;
+- Clownmdemu v.0.8 and above (logging only);
 - Gens KMod (outdated, not recommended).
 
 Under the hood, `KDebug` macros communicate with the emulator via unused VDP registers. This, lucky enough, has no side effects on the real hardware. But be careful when using it in the middle of the code that writes to VDP data port for that very reason: `KDebug` resets the last VDP access address. **This is a hardware quirk.**

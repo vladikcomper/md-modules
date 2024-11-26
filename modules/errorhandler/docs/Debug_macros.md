@@ -332,7 +332,7 @@ This set of macros provides a convenient interface for debug logging, timing cod
 
 Currently, the only emulators to support KDebug are:
 - Blastem-nightly;
-- Clowmdemu since v0.8 (limited support);
+- Clownmdemu since v0.8 (logging only);
 - Gens KMod (outdated, not recommended).
 
 **`KDebug` macros are only compiled in DEBUG builds (when `__DEBUG__` equate is set).** On unsupported emulators and the real hardware, these macros have no effect either way.
