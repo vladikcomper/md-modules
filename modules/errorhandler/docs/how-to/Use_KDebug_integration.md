@@ -47,7 +47,7 @@ On Linux though, the output in the terminal window can be delayed and only flush
 1. Open Terminal and type in path to the `blastem` executable (you may add it to your `PATH` for easier access);
 2. You will see debug messages in the very same terminal.
 
-If you have issues seing Blastem's terminal output on your OS, conside the following:
+If you have issues seing Blastem's terminal output on your OS, consider the following:
 
 1. Press the `u` key to pause the game and toggle debugger;
 2. You should now emulator's console and all the messages up to this point;
