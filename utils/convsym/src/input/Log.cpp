@@ -17,13 +17,8 @@
 
 struct Input__Log : public InputWrapper {
 
-	Input__Log() : InputWrapper() { // Constructor
-
-	}
-
-	~Input__Log() {	// Destructor
-
-	}
+	Input__Log() : InputWrapper() {}
+	~Input__Log() {}
 
 	/**
 	 * Interface for input file parsing
@@ -36,13 +31,14 @@ struct Input__Log : public InputWrapper {
 	 *
 	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
 	 */
-	std::multimap<uint32_t, std::string>
-	parse(	const char *fileName,
-			uint32_t baseOffset = 0x000000,
-			uint32_t offsetLeftBoundary = 0x000000,
-			uint32_t offsetRightBoundary = 0x3FFFFF,
-			uint32_t offsetMask = 0xFFFFFF,
-			const char * opts = "" ) {
+	std::multimap<uint32_t, std::string> parse(
+		const char *fileName,
+		uint32_t baseOffset = 0x000000,
+		uint32_t offsetLeftBoundary = 0x000000,
+		uint32_t offsetRightBoundary = 0x3FFFFF,
+		uint32_t offsetMask = 0xFFFFFF,
+		const char * opts = ""
+	) {
 
 		// Supported options:
 		//	/separator=x	- determines character that separates labes and offsets, default: ":"
@@ -122,7 +118,6 @@ struct Input__Log : public InputWrapper {
 		#undef SKIP_SPACES
 			
 		return SymbolMap;
-
 	}
 
 };

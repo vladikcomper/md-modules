@@ -22,10 +22,9 @@
 
 
 /* Input wrappers map */
-std::unique_ptr<InputWrapper> getInputWrapper( const std::string& name ) {
-
-	std::map<std::string, std::function<std::unique_ptr<InputWrapper>()> >
-	wrappersTable {
+std::unique_ptr<InputWrapper> getInputWrapper(const std::string& name) {
+	static const std::map<std::string, std::function<std::unique_ptr<InputWrapper>()> >
+	wrapperTable {
 		{ "asm68k_sym", 	[]() { return std::unique_ptr<InputWrapper>(new Input__ASM68K_Sym()); } },
 		{ "asm68k_lst", 	[]() { return std::unique_ptr<InputWrapper>(new Input__ASM68K_Listing()); } },
 		{ "as_lst",			[]() { return std::unique_ptr<InputWrapper>(new Input__AS_Listing()); } },
@@ -33,12 +32,11 @@ std::unique_ptr<InputWrapper> getInputWrapper( const std::string& name ) {
 		{ "log", 			[]() { return std::unique_ptr<InputWrapper>(new Input__Log()); } }
 	};
 
-	auto entry = wrappersTable.find( name );
-	if ( entry == wrappersTable.end() ) {
-		IO::Log( IO::fatal, "Unknown input format specifier: %s", name.c_str() );
+	auto entry = wrapperTable.find(name);
+	if (entry == wrapperTable.end()) {
+		IO::Log(IO::fatal, "Unknown input format specifier: %s", name.c_str());
 		throw "Bad input format specifier";
 	}
 
 	return (entry->second)();
-
 }

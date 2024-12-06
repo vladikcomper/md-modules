@@ -17,13 +17,9 @@
 
 struct Input__ASM68K_Listing : public InputWrapper {
 
-	Input__ASM68K_Listing() : InputWrapper() { // Constructor
+	Input__ASM68K_Listing() : InputWrapper() { }
 
-	}
-
-	~Input__ASM68K_Listing() {	// Destructor
-
-	}
+	~Input__ASM68K_Listing() { }
 
 	/**
 	 * Interface for input file parsing
@@ -36,13 +32,14 @@ struct Input__ASM68K_Listing : public InputWrapper {
 	 *
 	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
 	 */
-	std::multimap<uint32_t, std::string>
-	parse(	const char *fileName,
-			uint32_t baseOffset = 0x000000,
-			uint32_t offsetLeftBoundary = 0x000000,
-			uint32_t offsetRightBoundary = 0x3FFFFF,
-			uint32_t offsetMask = 0xFFFFFF,
-			const char * opts = "" ) {
+	std::multimap<uint32_t, std::string> parse(
+		const char *fileName,
+		uint32_t baseOffset = 0x000000,
+		uint32_t offsetLeftBoundary = 0x000000,
+		uint32_t offsetRightBoundary = 0x3FFFFF,
+		uint32_t offsetMask = 0xFFFFFF,
+		const char * opts = ""
+	) {
 
 		// Known issues:
 		//	* Doesn't recognize line break character "&", as line continuations aren't properly listed by ASM68K
@@ -82,11 +79,12 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 		// Setup buffer, symbols list and file for input
 		const int sBufferSize = 1024;
-		uint8_t sBuffer[ sBufferSize ];
+		uint8_t sBuffer[sBufferSize];
 		std::multimap<uint32_t, std::string> SymbolMap;
-		IO::FileInput input = IO::FileInput( fileName, IO::text );
-		if ( !input.good() ) { throw "Couldn't open input file"; }
-
+		IO::FileInput input = IO::FileInput(fileName, IO::text);
+		if (!input.good()) {
+			throw "Couldn't open input file";
+		}
 
 		// Vocabulary for assembly directives that support labels
 		// NOTICE: This will be also extended with macro names
@@ -102,7 +100,6 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		#define IS_LABEL_CHAR(X)		((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(unsigned)(X-'0')<10||X=='?'||X=='_')
 		#define IS_WHITESPACE(X)		(X==' '||X=='\t')
 		#define IS_ENDOFLINE(X)			(X=='\n'||X=='\r'||X==0x00)
-
 
 		// For every string in a listing file ...
 		for ( 
@@ -132,26 +129,26 @@ struct Input__ASM68K_Listing : public InputWrapper {
 			{
 				bool hasProperOffset = true;
 				for (int i = 0; i < 8; ++i) {
-					if ( !IS_HEX_CHAR(*ptr) ) {
+					if (!IS_HEX_CHAR(*ptr)) {
 						hasProperOffset = false;
 						break;
 					}
 					ptr++;
 				}
-				if ( !hasProperOffset ) {
-					IO::Log( IO::debug, "Line %d doesn't have a proper offset, skipping...", lineCounter );
+				if (!hasProperOffset) {
+					IO::Log(IO::debug, "Line %d doesn't have a proper offset, skipping...", lineCounter);
 					continue;
 				}
 				*ptr++ = 0x00;					// separate offset, so "sLineOffset" is proper c-string, containing only offset
 			}
 
 			// If this line represents an expression result, ignore
-			if ( *ptr == '=' ) {
+			if (*ptr == '=') {
 				continue;
 			}
 			
 			// If this line is macro expansion and option is set to ignore expansions, ignore
-			if ( optIgnoreMacroExpansions && *cMacroMark == 'M' ) {
+			if (optIgnoreMacroExpansions && *cMacroMark == 'M') {
 				continue;
 			}
 
@@ -166,13 +163,13 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 			// Scenario #1 : Line doesn't have indention, meaning it starts with a name
 			// NOTICE: In this case, label may use a wider range of allowed characters, hence it's referenced as "NAME" below ...
-			if ( IS_START_OF_NAME(*ptr) ) {
-				IO::Log( IO::debug, "Line %d: Possible label at the beginning of line", lineCounter );
-				sLabel = ptr++;					// assume this as label
-				while ( IS_NAME_CHAR(*ptr) ) ptr++;	// iterate through label characters
+			if (IS_START_OF_NAME(*ptr)) {
+				IO::Log(IO::debug, "Line %d: Possible label at the beginning of line", lineCounter);
+				sLabel = ptr++;						// assume this as label
+				while (IS_NAME_CHAR(*ptr)) ptr++;	// iterate through label characters
 
 				// Make sure label ends properly
-				if ( IS_WHITESPACE(*ptr) || *ptr==':' || IS_ENDOFLINE(*ptr) ) {
+				if (IS_WHITESPACE(*ptr) || *ptr==':' || IS_ENDOFLINE(*ptr)) {
 					*ptr++ = 0x00;			// mark labels end, so "sLabel" is a proper c-string containing label alone now
 				}
 				else {
@@ -182,15 +179,15 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 			// Scenario #2 : Line starts with idention (space or tab)
 			// NOTICE: In this case, label cannot include certain characters allowed otherwise...
-			else if ( IS_WHITESPACE(*ptr) ) {
-				IO::Log( IO::debug, "Line %d: Possible label with idention", lineCounter );
-				do { ptr++; } while ( IS_WHITESPACE(*ptr) ); 	// skip idention
-				if ( IS_START_OF_LABEL(*ptr) ) {
-					sLabel = ptr++;						// assume this as label
-					while ( IS_LABEL_CHAR(*ptr) ) ptr++;	// iterate through label characters
+			else if (IS_WHITESPACE(*ptr)) {
+				IO::Log(IO::debug, "Line %d: Possible label with idention", lineCounter);
+				do { ptr++; } while (IS_WHITESPACE(*ptr)); 	// skip idention
+				if (IS_START_OF_LABEL(*ptr)) {
+					sLabel = ptr++;							// assume this as label
+					while (IS_LABEL_CHAR(*ptr)) ptr++;		// iterate through label characters
 
 					// Make sure label ends properly
-					if ( *ptr==':' ) {
+					if (*ptr==':') {
 						*ptr++ = 0x00;			// mark labels end, so "sLabel" is a proper c-string containing label alone now
 					}
 					else {
@@ -201,17 +198,16 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 			// Scenario #3: Line doesn't seem to contain a label ...
 			else {
-				IO::Log( IO::debug, "Line %d: Didn't identify label, skipping", lineCounter );
+				IO::Log(IO::debug, "Line %d: Didn't identify label, skipping", lineCounter);
 				continue;
 			}
 
 			// If label was determined ...
 			// WARNING: "ptr" should point past label's end!
-			if ( sLabel != nullptr ) {
-
+			if (sLabel != nullptr) {
 				// Construct full label's name as std::string object
 				std::string strLabel;
-				if ( *sLabel == localLabelSymbol ) {
+				if (*sLabel == localLabelSymbol) {
 					strLabel  = strLastGlobalLabel;
 					strLabel += localLabelRef;
 					strLabel += (char*)sLabel+1;	// +1 to skip local label symbol itself
@@ -221,51 +217,49 @@ struct Input__ASM68K_Listing : public InputWrapper {
 				}
 
 				// Fetch label's opcode into std::string object
-				while ( IS_WHITESPACE(*ptr) ) ptr++; 	// skip indention
+				while (IS_WHITESPACE(*ptr)) ptr++; 		// skip indention
 				uint8_t* const ptr_start = ptr;
-				do { ptr++; } while ( !IS_WHITESPACE(*ptr) && !IS_ENDOFLINE(*ptr) );
+				do { ptr++; } while (!IS_WHITESPACE(*ptr) && !IS_ENDOFLINE(*ptr));
 				*ptr++ = 0x00;
-				std::string strOpcode( (char*)ptr_start, ptr-ptr_start-1 );		// construct opcode string
-				if ( strOpcode[0] == localLabelSymbol ) {					// in case opcode is a local label reference
+				std::string strOpcode((char*)ptr_start, ptr-ptr_start-1);		// construct opcode string
+				if (strOpcode[0] == localLabelSymbol) {					// in case opcode is a local label reference
 					strOpcode = strLastGlobalLabel;
 					strOpcode += localLabelRef;
 					strOpcode += (char*)ptr_start+1;	// +1 to skip local label symbol itself
 				}
-				
-				IO::Log( IO::debug, "Processing: %s: %s", strLabel.c_str(), strOpcode.c_str() );
+
+				IO::Log(IO::debug, "Processing: %s: %s", strLabel.c_str(), strOpcode.c_str());
 
 				// Make sure this label doesn't name any special object ...
-				auto opcodeRef = NamingOpcodes.find( strOpcode );
-				if ( opcodeRef != NamingOpcodes.end() ) {
+				auto opcodeRef = NamingOpcodes.find(strOpcode);
+				if (opcodeRef != NamingOpcodes.end()) {
 					// If this label names a macro ...
-					if ( !opcodeRef->compare("macro") ) {	// TODOh: Optimize by handling pointer to "macro" record within set
+					if (!opcodeRef->compare("macro")) {	// TODOh: Optimize by handling pointer to "macro" record within set
 
-						IO::Log( IO::debug, "%s recognized as macro declaration", strLabel.c_str() );
+						IO::Log(IO::debug, "%s recognized as macro declaration", strLabel.c_str());
 
 						// If macro processing option is on ...
-						if ( optRegisterMacrosAsOpcodes ) {
-							while ( IS_WHITESPACE(*ptr) ) ptr++; 	// skip indention
+						if (optRegisterMacrosAsOpcodes) {
+							while (IS_WHITESPACE(*ptr)) ptr++; 	// skip indention
 
 							// If macro uses labels as argument, add macro's name (the label) to the vocabulary
-							if ( *ptr == '*' ) {
-								NamingOpcodes.insert( strLabel );
+							if (*ptr == '*') {
+								NamingOpcodes.insert(strLabel);
 							}
 						}
 
 						// If ignore macro definitions option is on ...
-						if ( optIgnoreMacroDefinitions ) {
-
+						if (optIgnoreMacroDefinitions) {
 							bool endmDirectiveReached = false;
 
 							for (
-									int macroLineCounter = 0, macroLineLength;
-									macroLineLength = input.readLine( sBuffer, sBufferSize ), macroLineLength >= 0;
-									++macroLineCounter
-								) {
-
+								int macroLineCounter = 0, macroLineLength;
+								macroLineLength = input.readLine( sBuffer, sBufferSize ), macroLineLength >= 0;
+								++macroLineCounter
+							) {
 								// Maintain line counter to warn if suspiciously many lines were processed as macro definition alone
-								if ( macroLineCounter >= 1000 ) {
-									IO::Log( IO::warning,
+								if (macroLineCounter >= 1000) {
+									IO::Log(IO::warning,
 										// TODOh: Advise to enable ignore macro definitions option?
 										"Too many lines (>=1000) found in definition of \"%s\" macro. This could be missing \"endm\" statement or a parsing error.",
 										strLabel.c_str()
@@ -274,26 +268,26 @@ struct Input__ASM68K_Listing : public InputWrapper {
 								}
 
 								// Make sure this line includes assembly text
-								if ( macroLineLength <= 36 ) {
+								if (macroLineLength <= 36) {
 									continue;
 								}
 
 								ptr = sBuffer+36;
 
 								// If line starts with label, skip it ...
-								if ( !IS_WHITESPACE(*ptr) ) {
-									do { ptr++; } while ( !IS_WHITESPACE(*ptr) && !IS_ENDOFLINE(*ptr) );
+								if (!IS_WHITESPACE(*ptr)) {
+									do { ptr++; } while (!IS_WHITESPACE(*ptr) && !IS_ENDOFLINE(*ptr));
 								}
 								
 								// Fetch opcode, if present ...
-								while ( IS_WHITESPACE(*ptr) ) ptr++;
+								while (IS_WHITESPACE(*ptr)) ptr++;
 								uint8_t* const ptr_start = ptr;
-								do { ptr++; } while ( !IS_WHITESPACE(*ptr) && !IS_ENDOFLINE(*ptr) );
+								do { ptr++; } while (!IS_WHITESPACE(*ptr) && !IS_ENDOFLINE(*ptr));
 								*ptr++ = 0x00;
 								
 								// If opcode is "endm", stop processing
-								if ( !strcmp( (char*)ptr_start, "endm" ) ) {
-									IO::Log( IO::debug,
+								if (!strcmp((char*)ptr_start, "endm")) {
+									IO::Log(IO::debug,
 										"Skipped definition of macro \"%s\" (lines %d-%d)",
 										strLabel.c_str(), lineCounter, lineCounter+macroLineCounter
 									);
@@ -301,12 +295,11 @@ struct Input__ASM68K_Listing : public InputWrapper {
 									endmDirectiveReached = true;
 									break;
 								}
-
 							}
 							
 							// If end of file was reached before "endm"
-							if ( !endmDirectiveReached ) {
-								IO::Log( IO::error,
+							if (!endmDirectiveReached) {
+								IO::Log(IO::error,
 									// TODOh: Advise to enable ignore macro definitions option?
 									"Couldn't reach end of \"%s\" macro. This is possibly due to a parsing error.",
 									strLabel.c_str()
@@ -321,27 +314,25 @@ struct Input__ASM68K_Listing : public InputWrapper {
 						}
 					}
 
-					IO::Log( IO::debug, "%s recognized as macro symbol", strLabel.c_str() );
+					IO::Log(IO::debug, "%s recognized as macro symbol", strLabel.c_str());
 					continue;				// cancel further processing
-
 				}
 
 				// Decode symbol offset
 				uint32_t offset = 0;
-				for ( uint8_t* c = sLineOffset; *c; c++ ) {
+				for (uint8_t* c = sLineOffset; *c; c++) {
 					offset = offset*0x10 + (((unsigned)(*c-'0')<10) ? (*c-'0') : (*c-('A'-10)));
 				}
 
 				// Add label to the symbols table, if:
 				//	1) Its absolute offset is higher than the previous offset successfully added
 				//	2) When base offset is subtracted and the mask is applied, the resulting offset is within allowed boundaries
-				if ( (lastSymbolOffset == (uint32_t)-1) || (offset >= lastSymbolOffset) ) {
-
+				if ((lastSymbolOffset == (uint32_t)-1) || (offset >= lastSymbolOffset)) {
 					// Convert offset according to parameters
 					uint32_t converted_offset = (offset - baseOffset) & offsetMask;
 
-					if ( converted_offset >= offsetLeftBoundary && converted_offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
-						IO::Log( IO::debug, "Adding symbol: %s", strLabel.c_str() );
+					if (converted_offset >= offsetLeftBoundary && converted_offset <= offsetRightBoundary) {	// if offset is within range, add it ...
+						IO::Log(IO::debug, "Adding symbol: %s", strLabel.c_str());
 
 						// Add label to the symbols map...
 						SymbolMap.insert({converted_offset, strLabel});
@@ -352,9 +343,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 				else {
 					IO::Log( IO::debug, "Symbol %s at offset %X ignored: its offset is less than the previous symbol successfully fetched", strLabel.c_str(), offset );
 				}
-
 			}
-
 		}
 
 		// Undefine conditions, so they can be redefined in other format handlers
@@ -367,7 +356,5 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		#undef IS_ENDOFLINE
 
 		return SymbolMap;
-
 	}
-
 };

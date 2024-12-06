@@ -21,7 +21,7 @@
 
 /* Main function */
 int main (int argc, const char ** argv) {
-	
+
 	/* Provide help if no sufficient arguments were passed */
 	if (argc<2) {
 		printf(
@@ -113,8 +113,8 @@ int main (int argc, const char ** argv) {
 	uint32_t pointerOffset = 0;
 
 	std::string inputWrapperName = "asm68k_sym";		// default input format
-	std::string outputWrapperName = "deb2";			// default output format
-	std::string inputOpts = "";						// default options for input format
+	std::string outputWrapperName = "deb2";				// default output format
+	std::string inputOpts = "";							// default options for input format
 	std::string outputOpts = "";						// default options for output format
 	std::string filterRegexStr = "";					// default filter expression
 
@@ -122,7 +122,7 @@ int main (int argc, const char ** argv) {
 	const char *inputFileName = argv[1];
 	const char *outputFileName = argv[2];
 	{
-		const std::map <std::string, ArgvParser::record>
+		const std::map<std::string, ArgvParser::record>
 			ParametersList {
 				{ "-base",		{ .type = ArgvParser::record::hexNumber,	.target = &baseOffset											} },
 				{ "-mask",		{ .type = ArgvParser::record::hexNumber,	.target = &offsetMask											} },
@@ -146,64 +146,63 @@ int main (int argc, const char ** argv) {
 
 		/* Decode parameters acording to list defined by "ParametersList" variable */
 		try {
-			ArgvParser::parse( argv+3, argc-3, ParametersList );
+			ArgvParser::parse(argv+3, argc-3, ParametersList);
 		}
 		catch (const char* err) {
-			IO::Log( IO::fatal, err );
+			IO::Log(IO::fatal, err);
 			return -1;
 		}
-
 	}
 
 	/* Apply configuration based off the parameters parsed ... */
 	IO::LogLevel = optDebug ? IO::debug : IO::warning;
-	if ( optAppend == true ) {
+	if (optAppend == true) {
 		if ( appendOffset != 0 ) {
-			IO::Log( IO::warning, "Using conflicting parameters: -a and -org. The -org parameter has no effect" );
+			IO::Log(IO::warning, "Using conflicting parameters: -a and -org. The -org parameter has no effect");
 		}
 		appendOffset = -1;
 	}
-	if ( optFilterExclude && !filterRegexStr.length() ) {
-		IO::Log( IO::warning, "Using -exclude parameter without -filter [regex]. The -exclude parameter has no effect" );
+	if (optFilterExclude && !filterRegexStr.length()) {
+		IO::Log(IO::warning, "Using -exclude parameter without -filter [regex]. The -exclude parameter has no effect");
 		optFilterExclude = false;
 	}
-	if ( optToUpper && optToLower ) {
-		IO::Log( IO::warning, "Using conflicting parameters: -toupper and -tolower. The -toupper parameter has no effect" );
+	if (optToUpper && optToLower) {
+		IO::Log(IO::warning, "Using conflicting parameters: -toupper and -tolower. The -toupper parameter has no effect");
 		optToUpper = false;
 	}
 
 	/* Retrieve symbols from the input file */
-	std::multimap<uint32_t, std::string> Symbols;
+	std::multimap<uint32_t,std::string> Symbols;
 	try {
-		std::unique_ptr<InputWrapper> input = getInputWrapper( inputWrapperName );
-		Symbols = input->parse( inputFileName, baseOffset, offsetLeftBoundary, offsetRightBoundary, offsetMask, inputOpts.c_str() );
+		auto input = getInputWrapper( inputWrapperName );
+		Symbols = input->parse(inputFileName, baseOffset, offsetLeftBoundary, offsetRightBoundary, offsetMask, inputOpts.c_str());
 	}
 	catch (const char* err) {
-		IO::Log( IO::fatal, "Input file parsing failed: %s", err ); 
+		IO::Log(IO::fatal, "Input file parsing failed: %s", err); 
 		return -1;
 	}
 	
 	/* Apply transformation to symbols */
-	if ( optToUpper ) {
-		for ( auto it = Symbols.begin(); it != Symbols.end(); it++ ) {
-			std::transform(it->second.begin(), it->second.end(), it->second.begin(), ::toupper);
+	if (optToUpper) {
+		for (auto & symbolRef : Symbols) {
+			std::transform(symbolRef.second.begin(), symbolRef.second.end(), symbolRef.second.begin(), ::toupper);
 		}
 		std::transform(filterRegexStr.begin(), filterRegexStr.end(), filterRegexStr.begin(), ::toupper);
 	}    
-	if ( optToLower ) {
-		for ( auto it = Symbols.begin(); it != Symbols.end(); it++ ) {
-			std::transform(it->second.begin(), it->second.end(), it->second.begin(), ::tolower);
-		}                                                         
+	if (optToLower) {
+		for (auto & symbolRef : Symbols) {
+			std::transform(symbolRef.second.begin(), symbolRef.second.end(), symbolRef.second.begin(), ::tolower);
+		}
 		std::transform(filterRegexStr.begin(), filterRegexStr.end(), filterRegexStr.begin(), ::tolower);
 	}
 	
 	/* Pre-filter symbols based on regular expression */
-	if ( filterRegexStr.length() > 0 ) {
-		const auto regexExpression = std::regex( filterRegexStr );
-		for ( auto it = Symbols.cbegin(); it != Symbols.cend(); /*it++*/ ) {	// NOTICE: Do not increment iterator here (but see below)
-			bool matched = std::regex_match( it->second, regexExpression );
-			if ( matched == optFilterExclude ) {	// will erase element: if mode=exclude and matched, if mode=include and !matched
-				it = Symbols.erase( it );
+	if (filterRegexStr.length() > 0) {
+		const auto regexExpression = std::regex(filterRegexStr);
+		for (auto it = Symbols.cbegin(); it != Symbols.cend(); /*it++*/) {	// NOTICE: Do not increment iterator here (but see below)
+			bool matched = std::regex_match(it->second, regexExpression);
+			if (matched == optFilterExclude) {	// will erase element: if mode=exclude and matched, if mode=include and !matched
+				it = Symbols.erase(it);
 			}
 			else {
 				it++;
@@ -212,21 +211,20 @@ int main (int argc, const char ** argv) {
 	}
 
 	/* Pass generated symbols list to the output wrapper */
-	if ( Symbols.size() > 0 ) {
+	if (!Symbols.empty()) {
 		try {
-			std::unique_ptr<OutputWrapper> output = getOutputWrapper( outputWrapperName );
-			output->parse( Symbols, outputFileName, appendOffset, pointerOffset, outputOpts.c_str(), !optNoAlignOnAppend );
+			auto output = getOutputWrapper(outputWrapperName);
+			output->parse(Symbols, outputFileName, appendOffset, pointerOffset, outputOpts.c_str(), !optNoAlignOnAppend);
 		}
 		catch (const char* err) {
-			IO::Log( IO::fatal, "Output generation failed: %s", err );
+			IO::Log(IO::fatal, "Output generation failed: %s", err);
 			return -2;
 		}
 	}
 	else {
-		IO::Log( IO::error, "No symbols passed for output, operation aborted" );
+		IO::Log(IO::error, "No symbols passed for output, operation aborted");
 		return -3;
 	}
 
 	return 0;
-
 }

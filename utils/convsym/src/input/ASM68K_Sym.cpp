@@ -16,34 +16,31 @@
 
 struct Input__ASM68K_Sym : public InputWrapper {
 
-	Input__ASM68K_Sym() : InputWrapper() { // Constructor
-
-	}
-
-	~Input__ASM68K_Sym() {	// Destructor
-
-	}
+	Input__ASM68K_Sym() : InputWrapper() { }
+	~Input__ASM68K_Sym() { }
 
 	/**
 	 * Interface for input file parsing
+	 *
 	 * @param path Input file path
 	 * @param baseOffset Base offset for the parsed records (subtracted from the fetched offsets to produce internal offsets)
 	 * @param offsetLeftBoundary Left boundary for the calculated offsets
 	 * @param offsetRightBoundary Right boundary for the calculated offsets
 	 * @param offsetMask Mask applied to offset after base offset subtraction
+	 * @param opts Parser options
 	 *
 	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
 	 */
-	std::multimap<uint32_t, std::string>
-	parse(	const char *fileName,
-			uint32_t baseOffset = 0x000000,
-			uint32_t offsetLeftBoundary = 0x000000,
-			uint32_t offsetRightBoundary = 0x3FFFFF,
-			uint32_t offsetMask = 0xFFFFFF,
-			const char * opts = "" ) {
-
+	std::multimap<uint32_t, std::string> parse(
+		const char *fileName,
+		uint32_t baseOffset = 0x000000,
+		uint32_t offsetLeftBoundary = 0x000000,
+		uint32_t offsetRightBoundary = 0x3FFFFF,
+		uint32_t offsetMask = 0xFFFFFF,
+		const char * opts = ""
+	) {
 		IO::FileInput input = IO::FileInput( fileName );
-		if ( !input.good() ) { throw "Couldn't open input file"; }
+		if (!input.good()) { throw "Couldn't open input file"; }
 
 		// Supported options:
 		//	/localSign=x			- determines character used to specify local labels
