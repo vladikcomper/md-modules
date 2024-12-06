@@ -2,6 +2,7 @@
 
 #include <map>
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include <IO.hpp>
@@ -14,16 +15,15 @@ struct OutputWrapper {
 	virtual ~OutputWrapper() { }
 
 	// Function to setup output
-	static IO::FileOutput* setupOutput( const char * fileName, int32_t appendOffset, int32_t pointerOffset, bool alignOnAppend ) {
+	static std::unique_ptr<IO::FileOutput> setupOutput( const char * fileName, int32_t appendOffset, int32_t pointerOffset, bool alignOnAppend ) {
 
 		// If append offset was specified, don't overwrite the contents of file
 		if ( appendOffset != 0 ) {
-
-			IO::FileOutput* output = new IO::FileOutput( fileName, IO::append );
+			std::unique_ptr<IO::FileOutput> output = std::make_unique<IO::FileOutput>(fileName, IO::append);
 
 			// Make sure IO operation was successful
 			if (!output->good()) {
-				IO::Log( IO::fatal, "Couldn't open file \"%s\"", fileName );
+				IO::Log(IO::fatal, "Couldn't open file \"%s\"", fileName);
 				throw "IO error";
 			}
 
@@ -58,25 +58,23 @@ struct OutputWrapper {
 			output->setOffset( 0 );						// move to the start of appending section ...
 
 			return output;
-
 		}
 
 		// Otherwise, discard file contents if exists
 		else {
-			return new IO::FileOutput( fileName );
+			return std::make_unique<IO::FileOutput>(fileName);
 		}
 
 	}
 
 	// Virtual function interface that handles generating output data
-	virtual void
-		parse( 
-			std::multimap<uint32_t, std::string>& SymbolMap, 
-			const char * fileName, 
-			uint32_t appendOffset = 0, 
-			uint32_t pointerOffset = 0,
-			const char * opts = "",
-			bool alignOnAppend = true
-		) = 0;
+	virtual void parse( 
+		std::multimap<uint32_t, std::string>& SymbolMap, 
+		const char * fileName, 
+		uint32_t appendOffset = 0, 
+		uint32_t pointerOffset = 0,
+		const char * opts = "",
+		bool alignOnAppend = true
+	) = 0;
 
 };
