@@ -309,6 +309,28 @@ tests: 'tuple[Test, ...]' = (
 			CheckMatch(output=File('output-expected/kernel.log'), text=True),
 		),
 	),
+	Test(
+		description = 'log->deb1 huffman tree flattening test (Sonic 1 Blastless)',
+		pipeline=(
+			ConvSym(
+				input = File('input/s1blast.log'),
+				output = File('output/s1blast.deb1'),
+				options = ('-in', 'log', '-out', 'deb1')
+			),
+			CheckMatch(output=File('output-expected/s1blast.deb1')),
+		)
+	),
+	Test(
+		description = 'log->deb2 huffman tree flattening test (Sonic 1 Blastless)',
+		pipeline=(
+			ConvSym(
+				input = File('input/s1blast.log'),
+				output = File('output/s1blast.deb2'),
+				options = ('-in', 'log', '-out', 'deb2')
+			),
+			CheckMatch(output=File('output-expected/s1blast.deb2')),
+		)
+	),
 )
 
 
