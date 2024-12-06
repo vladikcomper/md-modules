@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.9.1								*
+ * ConvSym utility version 2.10									*
  * Output wrapper for assembly file with equates				*
  * ------------------------------------------------------------	*/
 

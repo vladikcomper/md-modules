@@ -99,6 +99,10 @@ Symbols conversion and filtering options:
   -tolower
     Converts all symbol names to lowercase.
 
+  -addprefix [string]
+    Prepends a specified prefix string to every symbol in the resulting table.
+    Done after all other transformations.
+
   -filter [regex]
     Enables filtering of the symbol list fetched from the [input_file]
     based on a regular expression.
@@ -394,6 +398,19 @@ Default parser options can be expressed as follows:
 
 
 ## Version history
+
+### Version 2.10 (2024-12-07)
+
+* Added `-addprefix` option to prepend any string to output symbols.
+
+* `deb2` and `deb1` output parsers:
+  - Fixed a rare symbol encoding issue where data with unusual entropy would produce long prefix trees with some codes exceeding 16-bits. Respective characters (usually extremely rare) would then fail to decode properly corrupting a small set of symbol texts. A custom tree rebalancing algorithm was implemented to fix trees with codes longer than 16-bit;
+  - Fixed a minor memory leak (<2 kb in a lifetime) on nodes in encoding function;
+  - Fixed a tiny (several bytes) memory leak due to an unreleased file handle.
+
+* `asm` and `log` output parsers:
+  - Properly report I/O error if output file couldn't be opened.
+
 
 ### Version 2.9.1 (2023-03-22)
 

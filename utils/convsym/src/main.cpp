@@ -1,8 +1,8 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.9.1								*
+ * ConvSym utility version 2.10									*
  * Main definitions file										*
- * (c) 2017-2018, 2020-2023, Vladikcomper						*
+ * (c) 2017-2018, 2020-2024, Vladikcomper						*
  * ------------------------------------------------------------	*/
 
 #include <cstdio>
@@ -25,8 +25,8 @@ int main (int argc, const char ** argv) {
 	/* Provide help if no sufficient arguments were passed */
 	if (argc<2) {
 		printf(
-			"ConvSym utility version 2.9.1\n"
-			"(c) 2016-2023, vladikcomper\n"
+			"ConvSym utility version 2.10\n"
+			"(c) 2016-2024, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
 			"  convsym [input_file|-] [output_file|-] <options>\n"
@@ -83,7 +83,7 @@ int main (int argc, const char ** argv) {
 			"Symbols conversion and filtering options:\n"
 			"  -toupper\n"
 			"    Converts all symbol names to uppercase.\n"    
-			"\n"   
+			"\n"
 			"  -tolower\n"
 			"    Converts all symbol names to lowercase.\n"
 			"\n"

@@ -1,8 +1,7 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.9.1								*
+ * ConvSym utility version 2.10									*
  * Output formats base controller								*
- * (c) 2017-2018, 2020-2023, Vladikcomper						*
  * ------------------------------------------------------------	*/
 
 #pragma once
