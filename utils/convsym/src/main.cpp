@@ -87,6 +87,9 @@ int main (int argc, const char ** argv) {
 			"  -tolower\n"
 			"    Converts all symbol names to lowercase.\n"
 			"\n"
+			"  -addprefix [string]\n"
+			"    Prepends a specified prefix string to every symbol in the resulting table. Done after all other transformations.\n"
+			"\n"
 			"  -filter [regex]\n"
 			"    Enables filtering of the symbol list fetched from the [input_file] based on a regular expression.\n"
 			"\n"
@@ -117,6 +120,7 @@ int main (int argc, const char ** argv) {
 	std::string inputOpts = "";							// default options for input format
 	std::string outputOpts = "";						// default options for output format
 	std::string filterRegexStr = "";					// default filter expression
+	std::string prefixStr = "";							// default added prefix (empty)
 
 	/* Parse command line arguments */
 	const char *inputFileName = argv[1];
@@ -140,6 +144,7 @@ int main (int argc, const char ** argv) {
 				{ "-ref",		{ .type = ArgvParser::record::hexNumber,	.target = &pointerOffset										} },
 				{ "-filter",	{ .type = ArgvParser::record::string,		.target = &filterRegexStr										} },
 				{ "-exclude",	{ .type = ArgvParser::record::flag,			.target = &optFilterExclude										} },
+				{ "-addprefix",	{ .type = ArgvParser::record::string,		.target = &prefixStr											} },
 				{ "-toupper",	{ .type = ArgvParser::record::flag,			.target = &optToUpper											} },
 				{ "-tolower",	{ .type = ArgvParser::record::flag,			.target = &optToLower											} }
 			};
@@ -194,6 +199,15 @@ int main (int argc, const char ** argv) {
 			std::transform(symbolRef.second.begin(), symbolRef.second.end(), symbolRef.second.begin(), ::tolower);
 		}
 		std::transform(filterRegexStr.begin(), filterRegexStr.end(), filterRegexStr.begin(), ::tolower);
+	}
+	if (!prefixStr.empty()) {
+		const auto prefixSize = prefixStr.size();
+		for (auto & symbolRef : Symbols) {
+			if (symbolRef.second.size() + prefixSize > symbolRef.second.capacity()) {
+				symbolRef.second.reserve(symbolRef.second.size() + prefixSize);
+			}
+			symbolRef.second.insert(0, prefixStr);
+		}
 	}
 	
 	/* Pre-filter symbols based on regular expression */

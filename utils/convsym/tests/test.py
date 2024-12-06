@@ -331,6 +331,16 @@ tests: 'tuple[Test, ...]' = (
 			CheckMatch(output=File('output-expected/s1blast.deb2')),
 		)
 	),
+	Test(
+		description = 'log->log with "-addprefix" option (sanity check)',
+		pipeline=(
+			ConvSym(
+				input = Buffer(b'0: Start\n20000: SomeLongLabelNameInTheMiddle\n3FFFFF: End\n'),
+				options = ('-input', 'log', '-output', 'log', '-addprefix', 'MyPrefix.'),
+			),
+			CheckMatch(output=Buffer(b'0: MyPrefix.Start\n20000: MyPrefix.SomeLongLabelNameInTheMiddle\n3FFFFF: MyPrefix.End\n'), text=True)
+		),
+	),
 )
 
 
