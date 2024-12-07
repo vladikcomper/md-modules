@@ -26,16 +26,23 @@ struct Huffman {
 
 	/* Simple node structure that is used to build a tree */
 	struct Node {
+		static inline int uid = 0;
+
+		// Disable copy constructors to avoid duplicate IDs
+		Node(const Node& node) noexcept = delete;
+		Node& operator=(const Node& node) noexcept = delete;
 
 		// Constructor: Unlinked Huffman tree node with the data
-		Node(const uint16_t _data)
+		Node(const uint16_t _data) noexcept
 		: data(_data) {
+			id = uid++;
 			leaf[0] = leaf[1] = nullptr;	// specify leaves as unlinked (orphans)
 		};
 
 		// Constructor: Merge two specified nodes into a branch (a root for the passed nodes is constructed)
-		Node(Node* A, Node* B)
+		Node(Node* A, Node* B) noexcept
 		: data(0) {
+			id = uid++;
 			leaf[0] = A;	// link node A to the left leaf
 			leaf[1] = B;	// link node B to the right leaf
 		};
@@ -49,6 +56,7 @@ struct Huffman {
 		// Data structure
 		uint16_t data;		// character code (or other value) that this node stores
 		Node* leaf[2];		// connects the node to the underlying nodes, forming a binary tree
+		int id;				// unique node identifier (mostly used for determinstic tree sorting)
 	};
 
 	/* Complete record of Huffman-encoded symbol */
@@ -145,10 +153,12 @@ struct Huffman {
 		/* Generate a map to hold the end nodes (leaf nodes) at each level */
 		struct NodeRef { Node* node; Node* parent; };
 		const auto sortByParent = [](const std::reference_wrapper<NodeRef>& a, const std::reference_wrapper<NodeRef>& b) {
-			if (a.get().parent != b.get().parent) { // sorting by pointer ensures neighboring nodes share the same parent
-				return a.get().parent < b.get().parent;
+			if (a.get().parent != b.get().parent) {
+				assert(a.get().parent && b.get().parent);
+				return a.get().parent->id < b.get().parent->id;
 			}
-			return &a.get() < &b.get();
+			assert(a.get().node->id != b.get().node->id);
+			return a.get().node->id < b.get().node->id;
 		};
 
 		std::map<Node*, NodeRef> nodeRefMap;			// map of <Node, reference data>
@@ -163,7 +173,8 @@ struct Huffman {
 				}
 				auto [nodeRefPair, _] = nodeRefMap.emplace(node, NodeRef{node, parent});
 				if (!node->leaf[0] && !node->leaf[1]) {
-					endNodesMap[depth].insert(std::ref(nodeRefPair->second));
+					const auto [_, inserted] = endNodesMap[depth].insert(std::ref(nodeRefPair->second));
+					assert(inserted);	// inserting should succeed
 				}
 			};
 			traverseTree(rootNode, nullptr, 0, traverseTree);
