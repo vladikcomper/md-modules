@@ -90,7 +90,6 @@ namespace OptsParser {
 				else {
 					IO::Log( IO::error, "Unknown option: /%s, skipping", strOptionName.c_str() );
 				}
-
 			}
 
 			// ... otherwise
