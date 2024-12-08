@@ -19,6 +19,7 @@ The utility supports various input and output processing and transformation opti
   * [`as_lst` parser](#as_lst-parser)
   * [`as_lst_exp` parser](#as_lst_exp-parser)
   * [`log` parser](#log-input-parser)
+  * [`txt` parser](#txt-input-parser)
 * [Output formats parsers](#output-formats-parsers)
   * [`deb2` parser](#deb2-output-parser)
   * [`deb1` parser](#deb1-output-parser)
@@ -42,7 +43,7 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
   -in [format]
   -input [format]
     Selects input file format. Supported formats: asm68k_sym, asm68k_lst,
-    as_lst, as_lst_exp, log
+    as_lst, as_lst_exp, log, txt
     Default: asm68k_sym
 
   -out [format]
@@ -52,9 +53,23 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
 
   -inopt [options]
     Additional options specific for the input parser.
+    Default options (depending on -in [format]):
+      -in asm68k_sym -inopt "/localSign=@ /localJoin=. /processLocals+"
+      -in asm68k_lst -inopt "/localSign=@ /localJoin=. /ignoreMacroDefs+ /ignoreMacroExp- /addMacrosAsOpcodes+ /processLocals+"
+      -in as_lst -inopt "/localJoin=. /processLocals+ /ignoreInternalSymbols+"
+      -in log -inopt "/separator=: /useDecimal-"
+      -in txt -inopt "/fmt='%s %X' /offsetFirst-"
 
   -outopt [options]
     Additional options specific for the output parser.
+    Default options (depending on -out [format]):
+      -out deb2 -outopt "/favorLastLabels-"
+      -out deb1 -outopt "/favorLastLabels-"
+      -out asm -outopt "/fmt='%s:       equ     $%X'"
+      -out log -outopt "/fmt='%X: %s'"
+
+  -debug
+    Enables verbose debug-level logging. Can be useful for troubleshooting.
 
 Offsets conversion options:
   -base [offset]
@@ -147,7 +162,7 @@ Let's break down command line options:
 
 - `out/symbol.txt out/rom.bin` - specifies path to input and output files respectively;
 - `-in txt` - selects `txt` parser for the input file;
-- `-inopt "/fmt='%X %*[TtBbCcDd] %511s /offsetFirst+"` - specifies `/fmt` and `/offsetFirst` for the parser (they are exclusive to `txt` parser), `/fmt` describes line format for the file, which includes:
+- `-inopt "/fmt='%X %*[TtBbCcDd] %511s /offsetFirst+"` - specifies `/fmt` and `/offsetFirst` options for the parser (they are exclusive to `txt` parser), `/fmt` describes line format for the file, which includes:
    - A hex offset (`%X`);
    - One of the following symbol type specifiers `T`, `t`, `B`, `b`, `C`, `c`, `D`, `d` (others are ignored);
    - A label name which shouldn't exceed 512 characters with null terminator (`%511s`);
@@ -313,6 +328,27 @@ Default parser options can be expressed as follows:
 
 	-inopt "/separator=: /useDecimal-"
 
+### `txt` input parser
+
+*This parser is available since **version 2.11**.*
+
+This parser aims for generic text files and can be flexibly configured for arbitrary line formats using `printf`-like syntax (`scanf` format from the C standard library to be exact). It defaults to `%s %X` (e.g. `MyLabel 1C2`).
+
+This parser can be used to parse SGDK's `symbols.txt` file (see [Converting SGDK symbols](#converting-sgdk-symbols) section).
+
+**Options:**
+
+```
+  /fmt='format-string'
+    specifies format string to parse input file lines, default: "%s %X"
+
+  /offsetFirst[+|-]
+    specifies whether offset comes first in the input string; default: -
+```
+
+Default parser options can be expressed as follows:
+
+	-inopt "/fmt='%s %X' /offsetFirst-"
 
 ## Output formats parsers
 
@@ -373,9 +409,23 @@ The default format is the following:
 
 This format can be altered by passing **printf**-compatible format string, where the first argument corresponds to the symbol name and the second corresponds to the offset.
 
+**Options:**
+
+Since **version 2.11**, this parser supports the following options:
+
+```
+  /fmt='format-string'
+    specifies format string to print (label, offset) pairs, default: "%s:	equ	$%X"
+```
+
 Default parser options can be expressed as follows:
 
+	-outopt "/fmt='%s:	equ	$%X'"
+
+Before **version 2.11** format string option could be specified as follows (this legacy syntax is still recognized):
+
 	-outopt "%s:	equ	$%X"
+
 
 ### `log` output parser
 
@@ -389,7 +439,20 @@ The default format is the following:
 
 This format can be altered by passing **printf**-compatible format string, where the first argument corresponds to the symbol name and the second corresponds to the offset.
 
+**Options:**
+
+Since **version 2.11**, this parser supports the following options:
+
+```
+  /fmt='format-string'
+    specifies format string to print (offset, label) pairs, default: "%X: %s"
+```
+
 Default parser options can be expressed as follows:
+
+	-outopt "/fmt='%X: %s'"
+
+Before **version 2.11** format string option could be specified as follows (this legacy syntax is still recognized):
 
 	-outopt "%X: %s"
 
@@ -413,7 +476,7 @@ Default parser options can be expressed as follows:
 * `deb2` and `deb1` output parsers:
   - Made tree flattening algorithm introduced in 2.10 deterministic.
 
-* Document all default parser options in ConvSym's usage message (printed when invoked without arguments).
+* Document all default parser options in ConvSym's usage message (printed when invoked without arguments), document `-debug` option.
 
 ### Version 2.10 (2024-12-07)
 
