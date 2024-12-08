@@ -19,6 +19,7 @@
 #include "AS_Listing.cpp"
 #include "AS_Listing_Experimental.cpp"
 #include "Log.cpp"
+#include "TXT.cpp"
 
 
 /* Input wrappers map */
@@ -29,7 +30,8 @@ std::unique_ptr<InputWrapper> getInputWrapper(const std::string& name) {
 		{ "asm68k_lst", 	[]() { return std::unique_ptr<InputWrapper>(new Input__ASM68K_Listing()); } },
 		{ "as_lst",			[]() { return std::unique_ptr<InputWrapper>(new Input__AS_Listing()); } },
 		{ "as_lst_exp", 	[]() { return std::unique_ptr<InputWrapper>(new Input__AS_Listing_Experimental()); } },
-		{ "log", 			[]() { return std::unique_ptr<InputWrapper>(new Input__Log()); } }
+		{ "log", 			[]() { return std::unique_ptr<InputWrapper>(new Input__Log()); } },
+		{ "txt", 			[]() { return std::unique_ptr<InputWrapper>(new Input__TXT()); } }
 	};
 
 	auto entry = wrapperTable.find(name);
