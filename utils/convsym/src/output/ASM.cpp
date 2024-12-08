@@ -7,9 +7,11 @@
 #include <map>
 #include <cstdint>
 #include <string>
+#include <algorithm>
 
 #include <IO.hpp>
 
+#include "OptsParser.hpp"
 #include "OutputWrapper.hpp"
 
 
@@ -33,16 +35,36 @@ struct Output__Asm : public OutputWrapper {
 			IO::Log(IO::warning, "Append options aren't supported by the \"asm\" output parser.");
 		}
 
-		const char * lineFormat = *opts ? opts : "%s:\tequ\t$%X";
+		// Supported options:
+		//	/fmt='format-string' 	- overrides C-style format string (default: '%X: %s')
+
+		// Default options
+		std::string lineFormat = "%s:\tequ\t$%X";
+
+		if (*opts && opts[0] == '/') {
+			static const std::map<std::string, OptsParser::record>
+			OptsList {
+				{ "fmt", { .type = OptsParser::record::p_string, .target = &lineFormat	} }
+			};
+			OptsParser::parse(opts, OptsList);
+		}
+		else if (*opts) {
+			lineFormat = opts;
+		}
+		auto numSpecifiers = std::ranges::count(lineFormat, '%');
+		if (numSpecifiers < 2) {
+			IO::Log(IO::warning, "Line format string likely has too few arguments (try '%%s:\tequ\t$%%X')");
+		}
+
 		IO::FileOutput output = IO::FileOutput(fileName, IO::text);
 		if (!output.good()) {
 			IO::Log(IO::fatal, "Couldn't open file \"%s\"", fileName);
 			throw "IO error";
 		}
 
+		const auto lineFormat_cstr = lineFormat.c_str();
 		for (auto& symbol : SymbolList) {
-			output.writeLine(lineFormat, symbol.second.c_str(), symbol.first);
+			output.writeLine(lineFormat_cstr, symbol.second.c_str(), symbol.first);
 		}
 	}
-
 };

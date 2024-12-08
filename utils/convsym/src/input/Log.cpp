@@ -48,7 +48,7 @@ struct Input__Log : public InputWrapper {
 		char labelSeparator = ':';
 		bool optUseDecimal = false;
 		
-		const std::map<std::string, OptsParser::record>
+		static const std::map<std::string, OptsParser::record>
 			OptsList {
 				{ "separator",	{ .type = OptsParser::record::p_char, .target = &labelSeparator	} },
 				{ "useDecimal",	{ .type = OptsParser::record::p_bool, .target = &optUseDecimal	} }
@@ -70,7 +70,9 @@ struct Input__Log : public InputWrapper {
 		#define IS_NUMERIC(X) 			((unsigned)(X-'0')<10)
 		#define SKIP_SPACES(X)			while ( *X==' ' || *X=='\t' ) X++
 
-		while ( input.readLine( sBuffer, sBufferSize ) >= 0 ) {
+		int lineNum = 0;
+		while (input.readLine( sBuffer, sBufferSize ) >= 0) {
+			lineNum++;
 
 			uint8_t* ptr = sBuffer;						// WARNING: Unsigned type is required here for certain range-based optimizations
 			
@@ -93,6 +95,7 @@ struct Input__Log : public InputWrapper {
 		
 			// If line doesn't include proper separator, skip this line ...
 			if ( *ptr++ != labelSeparator ) {
+				IO::Log(IO::debug, "Failed to parse line %d, skipping", lineNum);
 				continue;
 			} 
 			SKIP_SPACES(ptr);

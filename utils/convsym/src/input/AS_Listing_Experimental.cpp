@@ -44,6 +44,10 @@ struct Input__AS_Listing_Experimental : public InputWrapper {
 
 		const int sBufferSize = 1024;
 
+		if (*opts) {
+			IO::Log(IO::warning, "-inopt is not supported by this parser");
+		}
+
 		// Variables
 		uint8_t sBuffer[ sBufferSize ];
 		std::multimap<uint32_t, std::string> SymbolMap;

@@ -54,7 +54,7 @@ struct Input__AS_Listing : public InputWrapper {
 		bool foundSymbolTable = false;
 
 		// Fetch options from "-inopt" argument's value
-		const std::map<std::string, OptsParser::record>
+		static const std::map<std::string, OptsParser::record>
 			OptsList {
 				{ "localJoin",				{ .type = OptsParser::record::p_char,	.target = &localLabelSymbol				} },
 				{ "processLocals",			{ .type = OptsParser::record::p_bool,	.target = &optProcessLocalLabels		} },

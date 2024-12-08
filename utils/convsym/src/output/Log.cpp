@@ -7,9 +7,11 @@
 #include <map>
 #include <cstdint>
 #include <string>
+#include <algorithm>
 
 #include <IO.hpp>
 
+#include "OptsParser.hpp"
 #include "OutputWrapper.hpp"
 
 
@@ -33,7 +35,27 @@ struct Output__Log : public OutputWrapper {
 			IO::Log(IO::warning, "Append options aren't supported by the \"log\" output parser.");
 		}
 
-		const char * lineFormat = *opts ? opts : "%X: %s";
+		// Supported options:
+		//	/fmt='format-string' 	- overrides C-style format string (default: '%X: %s')
+
+		// Default options
+		std::string lineFormat = "%X: %s";
+
+		if (*opts && opts[0] == '/') {
+			static const std::map<std::string, OptsParser::record>
+			OptsList {
+				{ "fmt", { .type = OptsParser::record::p_string, .target = &lineFormat	} }
+			};
+			OptsParser::parse(opts, OptsList);
+		}
+		else if (*opts) {
+			lineFormat = opts;
+		}
+		auto numSpecifiers = std::ranges::count(lineFormat, '%');
+		if (numSpecifiers < 2) {
+			IO::Log(IO::warning, "Line format string likely has too few arguments (try '%%X: %%s')");
+		}
+
 		IO::FileOutput output = IO::FileOutput(fileName, IO::text);
 		if (!output.good()) {
 			IO::Log(IO::fatal, "Couldn't open file \"%s\"", fileName);
@@ -41,7 +63,7 @@ struct Output__Log : public OutputWrapper {
 		}
 
 		for (auto & symbol : SymbolList ) {
-			output.writeLine(lineFormat, symbol.first, symbol.second.c_str());
+			output.writeLine(lineFormat.c_str(), symbol.first, symbol.second.c_str());
 		}
 	}
 };

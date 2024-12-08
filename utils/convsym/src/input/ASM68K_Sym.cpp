@@ -55,7 +55,7 @@ struct Input__ASM68K_Sym : public InputWrapper {
 		char localLabelSymbol = '@';		// default symbol for local labels
 		char localLabelRef = '.';			// default symbol to reference local labels within global ones
 		
-		const std::map<std::string, OptsParser::record>
+		static const std::map<std::string, OptsParser::record>
 			OptsList {
 				{ "localSign",			{ .type = OptsParser::record::p_char,	.target = &localLabelSymbol			} },
 				{ "localJoin",			{ .type = OptsParser::record::p_char,	.target = &localLabelRef			} },
