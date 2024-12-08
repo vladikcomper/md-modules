@@ -10,9 +10,9 @@ SRC_FILES = $(wildcard $(SRC_DIR)/*.asm)
 CORE_SRC_FILES ?= $(wildcard ../errorhandler-core/*.asm) $(wildcard ../core/*.asm)
 
 
-.PHONY:	all asm68k asm68k-debug asm68k-extsym asm68k-linkable axm68k axm68k-extsym as as-extsym tests clean
+.PHONY:	all asm68k asm68k-debug asm68k-extsym asm68k-linkable axm68k axm68k-extsym as as-extsym gas tests clean
 
-all:	asm68k asm68k-debug asm68k-extsym asm68k-linkable axm68k axm68k-extsym as as-extsym
+all:	asm68k asm68k-debug asm68k-extsym asm68k-linkable axm68k axm68k-extsym as as-extsym gas
 
 asm68k:	$(BUILD_DIR)/asm68k/Debugger.asm $(BUILD_DIR)/asm68k/ErrorHandler.asm
 
@@ -29,6 +29,8 @@ axm68k-extsym:	$(BUILD_DIR)/axm68k-extsym/Debugger.asm $(BUILD_DIR)/axm68k-extsy
 as:	$(BUILD_DIR)/as/Debugger.asm $(BUILD_DIR)/as/ErrorHandler.asm
 
 as-extsym:	$(BUILD_DIR)/as-extsym/Debugger.asm $(BUILD_DIR)/as-extsym/ErrorHandler.asm
+
+gas:	$(BUILD_DIR)/gas/ErrorHandler.asm
 
 tests:	all
 	$(MAKE) -C tests -f .Makefile
@@ -77,6 +79,10 @@ $(BUILD_DIR)/as-extsym/Debugger.asm $(BUILD_DIR)/as-extsym/ErrorHandler.asm &: $
 	$(CBUNDLE) $(SRC_DIR)/Debugger.asm -def BUNDLE-AS -def EXTSYM -out $(BUILD_DIR)/as-extsym/Debugger.asm
 	$(CBUNDLE) $(SRC_DIR)/ErrorHandler.asm -def BUNDLE-AS -def EXTSYM -out $(BUILD_DIR)/as-extsym/ErrorHandler.asm
 
+$(BUILD_DIR)/gas/ErrorHandler.asm:  $(SRC_FILES) $(CORE_BUILD_DIR)/ErrorHandler.Headless.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Headless.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
+	mkdir -p $(BUILD_DIR)/gas
+	$(CBUNDLE) $(SRC_DIR)/ErrorHandler-GAS.asm -out $(BUILD_DIR)/gas/ErrorHandler.s
+
 
 $(CORE_BUILD_DIR)/ErrorHandler.Linkable.obj $(CORE_BUILD_DIR)/ErrorHandler.Linkable.Refs.asm &:	$(CORE_SRC_FILES)
 	$(MAKE) -C ../errorhandler-core release-linkable
@@ -89,6 +95,9 @@ $(CORE_BUILD_DIR)/ErrorHandler.Debug.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Deb
 
 $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.ExtSymbols.Globals.asm &:	$(CORE_SRC_FILES)
 	$(MAKE) -C ../errorhandler-core extsym
+
+$(CORE_BUILD_DIR)/ErrorHandler.Headless.Blob.asm $(CORE_BUILD_DIR)/ErrorHandler.Headless.Globals.asm &: $(CORE_SRC_FILES)
+	$(MAKE) -C ../errorhandler-core headless
 
 
 $(BUILD_DIR):

@@ -1,0 +1,2 @@
+ErrorHandler_ExtraDebuggerList+0:long:inline: MDDBG__Debugger_AddressRegisters
+ErrorHandler_ExtraDebuggerList+8:long:inline: MDDBG__Debugger_Backtrace
