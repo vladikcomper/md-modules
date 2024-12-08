@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.10									*
+ * ConvSym utility version 2.11									*
  * Output formats base controller								*
  * ------------------------------------------------------------	*/
 

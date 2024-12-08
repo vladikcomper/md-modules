@@ -133,31 +133,28 @@ convsym listing.lst rom.bin -input as_lst -output deb2 -a
 > SGDK isn't officially supported by the "Advanced Error Handler and Debugger", which makes use of the converted symbols, hence no installation instructions are provided.
 > At this point, you'll have to figure out installation on your own.
 
-While **ConvSym** doesn't support SGDK, it's still possible to feed it the symbol list and generate debug symbols database for the "Advanced Error Handler and Debugger".
+Since **version 2.11** ConvSym supports converting symbols in SGDK projects.
 
-Since **version 2.1**, ConvSym supports `log` input parser, so you can build symbols database from any source as long as you're able to represent symbol lists in a simple plain text format: each line must contain symbol name, followed by ":" character (separator) and symbol's hexadecimal offset (you can also use a different separator, see `log` parser documentation below for more information). For example:
+SGDK logs all symbols to `symbol.txt` file upon build. Since version 2.11 ConvSym introduced `txt` input parser which can be configured to recognize this file's format.
 
-```
-SomeSymbol: 0
-AnotherSymbol: 1C0
-Symbol2000: 420C
-```
+Here's how ConvSym can be invoked in the command line to store symbols from `out/symbol.txt` file in `out/rom.bin`:
 
-On Linux, it's possible to use `nm` utility to list symbols from the ELF binary that SGDK build produces, pipe it to `awk` to alter lines format and the pipe the results to `convsym`.
-
-Consider the following example:
-
-```
-nm -n out/rom.out | awk '{print $1":",$3}' | ./convsym - out/rom.deb2 -in log
+```sh
+convsym out/symbol.txt out/rom.bin -in txt -inopt "/fmt='%X %*[tTtBbCcDd] %511s /offsetFirst+" -range 0 FFFFFF -a -ref 200
 ```
 
-This will extract symbols from `out/rom.out` and convert them to `out/rom.deb2` (DEB2 database format for the "Advanced Error Handler and Debugger").
+Let's break down command line options:
 
-Alternatively, using the `-a` flag, you can append symbols to your ROM instead. For this to work properly, make sure ROM is rebuilt every time `convsym` is called (otherwise, after several invocations, you'll accumulate more than one symbols table at the end of ROM):
-
-```
-nm -n out/rom.out | awk '{print $1":",$3}' | ./convsym - out/rom.bin -in log -a
-```
+- `out/symbol.txt out/rom.bin` - specifies path to input and output files respectively;
+- `-in txt` - selects `txt` parser for the input file;
+- `-inopt "/fmt='%X %*[TtBbCcDd] %511s /offsetFirst+"` - specifies `/fmt` and `/offsetFirst` for the parser (they are exclusive to `txt` parser), `/fmt` describes line format for the file, which includes:
+   - A hex offset (`%X`);
+   - One of the following symbol type specifiers `T`, `t`, `B`, `b`, `C`, `c`, `D`, `d` (others are ignored);
+   - A label name which shouldn't exceed 512 characters with null terminator (`%511s`);
+   - For more information, search reference for `sscanf` format (C standard library), which is used under the hood here.
+- `-range 0 FFFFFF` - adds both ROM and RAM symbols to the output (covers the entire 68K 24-bit address space), it would've been only ROM by default (`-range 0 3FFFFF`);
+- `-a` - appends output file (the ROM) instead of overwriting it;
+- `-ref 200` - writes reference pointer to the symbol table (where ROM was appended) at offset 0x200 so MD Debugger can read it (**WARNING!** Make sure you've allocated 4 bytes for the pointer at that offset, after the ROM header).
 
 
 ## Input formats parsers
@@ -398,6 +395,25 @@ Default parser options can be expressed as follows:
 
 
 ## Version history
+
+### Version 2.11 (2024-12-08)
+
+* Added new `txt` input parser to parse arbitrary text files; ConvSym can now parse SGDK's `symbols.txt` file.
+
+* `asm` and `log` output parsers:
+  - Implement proper options support in `-outopt`. You can configure line format as `-outopt "/fmt='format-string'"` now (legacy `-outopt "format-string"` syntax is preserved). This goes in line with the new `txt` parser (which also has `/fmt` option among others and will allow to add additional options in the future;
+  - Warn if line format string is incorrect (e.g. too few arguments specified).
+
+* `log` input parser:
+  - Log failed to parse lines on DEBUG level.
+
+* `as_lst_exp` input parser:
+  - Show a warning that `-inopt` is unsupported if user tries to set it.
+
+* `deb2` and `deb1` output parsers:
+  - Made tree flattening algorithm introduced in 2.10 deterministic.
+
+* Document all default parser options in ConvSym's usage message (printed when invoked without arguments).
 
 ### Version 2.10 (2024-12-07)
 

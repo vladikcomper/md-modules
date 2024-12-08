@@ -366,7 +366,7 @@ tests: 'tuple[Test, ...]' = (
 		pipeline=(
 			ConvSym(
 				input = Buffer(b'00000000 t Vectors\n0000012F a UselessSize\n00001200 T SomeData\n00001C80 b AnotherStuff'),
-				options = ('-input', 'txt', '-output', 'log', '-inopt', "/fmt='%X %*[tTtBbCcDd] %511s' /offsetFirst+"),
+				options = ('-input', 'txt', '-output', 'log', '-inopt', "/fmt='%X %*[TtBbCcDd] %511s' /offsetFirst+"),
 			),
 			CheckMatch(output=Buffer(b'0: Vectors\n1200: SomeData\n1C80: AnotherStuff\n'), text=True)
 		),
