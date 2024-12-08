@@ -5,13 +5,14 @@ from typing import Dict, NamedTuple, Union, List, Tuple
 
 
 InjectData = NamedTuple('InjectData', size=int, expression=str, inline=bool)
+SyntaxOptions = NamedTuple('SyntaxOptions', hexPrefix=str)
 
 
 @dataclass
 class DataToken:
 	size: int
 
-	def render(self):
+	def render(self, syntaxOptions: SyntaxOptions) -> str:
 		raise Exception('Not implemented')
 
 
@@ -19,13 +20,13 @@ class DataToken:
 class DataConstantToken(DataToken):
 	value: int
 
-	def render(self):
+	def render(self, syntaxOptions: SyntaxOptions):
 		if self.size == 1:
-			return f'${self.value:02X}'
+			return f'{syntaxOptions.hexPrefix}{self.value:02X}'
 		elif self.size == 2:
-			return f'${self.value:04X}'
+			return f'{syntaxOptions.hexPrefix}{self.value:04X}'
 		elif self.size == 4:
-			return f'${self.value:08X}'
+			return f'{syntaxOptions.hexPrefix}{self.value:08X}'
 		raise Exception(f'Unknown size: {self.size}')
 
 
@@ -33,7 +34,7 @@ class DataConstantToken(DataToken):
 class DataExpressionToken(DataToken):
 	expression: str
 
-	def render(self):
+	def render(self, syntaxOptions: SyntaxOptions):
 		return self.expression
 
 
@@ -41,7 +42,7 @@ class DataExpressionToken(DataToken):
 class CustomLine:
 	expression: str
 
-	def render(self):
+	def render(self, syntaxOptions: SyntaxOptions):
 		return self.expression
 
 
@@ -165,7 +166,7 @@ def tokenizeBlob(blob: bytes, symbolTable: Dict[str, int], injectionData: Dict[i
 	return tokens
 
 
-def render(path: str, tokens: List[Union[DataToken, CustomLine]], units_per_line):
+def render(path: str, tokens: List[Union[DataToken, CustomLine]], units_per_line: int, syntaxOptions: SyntaxOptions):
 	with open(path, 'w') as f:
 		line_opened = False
 		line_num_units = 0
@@ -188,12 +189,12 @@ def render(path: str, tokens: List[Union[DataToken, CustomLine]], units_per_line
 
 				line_num_units += 1
 				last_data_token = token
-				f.write(token.render())
+				f.write(token.render(syntaxOptions))
 
 			elif isinstance(token, CustomLine):
 				last_data_token = None
 				line_opened = False
-				f.write('\n\t' + token.render())
+				f.write('\n\t' + token.render(syntaxOptions))
 
 
 def main():
@@ -218,9 +219,15 @@ def main():
 		default=8,
 		help='Specifies number of units per line',	
 	)
+	parser.add_argument('-x', '--altHexPrefix',
+		action='store_true',
+		default=False,
+		help='Enables alternative hex prefix ("0x" instead of "$")'
+	)
 
 	args = parser.parse_args()
 
+	syntaxOptions = SyntaxOptions(hexPrefix='$' if not args.altHexPrefix else '0x')
 	symbolTable = getSymbolTable(args.symbolTable) if args.symbolTable else dict()
 	injectionData = getInjectData(args.injectionMap, symbolTable) if args.injectionMap else dict()
 
@@ -236,7 +243,7 @@ def main():
 		# Start rendering blob ...
 		tokens = tokenizeBlob(blob, symbolTable, injectionData, unit_size)
 
-		render(args.outfile, tokens, units_per_line)
+		render(args.outfile, tokens, units_per_line, syntaxOptions)
 
 
 if __name__ == '__main__':
