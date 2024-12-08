@@ -341,6 +341,36 @@ tests: 'tuple[Test, ...]' = (
 			CheckMatch(output=Buffer(b'0: MyPrefix.Start\n20000: MyPrefix.SomeLongLabelNameInTheMiddle\n3FFFFF: MyPrefix.End\n'), text=True)
 		),
 	),
+	Test(
+		description = 'log->log with formating (sanity check)',
+		pipeline=(
+			ConvSym(
+				input = Buffer(b'0: Start\n20000: SomeLongLabelNameInTheMiddle\n3FFFFF: End\n'),
+				options = ('-input', 'log', '-output', 'log', '-outopt', "/fmt='[%02x]: (%s)'"),
+			),
+			CheckMatch(output=Buffer(b'[00]: (Start)\n[20000]: (SomeLongLabelNameInTheMiddle)\n[3fffff]: (End)\n'), text=True)
+		),
+	),
+	Test(
+		description = 'log->log with formating (legacy syntax)',
+		pipeline=(
+			ConvSym(
+				input = Buffer(b'0: Start\n20000: SomeLongLabelNameInTheMiddle\n3FFFFF: End\n'),
+				options = ('-input', 'log', '-output', 'log', '-outopt', '[%02x]: (%s)'),
+			),
+			CheckMatch(output=Buffer(b'[00]: (Start)\n[20000]: (SomeLongLabelNameInTheMiddle)\n[3fffff]: (End)\n'), text=True)
+		),
+	),
+	Test(
+		description = 'txt->log SGDK format parsing (sanity check)',
+		pipeline=(
+			ConvSym(
+				input = Buffer(b'00000000 t Vectors\n0000012F a UselessSize\n00001200 T SomeData\n00001C80 b AnotherStuff'),
+				options = ('-input', 'txt', '-output', 'log', '-inopt', "/fmt='%X %*[tTtBbCcDd] %511s' /offsetFirst+"),
+			),
+			CheckMatch(output=Buffer(b'0: Vectors\n1200: SomeData\n1C80: AnotherStuff\n'), text=True)
+		),
+	),
 )
 
 
