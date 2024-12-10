@@ -39,7 +39,7 @@ struct Output__Deb2 : public OutputWrapper {
 		/* Parse options from "-inopt" agrument's value */
 		bool optFavorLastLabels = false;
 
-		static const std::map<std::string, OptsParser::record>
+		const std::map<std::string, OptsParser::record>
 			OptsList {
 				{ "favorLastLabels",	{ .type = OptsParser::record::p_bool,	.target = &optFavorLastLabels	} }
 			};

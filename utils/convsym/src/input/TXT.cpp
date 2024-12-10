@@ -51,7 +51,7 @@ struct Input__TXT : public InputWrapper {
 		std::string lineFormat = "%s %X";
 		bool offsetFirst = false;
 
-		static const std::map<std::string, OptsParser::record>
+		const std::map<std::string, OptsParser::record>
 			OptsList {
 				{ "fmt",			{ .type = OptsParser::record::p_string,	.target = &lineFormat } },
 				{ "offsetFirst",	{ .type = OptsParser::record::p_bool,	.target = &offsetFirst } },

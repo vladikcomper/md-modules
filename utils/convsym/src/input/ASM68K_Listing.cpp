@@ -65,7 +65,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
 
 		// Fetch options from "-inopt" agrument's value
-		static const std::map<std::string, OptsParser::record>
+		const std::map<std::string, OptsParser::record>
 			OptsList {
 				{ "localSign",			{ .type = OptsParser::record::p_char,	.target = &localLabelSymbol				} },
 				{ "localJoin",			{ .type = OptsParser::record::p_char,	.target = &localLabelRef				} },

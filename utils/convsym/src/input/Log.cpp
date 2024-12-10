@@ -48,7 +48,7 @@ struct Input__Log : public InputWrapper {
 		char labelSeparator = ':';
 		bool optUseDecimal = false;
 		
-		static const std::map<std::string, OptsParser::record>
+		const std::map<std::string, OptsParser::record>
 			OptsList {
 				{ "separator",	{ .type = OptsParser::record::p_char, .target = &labelSeparator	} },
 				{ "useDecimal",	{ .type = OptsParser::record::p_bool, .target = &optUseDecimal	} }

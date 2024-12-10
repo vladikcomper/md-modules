@@ -42,7 +42,7 @@ struct Output__Asm : public OutputWrapper {
 		std::string lineFormat = "%s:\tequ\t$%X";
 
 		if (*opts && opts[0] == '/') {
-			static const std::map<std::string, OptsParser::record>
+			const std::map<std::string, OptsParser::record>
 			OptsList {
 				{ "fmt", { .type = OptsParser::record::p_string, .target = &lineFormat	} }
 			};
