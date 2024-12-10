@@ -371,6 +371,26 @@ tests: 'tuple[Test, ...]' = (
 			CheckMatch(output=Buffer(b'0: Vectors\n1200: SomeData\n1C80: AnotherStuff\n'), text=True)
 		),
 	),
+	Test(
+		description = 'log->log offset and symbol transformation options (sanity check)',
+		pipeline=(
+			ConvSym(
+				input = Buffer(b'0: A\n1: B\n4: C\n10: D\n11: E\n12: F\n'),
+				options = ('-input', 'log', '-output', 'log', '-base', '1', '-range', '3', '10', '-tolower'),
+			),
+			CheckMatch(output=Buffer(b'3: c\nF: d\n10: e\n'), text=True)
+		),
+	),
+	Test(
+		description = 'log->deb2 symbol resolution sanity check',
+		pipeline=(
+			ConvSym(
+				input = Buffer(b'0: Start\n1: MyOffset\n4: RelativelyLongSymbolName\n\n12: End\n'),
+				options = ('-input', 'log', '-ref', '@RelativelyLongSymbolName', '-org', '@End'),
+			),
+			# This test isn't checked, it's passes if ConvSym returns success
+		),
+	),
 )
 
 
