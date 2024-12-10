@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
@@ -18,7 +19,7 @@ namespace ArgvParser {
 
 	/* Structure that handles parameter definitions */
 	struct record {
-		enum { flag, hexNumber, hexRange, string, string_list } type;
+		enum { flag, hexNumber, hexRange, string, string_list, custom } type;
 		void * target;
 		void * target2;
 	};
@@ -44,14 +45,14 @@ namespace ArgvParser {
 
 					case record::hexNumber:
 						_GET_NEXT_ARGUMENT
-						sscanf(argv[i], "%x", (unsigned int*)parameter->second.target);
+						*(unsigned int*)parameter->second.target = std::stoul(argv[i], 0, 16);
 						break;
 
 					case record::hexRange:
 						_GET_NEXT_ARGUMENT
-						sscanf(argv[i], "%x", (unsigned int*)parameter->second.target);
+						*(unsigned int*)parameter->second.target = std::stoul(argv[i], 0, 16);
 						_GET_NEXT_ARGUMENT
-						sscanf(argv[i], "%x", (unsigned int*)parameter->second.target2);
+						*(unsigned int*)parameter->second.target2 = std::stoul(argv[i], 0, 16);
 						break;
 
 					case record::string:
@@ -63,7 +64,11 @@ namespace ArgvParser {
 						_GET_NEXT_ARGUMENT
 						((std::vector<std::string>*)parameter->second.target)->emplace_back(argv[i]);
 						break;
-						
+
+					case record::custom:
+						_GET_NEXT_ARGUMENT
+						(*(std::function<void(const char*, void*)>*)parameter->second.target2)(argv[i], parameter->second.target);
+
 					default:
 						throw "Incorrect or broken parameters data";
 				}
