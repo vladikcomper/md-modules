@@ -16,6 +16,7 @@
 
 #include <IO.hpp>
 #include <ArgvParser.hpp>
+#include <string_view>
 #include <sys/types.h>
 #include <tuple>
 #include <variant>
@@ -214,7 +215,7 @@ int main (int argc, const char ** argv) {
 			}
 			if (offsetStrRaw[0] == '@') {	// e.g. "-ref @SymbolName"
 				offset = -2;
-				symbolToOffsetResolveTable.emplace(offsetStrRaw.substr(1), std::ref(offset));
+				symbolToOffsetResolveTable.emplace(std::string_view(offsetStrRaw).substr(1), std::ref(offset));
 			}
 			else {	// e.g. "-ref 1234"
 				try {
