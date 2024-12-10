@@ -18,32 +18,10 @@
 
 struct Input__AS_Listing : public InputWrapper {
 
-	Input__AS_Listing() : InputWrapper() { // Constructor
+	Input__AS_Listing() {}
+	~Input__AS_Listing() {}
 
-	}
-
-	~Input__AS_Listing() {	// Destructor
-
-	}
-
-	/**
-	 * Interface for input file parsing
-	 *
-	 * @param path Input file path
-	 * @param baseOffset Base offset for the parsed records (subtracted from the fetched offsets to produce internal offsets)
-	 * @param offsetLeftBoundary Left boundary for the calculated offsets
-	 * @param offsetRightBoundary Right boundary for the calculated offsets
-	 * @param offsetMask Mask applied to offset after base offset subtraction
-	 *
-	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
-	 */
-	std::multimap<uint32_t, std::string>
-	parse(	const char *fileName,
-			uint32_t baseOffset = 0x000000,
-			uint32_t offsetLeftBoundary = 0x000000,
-			uint32_t offsetRightBoundary = 0x3FFFFF,
-			uint32_t offsetMask = 0xFFFFFF,
-			const char * opts = "" ) {
+	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts) {
 
 		// Default processing options
 		bool optProcessLocalLabels = true;
@@ -61,20 +39,18 @@ struct Input__AS_Listing : public InputWrapper {
 				{ "ignoreInternalSymbols",	{ .type = OptsParser::record::p_bool,	.target = &optIgnoreInternalSymbols		} }
 			};
 
-		// Setup buffer, symbols list and file for input
+		// Setup buffer and file for input
 		const int sBufferSize = 1024;
 		uint8_t sBuffer[ sBufferSize ];
-		std::multimap<uint32_t, std::string> SymbolMap;
 		IO::FileInput input = IO::FileInput( fileName, IO::text );
 		if ( !input.good() ) { throw "Couldn't open input file"; }
 
 		// For every string in a listing file ...
 		for ( 
-				int lineCounter = 0, lineLength; 
-				lineLength = input.readLine( sBuffer, sBufferSize ), lineLength >= 0; 
-				++lineCounter 
-			) {
-
+			int lineCounter = 0, lineLength; 
+			lineLength = input.readLine( sBuffer, sBufferSize ), lineLength >= 0; 
+			++lineCounter 
+		) {
 			// If line is too short, do not proceed
 			if (lineLength < 8) {
 				continue;
@@ -109,17 +85,10 @@ struct Input__AS_Listing : public InputWrapper {
 
 					if (maybeSymbol.has_value()) {
 						auto symbol = maybeSymbol.value();
-						
+
 						if (optIgnoreInternalSymbols && symbol.second.starts_with("__")) continue;
 
-						// Add label to the symbols table
-						const auto offset = (symbol.first - baseOffset) & offsetMask;
-						if ( offset >= offsetLeftBoundary && offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
-							symbol.first = offset;
-							IO::Log( IO::debug, "Adding symbol: %s", symbol.second.c_str() );
-
-							SymbolMap.insert(symbol);
-						}
+						symbolTable.add(symbol.first, symbol.second);
 					}
 				}
 			}
@@ -128,9 +97,6 @@ struct Input__AS_Listing : public InputWrapper {
 		if (!foundSymbolTable) {
 			throw "Coudn't find symbols table";
 		}
-
-		return SymbolMap;
-
 	}
 
 private:
@@ -177,5 +143,4 @@ private:
 		#undef IS_LABEL_CHAR
 		#undef IS_WHITESPACE
 	}
-
 };

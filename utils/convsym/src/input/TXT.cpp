@@ -20,28 +20,10 @@
 
 struct Input__TXT : public InputWrapper {
 
-	Input__TXT() : InputWrapper() {}
+	Input__TXT() {}
 	~Input__TXT() {}
 
-	/**
-	 * Interface for input file parsing
-	 *
-	 * @param path Input file path
-	 * @param baseOffset Base offset for the parsed records (subtracted from the fetched offsets to produce internal offsets)
-	 * @param offsetLeftBoundary Left boundary for the calculated offsets
-	 * @param offsetRightBoundary Right boundary for the calculated offsets
-	 * @param offsetMask Mask applied to offset after base offset subtraction
-	 *
-	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
-	 */
-	std::multimap<uint32_t, std::string> parse(
-		const char *fileName,
-		uint32_t baseOffset = 0x000000,
-		uint32_t offsetLeftBoundary = 0x000000,
-		uint32_t offsetRightBoundary = 0x3FFFFF,
-		uint32_t offsetMask = 0xFFFFFF,
-		const char * opts = ""
-	) {
+	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts) {
 
 		// Supported options:
 		//	/fmt='format-string'	- C-style format string (default: '%s %X')
@@ -88,15 +70,8 @@ struct Input__TXT : public InputWrapper {
 				continue;
 			}
 
-			// Add label to the symbols table
-			offset = (offset - baseOffset) & offsetMask;
-			if ( offset >= offsetLeftBoundary && offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
-				IO::Log(IO::debug, "Adding symbol: %s", sLabel);
-				SymbolMap.insert({ offset, std::string(sLabel) });
-			}
+			symbolTable.add(offset, sLabel);
 		}
-
-		return SymbolMap;
 	}
 
 };

@@ -15,35 +15,11 @@
 
 struct Input__AS_Listing_Experimental : public InputWrapper {
 
-	Input__AS_Listing_Experimental() : InputWrapper() { // Constructor
+	Input__AS_Listing_Experimental() {}
+	~Input__AS_Listing_Experimental() {}
 
-	}
-
-	~Input__AS_Listing_Experimental() {	// Destructor
-
-	}
-
-	/**
-	 * Interface for input file parsing
-	 *
-	 * @param path Input file path
-	 * @param baseOffset Base offset for the parsed records (subtracted from the fetched offsets to produce internal offsets)
-	 * @param offsetLeftBoundary Left boundary for the calculated offsets
-	 * @param offsetRightBoundary Right boundary for the calculated offsets
-	 * @param offsetMask Mask applied to offset after base offset subtraction
-	 *
-	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
-	 */
-	std::multimap<uint32_t, std::string>
-	parse(	const char *fileName,
-			uint32_t baseOffset = 0x000000,
-			uint32_t offsetLeftBoundary = 0x000000,
-			uint32_t offsetRightBoundary = 0x3FFFFF,
-			uint32_t offsetMask = 0xFFFFFF,
-			const char * opts = "" ) {
-
+	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts) {
 		const int sBufferSize = 1024;
-
 		if (*opts) {
 			IO::Log(IO::warning, "-inopt is not supported by this parser");
 		}
@@ -136,33 +112,22 @@ struct Input__AS_Listing_Experimental : public InputWrapper {
 					//	1) Its absolute offset is higher than the previous offset successfully added
 					//	2) When base offset is subtracted and the mask is applied, the resulting offset is within allowed boundaries
 					if ( (lastSymbolOffset == (uint32_t)-1) || (offset >= lastSymbolOffset) ) {
-						
 						// Check if this is a label after ds or rs macro ...
 						while ( *ptr==' ' || *ptr=='\t' ) { ptr++; }			// skip spaces or tabs, if present      
 						if ( *ptr == 'd' && *(ptr+1) == 's' && *(ptr+2)=='.' ) continue;
-						if ( *ptr == 'r' && *(ptr+1) == 's' && *(ptr+2)=='.' ) continue;  
+						if ( *ptr == 'r' && *(ptr+1) == 's' && *(ptr+2)=='.' ) continue;
 
-						// Add label to the symbols table
-						uint32_t converted_offset = (offset - baseOffset) & offsetMask;
-						if ( converted_offset >= offsetLeftBoundary && converted_offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
-							
-							// Add label to the symbols map
-							SymbolMap.insert({converted_offset, std::string((const char*)label)});
-
-							lastSymbolOffset = offset;	// stores an absolute offset, not the converted one ...
+						const bool inserted = symbolTable.add(offset, (const char*)label);
+						if (inserted) {
+							lastSymbolOffset = offset;
 						}
 					}
 					else {
 						IO::Log( IO::debug, "Symbol %s at offset %X ignored: its offset is less than the previous symbol successfully fetched", label, offset );
 					}
-
 				}
 			}
-
 		}
-
-		return SymbolMap;
-
 	}
 
 };

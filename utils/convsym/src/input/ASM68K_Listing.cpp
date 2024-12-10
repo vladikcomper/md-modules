@@ -17,30 +17,10 @@
 
 struct Input__ASM68K_Listing : public InputWrapper {
 
-	Input__ASM68K_Listing() : InputWrapper() { }
+	Input__ASM68K_Listing() {}
+	~Input__ASM68K_Listing() {}
 
-	~Input__ASM68K_Listing() { }
-
-	/**
-	 * Interface for input file parsing
-	 *
-	 * @param path Input file path
-	 * @param baseOffset Base offset for the parsed records (subtracted from the fetched offsets to produce internal offsets)
-	 * @param offsetLeftBoundary Left boundary for the calculated offsets
-	 * @param offsetRightBoundary Right boundary for the calculated offsets
-	 * @param offsetMask Mask applied to offset after base offset subtraction
-	 *
-	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
-	 */
-	std::multimap<uint32_t, std::string> parse(
-		const char *fileName,
-		uint32_t baseOffset = 0x000000,
-		uint32_t offsetLeftBoundary = 0x000000,
-		uint32_t offsetRightBoundary = 0x3FFFFF,
-		uint32_t offsetMask = 0xFFFFFF,
-		const char * opts = ""
-	) {
-
+	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts = "") {
 		// Known issues:
 		//	* Doesn't recognize line break character "&", as line continuations aren't properly listed by ASM68K
 
@@ -328,16 +308,9 @@ struct Input__ASM68K_Listing : public InputWrapper {
 				//	1) Its absolute offset is higher than the previous offset successfully added
 				//	2) When base offset is subtracted and the mask is applied, the resulting offset is within allowed boundaries
 				if ((lastSymbolOffset == (uint32_t)-1) || (offset >= lastSymbolOffset)) {
-					// Convert offset according to parameters
-					uint32_t converted_offset = (offset - baseOffset) & offsetMask;
-
-					if (converted_offset >= offsetLeftBoundary && converted_offset <= offsetRightBoundary) {	// if offset is within range, add it ...
-						IO::Log(IO::debug, "Adding symbol: %s", strLabel.c_str());
-
-						// Add label to the symbols map...
-						SymbolMap.insert({converted_offset, strLabel});
-						
-						lastSymbolOffset = offset;	// stores an absolute offset, not the converted one ...
+					const bool inserted = symbolTable.add(offset, strLabel);
+					if (inserted) {
+						lastSymbolOffset = offset;
 					}
 				}
 				else {
@@ -354,7 +327,5 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		#undef IS_LABEL_CHAR
 		#undef IS_WHITESPACE
 		#undef IS_ENDOFLINE
-
-		return SymbolMap;
 	}
 };

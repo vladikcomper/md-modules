@@ -17,29 +17,10 @@
 
 struct Input__Log : public InputWrapper {
 
-	Input__Log() : InputWrapper() {}
+	Input__Log() {}
 	~Input__Log() {}
 
-	/**
-	 * Interface for input file parsing
-	 *
-	 * @param path Input file path
-	 * @param baseOffset Base offset for the parsed records (subtracted from the fetched offsets to produce internal offsets)
-	 * @param offsetLeftBoundary Left boundary for the calculated offsets
-	 * @param offsetRightBoundary Right boundary for the calculated offsets
-	 * @param offsetMask Mask applied to offset after base offset subtraction
-	 *
-	 * @return Sorted associative array (map) of found offsets and their corresponding symbol names
-	 */
-	std::multimap<uint32_t, std::string> parse(
-		const char *fileName,
-		uint32_t baseOffset = 0x000000,
-		uint32_t offsetLeftBoundary = 0x000000,
-		uint32_t offsetRightBoundary = 0x3FFFFF,
-		uint32_t offsetMask = 0xFFFFFF,
-		const char * opts = ""
-	) {
-
+	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts = "") {
 		// Supported options:
 		//	/separator=x	- determines character that separates labes and offsets, default: ":"
 		//	/useDecimal?	- set if offsets should be treat as decimal numbers; default: -
@@ -107,20 +88,11 @@ struct Input__Log : public InputWrapper {
 			}
 			*ptr = 0x00;
 			
-			// Add label to the symbols table
-			offset = (offset - baseOffset) & offsetMask;
-			if ( offset >= offsetLeftBoundary && offset <= offsetRightBoundary ) {	// if offset is within range, add it ...
-				IO::Log( IO::debug, "Adding symbol: %s", sLabel );
-				SymbolMap.insert( { offset, std::string(sLabel) } );    
-			}
-			
+			symbolTable.add(offset, sLabel);
 		}
 		
 		#undef IS_HEX_CHAR
 		#undef IS_NUMERIC
 		#undef SKIP_SPACES
-			
-		return SymbolMap;
 	}
-
 };
