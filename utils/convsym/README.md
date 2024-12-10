@@ -99,13 +99,19 @@ Offsets conversion options:
 
 Symbol table dump options:
   -org [offset]
+  -org @[symbolName]
     If set, symbol data will placed at the specified [offset] in the output 
     file. This option cannot be used in "append mode".
+    You can specify @SomeSymbol instead of plain offset, in this case ConvSym 
+    will resolve that symbol's offset.
 
   -ref [offset]
+  -ref @[symbolName]
     If set, a 32-bit Big Endian offset pointing to the beginning of symbol
     data will be written at specified offset. This is can be used, 
     if symbol data pointer must be written somewhere in the ROM header.
+    You can specify @SomeSymbol instead of plain offset, in this case ConvSym 
+    will resolve that symbol's offset.
 
 Symbols conversion and filtering options:
   -toupper
@@ -129,24 +135,31 @@ Symbols conversion and filtering options:
 
 ### Examples
 
-Convert listing file `listing.lst` in `as_lst` format to `symbols.log` of `log` format:
+**Default options.** Converts ASM68K symbol file to DEB2 format (implies `-input asm68k_sym` and `-output deb2` for default parsers respectively):
+
+```sh
+convsym symbols.sym symbols.deb2
+```
+
+**Append to ROM.** Converts ASM68K symbol file to DEB2 format (`-output deb2`) and appends it (`-a`) to the end of ROM (for use with MD Debugger):
+
+```sh
+convsym symbols.sym rom.bin -output deb2 -a
+```
+
+**AS Listing to Log file.** Convert listing file `listing.lst` in `as_lst` format to `symbols.log` of `log` format:
 
 ```sh
 convsym listing.lst symbols.log -input as_lst -output log
 ```
 
-Convert listing file `listing.lst` in `as_lst` format to `deb2` format and append to the end of `rom.bin` file:
+**Symbol filtering and transformation.** Converts from plaintext symbol table (log file), excludes symbols starting with "z80" (`-filter "z80.+" -exclude`), converts everything to lowercase for better compression (`-tolower`) and appends to ROM and writes a 32-bit Big-Endian pointer to the symbol table (where it was appended) at offset 0x200 of ROM (`-ref 200`):
 
 ```sh
-convsym listing.lst rom.bin -input as_lst -output deb2 -a
+convsym symbols.log rom.bin -input log -a -filter "z80.+" -exclude -tolower -ref 200
 ```
 
 ## Converting SGDK symbols
-
-> [!WARNING]
-> 
-> SGDK isn't officially supported by the "Advanced Error Handler and Debugger", which makes use of the converted symbols, hence no installation instructions are provided.
-> At this point, you'll have to figure out installation on your own.
 
 Since **version 2.11** ConvSym supports converting symbols in SGDK projects.
 
@@ -155,7 +168,7 @@ SGDK logs all symbols to `symbol.txt` file upon build. Since version 2.11 ConvSy
 Here's how ConvSym can be invoked in the command line to store symbols from `out/symbol.txt` file in `out/rom.bin`:
 
 ```sh
-convsym out/symbol.txt out/rom.bin -in txt -inopt "/fmt='%X %*[tTtBbCcDd] %511s /offsetFirst+" -range 0 FFFFFF -a -ref 200
+convsym out/symbol.txt out/rom.bin -in txt -inopt "/fmt='%X %*[tTtBbCcDd] %511s /offsetFirst+" -range 0 FFFFFF -a -ref @MDDBG__SymbolTablePtr
 ```
 
 Let's break down command line options:
@@ -169,7 +182,7 @@ Let's break down command line options:
    - For more information, search reference for `sscanf` format (C standard library), which is used under the hood here.
 - `-range 0 FFFFFF` - adds both ROM and RAM symbols to the output (covers the entire 68K 24-bit address space), it would've been only ROM by default (`-range 0 3FFFFF`);
 - `-a` - appends output file (the ROM) instead of overwriting it;
-- `-ref 200` - writes reference pointer to the symbol table (where ROM was appended) at offset 0x200 so MD Debugger can read it (**WARNING!** Make sure you've allocated 4 bytes for the pointer at that offset, after the ROM header).
+- `-ref @MDDBG__SymbolTablePtr` - writes reference pointer to the symbol table (where ROM was appended) at offset specified by the `MDDBG__SymbolTablePtr` symbol in ROM so MD Debugger can read it (**WARNING!** Make sure this symbol exists, or ConvSym will fail).
 
 
 ## Input formats parsers
@@ -459,6 +472,15 @@ Before **version 2.11** format string option could be specified as follows (this
 
 ## Version history
 
+### Version 2.12 (2024-12-11)
+
+* Added support for symbol references instead of raw offsets in `-ref` and `-org` options:
+  - Specify `-ref @MySymbol` to substitute offset of `MySymbol` from the symbol table (before any transformations or filtering);
+  - This is useful, for example, if you need to write symbol table pointer in ROM, but you don't know pointer's offset beforehand - you can now reference it by symbol name.
+
+* Minor stability improvements and general optimizations;
+* Document more usage examples in the README.
+
 ### Version 2.11 (2024-12-08)
 
 * Added new `txt` input parser to parse arbitrary text files; ConvSym can now parse SGDK's `symbols.txt` file.
@@ -489,7 +511,6 @@ Before **version 2.11** format string option could be specified as follows (this
 
 * `asm` and `log` output parsers:
   - Properly report I/O error if output file couldn't be opened.
-
 
 ### Version 2.9.1 (2023-03-22)
 

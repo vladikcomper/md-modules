@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.11									*
+ * ConvSym utility version 2.12									*
  * Main definitions file										*
  * (c) 2017-2018, 2020-2024, Vladikcomper						*
  * ------------------------------------------------------------	*/
@@ -21,8 +21,8 @@
 #include <tuple>
 #include <variant>
 
-#include "input/Wrappers.cpp"	// for GetInputWrapper[..]() and their linkage
-#include "output/Wrappers.cpp"	// for GetOutputWrapper[..]() and their linkage
+#include "input/Wrappers.cpp"	// for getInputWrapper[..]() and their linkage
+#include "output/Wrappers.cpp"	// for getOutputWrapper[..]() and their linkage
 #include "util/SymbolTable.hpp"
 
 
@@ -32,7 +32,7 @@ int main (int argc, const char ** argv) {
 	/* Provide help if no sufficient arguments were passed */
 	if (argc<2) {
 		printf(
-			"ConvSym utility version 2.11\n"
+			"ConvSym utility version 2.12\n"
 			"(c) 2016-2024, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
