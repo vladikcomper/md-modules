@@ -3,7 +3,7 @@
 
 **ConvSym** is a command-line utility aimed to extract symbol lists from various assembler-specific file formats and convert them into DEB1/DEB2 formats supported by the "Advanced Error Handler and Debugger" or human-readable plain-text files.
 
-It was originally designed to be used with the **ASM68K** and **The Macroassembler AS** assemblers, however, ConvSym's high configurability makes it possible to use with other tools and environments, including SGDK (although those may not be fully supported by the "Advanced Error Handler and Debugger").
+It was originally designed to be used with the **ASM68K** and **The AS Macroassembler** assemblers, however, ConvSym's high configurability makes it possible to use with other tools and environments, including SGDK and other projects with **GNU AS**.
 
 The utility supports various input and output processing and transformation options, allowing for a high level of flexibility.
 
@@ -168,7 +168,7 @@ SGDK logs all symbols to `symbol.txt` file upon build. Since version 2.11 ConvSy
 Here's how ConvSym can be invoked in the command line to store symbols from `out/symbol.txt` file in `out/rom.bin`:
 
 ```sh
-convsym out/symbol.txt out/rom.bin -in txt -inopt "/fmt='%X %*[tTtBbCcDd] %511s /offsetFirst+" -range 0 FFFFFF -a -ref @MDDBG__SymbolTablePtr
+convsym out/symbol.txt out/rom.bin -in txt -inopt "/fmt='%X %*[TtBbCcDd] %511s /offsetFirst+" -range 0 FFFFFF -a -ref @MDDBG__SymbolTablePtr
 ```
 
 Let's break down command line options:
