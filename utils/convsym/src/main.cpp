@@ -7,7 +7,6 @@
 
 #include <cstdio>
 #include <cstdint>
-#include <endian.h>
 #include <stdexcept>
 #include <string>
 #include <memory>
