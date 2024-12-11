@@ -8,13 +8,16 @@
 *
 * (c) 2016-2024, Vladikcomper
 * ---------------------------------------------------------------
-* Error handler blob (GNU AS syntax)
+* Error handler blob (GNU AS version)
 * ---------------------------------------------------------------
 
-#include ../../build/modules/errorhandler-core/ErrorHandler.Headless.Blob.asm
+__ErrorHandler:
+#include ../../build/modules/errorhandler-core/ErrorHandler.GAS.Blob.asm
 
 * ---------------------------------------------------------------
 * Exported symbols
 * ---------------------------------------------------------------
 
-#include ../../build/modules/errorhandler-core/ErrorHandler.Headless.Globals.asm
+#include ../../build/modules/errorhandler-core/ErrorHandler.GAS.Refs.asm
+
+#include ../../build/modules/errorhandler-core/ErrorHandler.GAS.Globals.asm

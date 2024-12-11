@@ -1,2 +1,4 @@
+__inject_symboldata_ptr_1+2:long:inline: MDDBG__SymbolDataPtr
+__inject_symboldata_ptr_2+2:long:inline: MDDBG__SymbolDataPtr
 ErrorHandler_ExtraDebuggerList+0:long:inline: MDDBG__Debugger_AddressRegisters
 ErrorHandler_ExtraDebuggerList+8:long:inline: MDDBG__Debugger_Backtrace

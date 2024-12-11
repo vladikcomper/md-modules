@@ -79,7 +79,7 @@ $(BUILD_DIR)\as-extsym\Debugger.asm $(BUILD_DIR)\as-extsym\ErrorHandler.asm &: $
 	$(CBUNDLE) $(SRC_DIR)\Debugger.asm -def BUNDLE-AS -def EXTSYM -out $(BUILD_DIR)\as-extsym\Debugger.asm
 	$(CBUNDLE) $(SRC_DIR)\ErrorHandler.asm -def BUNDLE-AS -def EXTSYM -out $(BUILD_DIR)\as-extsym\ErrorHandler.asm
 
-$(BUILD_DIR)\gas\ErrorHandler.asm:  $(SRC_FILES) $(CORE_BUILD_DIR)\ErrorHandler.Headless.Blob.asm $(CORE_BUILD_DIR)\ErrorHandler.Headless.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
+$(BUILD_DIR)\gas\ErrorHandler.asm:  $(SRC_FILES) $(CORE_BUILD_DIR)\ErrorHandler.GAS.Blob.asm $(CORE_BUILD_DIR)\ErrorHandler.GAS.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
 	-md $(BUILD_DIR)\gas
 	$(CBUNDLE) $(SRC_DIR)\ErrorHandler-GAS.asm -out $(BUILD_DIR)\gas\ErrorHandler.s
 
@@ -96,8 +96,8 @@ $(CORE_BUILD_DIR)\ErrorHandler.Debug.Blob.asm $(CORE_BUILD_DIR)\ErrorHandler.Deb
 $(CORE_BUILD_DIR)\ErrorHandler.ExtSymbols.Blob.asm $(CORE_BUILD_DIR)\ErrorHandler.ExtSymbols.Globals.asm &:	$(CORE_SRC_FILES)
 	$(MAKE) -C ..\errorhandler-core -f Makefile.win extsym
 
-$(CORE_BUILD_DIR)\ErrorHandler.Headless.Blob.asm $(CORE_BUILD_DIR)\ErrorHandler.Headless.Globals.asm &: $(CORE_SRC_FILES)
-	$(MAKE) -C ..\errorhandler-core -f Makefile.win headless
+$(CORE_BUILD_DIR)\ErrorHandler.GAS.Blob.asm $(CORE_BUILD_DIR)\ErrorHandler.GAS.Globals.asm &: $(CORE_SRC_FILES)
+	$(MAKE) -C ..\errorhandler-core -f Makefile.win gas
 
 
 $(BUILD_DIR):
