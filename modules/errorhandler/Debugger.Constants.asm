@@ -84,6 +84,7 @@ setx	equ		$FA				; set x-position
 ; Screen appearence flags
 _eh_address_error	equ	$01		; use for address and bus errors only (tells error handler to display additional "Address" field)
 _eh_show_sr_usp		equ	$02		; displays SR and USP registers content on error screen
+_eh_hide_caller		equ	$04		; don't guess and print caller in the header (in SGDK and C/C++ projects naive caller detection isn't reliable)
 
 ; Advanced execution flags
 ; WARNING! For experts only, DO NOT USE them unless you know what you're doing

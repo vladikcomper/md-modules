@@ -49,7 +49,7 @@ $(BUILD_DIR)/ErrorHandler.ExtSymbols.bin $(BUILD_DIR)/ErrorHandler.ExtSymbols.sy
 	$(ASM68K) $(ASFLAGS) /p /e __EXTSYM__ /e SymbolData_Ptr=512 $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.ExtSymbols.bin, $(BUILD_DIR)/ErrorHandler.ExtSymbols.sym, $(BUILD_DIR)/ErrorHandler.ExtSymbols.lst
 
 $(BUILD_DIR)/ErrorHandler.GAS.bin $(BUILD_DIR)/ErrorHandler.GAS.sym &:	$(wildcard $(SRC_DIR)/*.asm) $(wildcard $(CORE_DIR)/*.asm) | $(BUILD_DIR)
-	$(ASM68K) $(ASFLAGS) /p /e __EXTSYM__ /e SymbolData_Ptr=512 /e __HEADLESS__ $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.GAS.bin, $(BUILD_DIR)/ErrorHandler.GAS.sym, $(BUILD_DIR)/ErrorHandler.GAS.lst
+	$(ASM68K) $(ASFLAGS) /p /e __EXTSYM__ /e SymbolData_Ptr=512 /e __EH_DEFAULT_CONFIG__=6 /e __HEADLESS__ $(SRC_DIR)/Main.asm, $(BUILD_DIR)/ErrorHandler.GAS.bin, $(BUILD_DIR)/ErrorHandler.GAS.sym, $(BUILD_DIR)/ErrorHandler.GAS.lst
 
 
 # Symbol tables

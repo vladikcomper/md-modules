@@ -55,7 +55,7 @@ _blue2:				equ 	3<<13
 ;		bit #0:	If set, loads extended stack frame
 ;				(used for Address and Bus errors only)
 ;		bit #1: If set, displays SR and USP registers
-;		bit #2:	<UNUSED>
+;		bit #2:	If set, don't guess and display caller
 ;		bit #3:	<UNUSED>
 ;		bit #4:	<UNUSED>
 ;		bit #5:	If set, displays full screen, but then calls console program
@@ -122,11 +122,15 @@ ErrorHandler:	__global
 	jsr		Error_DrawOffsetLocation(pc)
 
 	; Print caller
+	btst	#2, d6							; is hide caller bit set?
+	bne.s	@skip2							; if yes, branch
+
 	movea.l	0.w, a1							; a1 = stack top boundary
 	lea		6(a4), a2						; a2 = call stack (after exception stack frame)
 	jsr		Error_GuessCaller(pc)			; d1 = caller
 	lea 	Str_Caller(pc), a0				; a0 = label string
 	jsr		Error_DrawOffsetLocation(pc)
+@skip2:
 
 	jsr		Console_StartNewLine(pc)
 
@@ -166,7 +170,7 @@ ErrorHandler:	__global
 
 	; Display USP and SR (if requested)
 	btst	#1, d6
-	beq.s	@skip2
+	beq.s	@skip3
 
     ; Draw 'USP'
 	lea		Str_USP(pc), a1
@@ -178,7 +182,7 @@ ErrorHandler:	__global
 	lea		(a4), a2
 	jsr		Console_WriteLine_Formatted(pc)
 
-@skip2:
+@skip3:
 	addq.w	#4, sp							; free USP copy from the stack (we don't need it anymore)
 
 	jsr		Console_GetPosAsXY(pc)			; d0/d1 = XY-pos
