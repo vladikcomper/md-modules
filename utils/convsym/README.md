@@ -472,4 +472,4 @@ Before **version 2.11** format string option could be specified as follows (this
 
 ## Version history
 
-See [CHANGES.md].
+See [CHANGES.md](CHANGES.md).
