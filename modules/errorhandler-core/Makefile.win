@@ -17,7 +17,7 @@ release:	$(BUILD_DIR)\ErrorHandler.bin $(BUILD_DIR)\ErrorHandler.Blob.asm $(BUIL
 
 release-linkable:	$(BUILD_DIR)\ErrorHandler.Linkable.obj $(BUILD_DIR)\ErrorHandler.Linkable.Refs.asm
 
-gas:	$(BUILD_DIR)\ErrorHandler.GAS.bin $(BUILD_DIR)\ErrorHandler.GAS.Blob.asm $(BUILD_DIR)\ErrorHandler.GAS.Globals.asm
+gas:	$(BUILD_DIR)\ErrorHandler.GAS.bin $(BUILD_DIR)\ErrorHandler.GAS.Blob.asm $(BUILD_DIR)\ErrorHandler.GAS.Globals.asm $(BUILD_DIR)\ErrorHandler.GAS.Refs.asm
 
 debug:	$(BUILD_DIR)\ErrorHandler.Debug.bin $(BUILD_DIR)\ErrorHandler.Debug.Blob.asm $(BUILD_DIR)\ErrorHandler.Debug.Globals.asm
 
