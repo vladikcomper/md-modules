@@ -391,6 +391,61 @@ tests: 'tuple[Test, ...]' = (
 			# This test isn't checked, it's passes if ConvSym returns success
 		),
 	),
+	Test(
+		description = 'log->deb1 sparse symbol table test',
+		pipeline=(
+			ConvSym(
+				input = File('input/sparse-table.log'),
+				output = File('output/sparse-table.deb1'),
+				options = ('-input', 'log', '-output', 'deb1'),
+			),
+			CheckMatch(output=File('output-expected/sparse-table.deb1')),
+		),
+	),
+	Test(
+		description = 'log->deb2 sparse symbol table test',
+		pipeline=(
+			ConvSym(
+				input = File('input/sparse-table.log'),
+				output = File('output/sparse-table.deb2'),
+				options = ('-input', 'log', '-range', '0', 'FFFFFF'),
+			),
+			CheckMatch(output=File('output-expected/sparse-table.deb2')),
+		),
+	),
+	Test(
+		description = 'log->deb1 huge table test',
+		pipeline=(
+			ConvSym(
+				input = File('input/huge-table.log'),
+				output = File('output/huge-table.deb1'),
+				options = ('-input', 'log', '-out', 'deb1', '-tolower'),
+			),
+			CheckMatch(output=File('output-expected/huge-table.deb1')),
+		),
+	),
+	Test(
+		description = 'log->deb2 huge table test',
+		pipeline=(
+			ConvSym(
+				input = File('input/huge-table.log'),
+				output = File('output/huge-table.deb2'),
+				options = ('-input', 'log', '-tolower'),
+			),
+			CheckMatch(output=File('output-expected/huge-table.deb2')),
+		),
+	),
+	Test(
+		description = 'txt->deb2 sgdk sonic example symbol conversion',
+		pipeline=(
+			ConvSym(
+				input = File('input/symbols-sgdk.txt'),
+				output = File('output/symbols-sgdk.deb2'),
+				options = ('-input', 'txt', '-inopt', "/fmt='%X %*[TtBbCcDd] %511s' /offsetFirst+", '-range', '0', 'FFFFFF'),
+			),
+			CheckMatch(output=File('output-expected/symbols-sgdk.deb2')),
+		),
+	),
 )
 
 
