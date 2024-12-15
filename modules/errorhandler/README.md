@@ -104,6 +104,8 @@ Currently, the *MD Debugger and Error Handler* supports integration with the fol
 
 ### Version 2.6 (2024-12-15)
 
+![Compact offsets](docs/.images/eh_address_error_v.2.6.png) ![Better assertions](docs/.images/eh_assertion_v.2.6.png)
+
 - Official AXM68K and GAS support (allows SGDK integration), support for ASM68K projects using Psy-Q Linker; the following new bundles were added:
   - `axm68k` (for AXM68K)
   - `axm68k-extsym` (AXM68K, dynamic symbol table location)
