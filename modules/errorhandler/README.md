@@ -116,9 +116,10 @@ Currently, the *MD Debugger and Error Handler* supports integration with the fol
   - You can now assign a debugger to use when assetion fails, e.g. `assert.w d0, eq, #$1234, MyDebuggerIfItFails`;
   - Save/restore CCR in `assert` macro, so conditional flags aren't affected by it (this was already done in other macros);
   - Assertion failed exception now displays the original source code line and the received value;
+- Error handler now also recognizes dynamic VInt/HInt jump handlers if they use `jmp (xxx).w` opcode instead of `jmp (xxx).l`;
 - `KDebug` integration is finalized and is no longer experimental:
   - You can now use `KDebug.Write[Line]` macros in Console programs (they previously were supressed due to VDP access conflicts);
-  - `KDebug.Write[Line]` now properly skip unsupported multi-byte flags in formatted strings (e.g. `%<setw,40>`);
+  - `KDebug.Write[Line]` now properly skips unsupported multi-byte flags in formatted strings (e.g. `%<setw,40>`);
 - Performance of `Console.WriteLine`, `Console.Write`, `KDebug.WriteLine`, `KDebug.Write` is now much faster when formatted string doesn't include any printable arguments;
 - Intoduce `_Console.*`, `_KDebug.*`, `_assert` macros ("shadow macros"): they behave like the original ones, but don't save/restore CCR; advanced users may take advantage of them for minor optimizations;
 - `Console.WriteLine` and `Console.Write` now always restore last VRAM write location and won't break if your code writes to other VRAM locations in-between them;
@@ -134,11 +135,11 @@ Currently, the *MD Debugger and Error Handler* supports integration with the fol
 - Make console detection in `Console.*` macros much safer; they previously read a magic byte `Console.Magic(usp)` to tell if `usp` pointed to valid Console data, but it could crash when reading from invalid memory; magic byte is now stored in MSB of `usp` to mark pointer itself valid;
 - Upgraded ConvSym from version 2.9.1 to 2.12.1, which adds the following major improvements:
   - Fixed a rare symbol encoding issue where data with unusual entropy would produce long prefix trees with some codes exceeding 16-bits, corrupting a small set of symbol texts;
-  - Fixed another rare bug where if symbol heap for a memory block exceeds 64 KB and stops accepting symbols, all symbols in further blocks are also discarded;
+  - Fixed another rare symbol encoding bug where if symbol heap for a memory block exceeds 64 KB and stops accepting symbols, all symbols in further blocks are also discarded;
   - Added new `txt` input parser for parsing generic text files using a configurable format string (this allows to parse SGDK's `symbol.txt` file);
-  - Added support for symbol references instead of raw offsets in -ref and -org options (e.g. `-ref @MySymbol`);
+  - Added support for symbol references instead of raw offsets in `-ref` and `-org` options (e.g. `-ref @MySymbol`);
   - Added `-addprefix` option to prefix all output symbols with a given string;
-- **Bugfix:** Fixed `%<palN>` flags clearing priority and XY-flip bits of Console's base pattern on top of changing palette bits;
+- **Bugfix:** Fix `%<palN>` flags clearing priority and XY-flip bits of Console's base pattern on top of changing palette bits;
 - **Bugfix:** Fix a bug introduced in v.2.5 where "VInt:", "HInt:" couldn't properly render `<undefined>` text if VInt or HInt handlers were dynamic (in RAM), but their target locations weren't understood.
 - **Bugfix:** Fix a rare buffer over-read in `Console.Write[Line]` and `KDebug.Write[Line]` and other macros using formatting strings if buffer flush occurs exactly in the middle of multi-byte formatting flag (e.g. `setw,40`);
 - General optimizations and stability improvements.
