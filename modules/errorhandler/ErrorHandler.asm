@@ -3,6 +3,10 @@
 ; ---------------------------------------------------------------
 ; MD Debugger and Error Handler v.2.6
 ;
+;
+; Documentation, references and source code are available at:
+; - https://github.com/vladikcomper/md-modules
+;
 ; (c) 2016-2024, Vladikcomper
 ; ---------------------------------------------------------------
 ; Debugger and Error handler blob
