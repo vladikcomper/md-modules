@@ -12,9 +12,9 @@ Currently, it targets **The AS Macroassembler** and **ASM68K** assemblers. It ha
 ![KDebug](docs/.images/eh_kdebug.png)
 
 - __Debug symbol support.__
-  - It can extract symbols from AS and ASM68K at build time and bundle them with the ROM;
+  - It can extract source code symbols at build time and bundle them with the ROM;
   - Debug symbols are efficiently compressed to save space and stored in custom database-like format; they are **not** visible as plain-text.
-  - Error dumps will display symbols from your source code instead of raw offsets, making debugging crashes times more easier;
+  - Error dumps will display symbols from your source code instead of raw offsets, making debugging crashes much easier;
 
 - __Backtrace support, caller guessing and more.__
   - Press the B button on the exception screen to display the backtrace and see the full call chain that led to the exception;
@@ -50,8 +50,18 @@ Currently, it targets **The AS Macroassembler** and **ASM68K** assemblers. It ha
   - Measure your code performance using `KDebug.StartTimer` and `KDebug.EndTimer`.
 
 - __Easy to install and extremely lightweight.__
-  - Error handler blob is below 3 KiB, which is quite small for the number of features it provides; optional debugger extensions take a few hundreds of bytes each;
+  - Error handler blob is below 4 KiB, which is quite small for the number of features it provides; optional debugger extensions take a few hundreds of bytes each;
   - It's quite easy to install, with installation instructions and ready configurations provided for the most mainline Sonic disassemblies.
+
+
+## Projects with MD Debugger
+
+The following ready-to-use open-source projects come with MD Debugger and Error Handler pre-installed:
+
+- **SGDK** (Error Handler only) - https://github.com/Stephane-D/SGDK
+- **Sonic Clean Engine (S.C.E.)** - https://github.com/TheBlad768/Sonic-Clean-Engine-S.C.E.-
+- **Sonic 1 in Sonic 3 & Knuckles (S.C.E. Version)** - https://github.com/TheBlad768/Sonic-1-in-Sonic-3-S.C.E.-
+- **Sonic 1-squared** - https://github.com/cvghivebrain/Sonic1sq
 
 
 ## Installation instructions
@@ -84,16 +94,54 @@ If you'd like to contribute new installation instructions or update the existing
 
 Currently, the *MD Debugger and Error Handler* supports integration with the following assemblers:
 
-* __ASM68K__ (`bundle-asm68k`)
-  * __AXM68K__, a hacked ASM68K usually bundled with macros for Z80 assembly support (`bundle-axm68k`)
-* __The AS Macroassembler__ v.1.42 Bld 55 and above (`bundle-as`)
-
-> [!WARNING]
->
-> The AS Macroassembler version has limited support for some features
+* __ASM68K__ (`bundle-asm68k`, recommended)
+  * __AXM68K__, a hacked ASM68K usually bundled with macros for Z80 assembly support (`bundle-axm68k`);
+* __The AS Macroassembler__ v.1.42 Bld 212 and above (`bundle-as`, slightly limited support for some macro featers)
+* __GNU Assembler (GAS)__ (`bundle-gas`, error handler only, no debugger macro support)
 
 
 ## Version History
+
+### Version 2.6 (2024-12-15)
+
+- Official AXM68K and GAS support (allows SGDK integration), support for ASM68K projects using Psy-Q Linker; the following new bundles were added:
+  - `axm68k` (for AXM68K)
+  - `axm68k-extsym` (AXM68K, dynamic symbol table location)
+  - `asm68k-linkable` (for ASM68K + Psylink)
+  - `gas` (GNU Assembler)
+- Error handler now uses compact offsets and symbol displacements: offsets are rendered as 24-bit instead of 32-bit (because M68K has a 24-bit bus anyways), and displacements don't have leading zeros (`+000X` is now `+X`):
+  - This makes offsets more readable and allows to fit more characters on a line;
+  - You can still revert to 32-bit offsets by changing `DEBUGGER__STR_OFFSET_SELECTOR` option in debugger config;
+- Improved assertions (`assert` macro):
+  - You can now assign a debugger to use when assetion fails, e.g. `assert.w d0, eq, #$1234, MyDebuggerIfItFails`;
+  - Save/restore CCR in `assert` macro, so conditional flags aren't affected by it (this was already done in other macros);
+  - Assertion failed exception now displays the original source code line and the received value;
+- `KDebug` integration is finalized and is no longer experimental:
+  - You can now use `KDebug.Write[Line]` macros in Console programs (they previously were supressed due to VDP access conflicts);
+  - `KDebug.Write[Line]` now properly skip unsupported multi-byte flags in formatted strings (e.g. `%<setw,40>`);
+- Performance of `Console.WriteLine`, `Console.Write`, `KDebug.WriteLine`, `KDebug.Write` is now much faster when formatted string doesn't include any printable arguments;
+- Intoduce `_Console.*`, `_KDebug.*`, `_assert` macros ("shadow macros"): they behave like the original ones, but don't save/restore CCR; advanced users may take advantage of them for minor optimizations;
+- `Console.WriteLine` and `Console.Write` now always restore last VRAM write location and won't break if your code writes to other VRAM locations in-between them;
+- **AS version:** Support `xxx.w`, `(xxx).w`, `xxx.l` and `(xxx).l` syntax in formatted string arguments;
+- **AS version:** Support missing `vc`, `vs` (overflow set/clear) conditions in `assert` macro (it was already supported in ASM68K version);
+- **ASM68K version:** Fully support projects using "." instead of "@" for local labels (previously debugging macros could break local label scopes);
+- **ASM68K version:** Support projects compiled with `/o ae+` option (it could previously caused issues when storing formatted strings);
+- **ASM68K version:** Don't allow `X(sp)`, `-(sp)`, `(sp)+` in formatted strings (e.g. `"%<.w 4(sp) sym>"`); it was already unsupported in AS version, because this can lead to unexpceted results or crashes;
+- **ASM68K version:** Warn if project `/o ws+` is not set as it breaks most of the debugger macros;
+- **ASM68K version:** Replace `endc` directives with `endif` for readability;
+- **ASM68K-Linkable version:** place strings of debugger macros (`.Write`, `.WriteLine`, `RaiseError` etc) in a separate section instead of inlining them, making generated code much smaller;
+- Replace `__global__*` prefix for exported labels with `MDDBG__*`;
+- Make console detection in `Console.*` macros much safer; they previously read a magic byte `Console.Magic(usp)` to tell if `usp` pointed to valid Console data, but it could crash when reading from invalid memory; magic byte is now stored in MSB of `usp` to mark pointer itself valid;
+- Upgraded ConvSym from version 2.9.1 to 2.12.1, which adds the following major improvements:
+  - Fixed a rare symbol encoding issue where data with unusual entropy would produce long prefix trees with some codes exceeding 16-bits, corrupting a small set of symbol texts;
+  - Fixed another rare bug where if symbol heap for a memory block exceeds 64 KB and stops accepting symbols, all symbols in further blocks are also discarded;
+  - Added new `txt` input parser for parsing generic text files using a configurable format string (this allows to parse SGDK's `symbol.txt` file);
+  - Added support for symbol references instead of raw offsets in -ref and -org options (e.g. `-ref @MySymbol`);
+  - Added `-addprefix` option to prefix all output symbols with a given string;
+- **Bugfix:** Fixed `%<palN>` flags clearing priority and XY-flip bits of Console's base pattern on top of changing palette bits;
+- **Bugfix:** Fix a bug introduced in v.2.5 where "VInt:", "HInt:" couldn't properly render `<undefined>` text if VInt or HInt handlers were dynamic (in RAM), but their target locations weren't understood.
+- **Bugfix:** Fix a rare buffer over-read in `Console.Write[Line]` and `KDebug.Write[Line]` and other macros using formatting strings if buffer flush occurs exactly in the middle of multi-byte formatting flag (e.g. `setw,40`);
+- General optimizations and stability improvements.
 
 ### Version 2.5 (2023-06-30)
 
@@ -135,8 +183,8 @@ Currently, the *MD Debugger and Error Handler* supports integration with the fol
 - **AS version:** Prefer `!align` instead of `align` to avoid issues if it's overridden in the project;
 - **AS version:** Support "case-sensitive" compile flag;
 - Support full address range for stack pointer (previous version only correctly worked with $FF8000-$FFFFFF range due to optimizations);
-- Introduce "External symbol table" bundles for both AS and ASM68K versions, which uses a reference to the symbol table instead of expecting it right after the Error Handler blob;
-- Fixed a rare case of buffer overflow when displaying offset as a symbol with displacement;
+- Introduce "External symbol table" bundles for both AS and ASM68K versions (`asm68k-extsym` and `as-extsym`), which uses a reference to the symbol table instead of expecting it right after the Error Handler blob;
+- **Bugfix:** Fixed a rare case of buffer overflow when displaying offset as a symbol with displacement;
 - Code-size optimizations, minor bugfixes and stability improvements.
 
 ### Version 2.0 (2018-01-14)
