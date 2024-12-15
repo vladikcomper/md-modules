@@ -1,34 +1,37 @@
 
-# MD Shell Macros Reference
+# MD Debugger Macros Reference
 
 This reference lists all the macros available in MD Shell. All of these macros are provided by MD Debugger and Error Handler, which is included in MD Shell.
 
 ## Table of contents
 
-- [assert](#assert)
-- [RaiseError](#raiseerror)
-- [Console macros](#console-macros)
-  - [Console.Write](#consolewrite-and-consolewriteline)
-  - [Console.WriteLine](#consolewrite-and-consolewriteline)
-  - [Console.SetXY](#consolesetxy)
-  - [Console.BreakLine](#consolebreakline)
-  - [Console.Clear](#consoleclear)
-  - [Console.Sleep](#consolesleep)
-  - [Console.Pause](#consolepause)
-- [KDebug macros](#kdebug-macros)
-  - [KDebug.Write](#kdebugwriteline-and-kdebugwrite)
-  - [KDebug.WriteLine](#kdebugwriteline-and-kdebugwrite)
-  - [KDebug.BreakLine](#kdebugbreakline)
-  - [KDebug.BreakPoint](#kdebugbreakpoint)
-  - [KDebug.StartTimer](#kdebugstarttimer-and-kdebugendtimer)
-  - [KDebug.EndTimer](#kdebugstarttimer-and-kdebugendtimer)
+- [`assert`](#assert)
+- [`RaiseError`](#raiseerror)
+- [`Console` macros](#console-macros)
+  - [`Console.Write`](#consolewrite-and-consolewriteline)
+  - [`Console.WriteLine`](#consolewrite-and-consolewriteline)
+  - [`Console.SetXY`](#consolesetxy)
+  - [`Console.BreakLine`](#consolebreakline)
+  - [`Console.Clear`](#consoleclear)
+  - [`Console.Sleep`](#consolesleep)
+  - [`Console.Pause`](#consolepause)
+- [`KDebug` macros](#kdebug-macros)
+  - [`KDebug.Write`](#kdebugwriteline-and-kdebugwrite)
+  - [`KDebug.WriteLine`](#kdebugwriteline-and-kdebugwrite)
+  - [`KDebug.BreakLine`](#kdebugbreakline)
+  - [`KDebug.BreakPoint`](#kdebugbreakpoint)
+  - [`KDebug.StartTimer`](#kdebugstarttimer-and-kdebugendtimer)
+  - [`KDebug.EndTimer`](#kdebugstarttimer-and-kdebugendtimer)
+- [Shadow macros](#shadow-macros)
 
 ## `assert`
+
+**Added in version 2.5**
 
 **Syntax:**
 
 ```m68k
-        assert[.b|.w|.l]    src_operand, condition[, dest_operand]
+        assert[.b|.w|.l]    src_operand, condition[, dest_operand, debugger]
 ```
 
 **Description:**
@@ -46,7 +49,7 @@ This code is equivalent to the following:
 ```m68k
         cmp.w    #64, d0
         blt.s    ok
-        RaiseError "Assertion failed:%<endl>d0 lt #64"
+        RaiseError "Assertion failed!"
     ok:
 ```
 
@@ -61,7 +64,7 @@ Which is the same as using `tst` instead of `cmp` in the equivalent code:
 ```m68k
         tst.b    MyRAMFlag
         bne.s    ok
-        RaiseError "Assertion failed:%<endl>MyRAMFlag ne"
+        RaiseError "Assertion failed!"
     ok:
 ```
 
@@ -70,14 +73,15 @@ Operands in assertions can use all the addressing modes that `tst` and `cmp` ins
 ```m68k
         assert.b (a0), eq            ; assert that the byte at `(a0)` is zero
         assert.w d2, lo, 2(a3)       ; assert that `d2` register is lower than `2(a3)`
-        assert.l MyData(pc,d0), mi   ; assert that the longword at `MyData(pc,d0)` is negative
+        assert.l ($FFFFA000).w, mi   ; assert that the longword at `($FFFFA000).w` is negative
 ```
 
 **Arguments:**
 
 * `src_operand` - source operand.
-* `condition` - condition to test (e.g. `eq`, `ne`, `mi`, `pl`, `cs`, `cc` etc).
+* `condition` - condition to test (e.g. `eq`, `ne`, `mi`, `pl`, `cs`, `cc`, `hi`, `hs`, `lo`, `ls`, `gt`, `ge`, `lt`, `le`, `vs`, `vc` etc).
 * `dest_operand` (optional) - destination operand; if present, `src_operand` is compared to `dest_operand`, otherwise a single `src_operand` is tested.
+* `debugger` (optional) - label of the console program (subroutine) used to print error screen body if assertion fails; if omitted, standard error handler is used (*added in version 2.6*)
 
 
 ## `RaiseError`
@@ -106,20 +110,23 @@ If `debugger` is not specified, the standard program is used which displays CPU 
 
 **Arguments:**
 
-* `message` - a formatted string representing an error message, for example: `"Object at address %<.w a0 hex> crashed"`; displays in error screen's header.
+* `message` - a [formatted string](Formatted_strings.md) representing an error message, for example: `"Object at address %<.w a0 hex> crashed"`; displays in error screen's header.
 * `debugger` (optional) - label of the console program (subroutine) used to print error screen body; if omitted, standard error handler is used.
 
 ## `Console` macros
 
-This set of macros provides an API for Debugger's built-in console. They are meant to be used inside _console programs_.
+This set of macros provides an API for Debugger's built-in console. They are meant to be used inside _console programs_. By default, MD Shell enters console mode when it starts executing `Main:` routine.
 
-Console programs work like normal assembly subroutines, but can call `Console` macros to render debug output on screen. They should end with an `rts` instruction like every standard subroutine.
+```m68k
+Main:
+        Console.WriteLine "Hello, world!"
+        rts
+````
 
-There are several ways to call a _console program_:
-
-- As a second argument in `RaiseError`;
-- By mapping it to a joypad button on exception screen (see `DEBUGGER__EXTENSIONS__BTN_C_DEBUGGER` in `Debugger.asm`);
-- Via `Console.Run`.
+There are several ways to call/specify a _console program_ by its label:
+- By mapping it to joypad buttons on exception screen (see `DEBUGGER__EXTENSIONS__BTN_C_DEBUGGER` in `MDShell.asm`);
+- As a third argument in `assert` (e.g. `assert.w d7, ne, #0, ProgramLabel`);
+- As a second argument in `RaiseError` (e.g. `RaiseError "Some error!", ProgramLabel`).
 
 > [!NOTE]
 >
@@ -177,11 +184,19 @@ To set the leftmost position, use:
         Console.SetXY #0, #0
 ```
 
-Since `x` and `y` are _operands_, all M68K addressing modes may be used to pass these parameters, for instance:
+Since `x` and `y` are word-sized _operands_, all M68K addressing modes may be used to pass these parameters, for instance:
 
 ```m68k
-        Console.SetXY d0, PositionData+1(pc,d1)  ; read X from d0, read Y from PositionData+1(pc,d1)
+        Console.SetXY d0, 2(a0)  ; read X from d0, read Y from 2(a0)
 ```
+
+In ASM68K version, all M68K addressing modes are supported, but for indexed modes (e.g. `d8(an,dn)`) you need to put the entire operand in brackets so assembler won't confuse a comma inside it for argument separator:
+
+```m68k
+        Console.SetXY 2(a0), <YPosTable(pc,d0.w)>  ; add `<...>` around operands with commas!
+```
+
+Advanced addressing modes aren't supported in the AS version.
 
 **Arguments:**
 
@@ -209,6 +224,8 @@ Adds a newline.
 
 ## `Console.Clear`
 
+**Added in version 2.5**
+
 **Syntax:**
 
 ```m68k
@@ -220,6 +237,8 @@ Adds a newline.
 Clears the entire console screen and resets the cursor back to the top-left corner (coordinate `#0, #0`).
 
 ## `Console.Sleep`
+
+**Added in version 2.5**
 
 **Syntax:**
 
@@ -235,17 +254,27 @@ Pauses program execution for the given number of frames. The following example p
         Console.Sleep  #60
 ```
 
-Since `frames` argument is an operand, it can use all M68K addressing mode, not just _immediate value_ (i.e. `#<Number>`), for instance:
+Since `frames` argument is an operand, it can use different M68K addressing modes, not just _immediate value_ (i.e. `#<Number>`), for instance:
 
 ```m68k
         Console.Sleep  d0   ; sleep for the number of frames specified in the d0 register
 ```
+
+In ASM68K version, all main M68K addressing modes are supported (same as MOVE instruction), but for indexed modes (e.g. `d8(an,dn)`) you need to put the entire operand in brackets so assembler won't confuse a comma inside it for argument separator:
+
+```m68k
+        Console.Sleep <SleepLUT(pc,d0.w)> ; add `<...>` around operands with commas!
+```
+
+Advanced addressing modes aren't supported in the AS version.
 
 **Arguments:**
 
 * `frames` - a word-sized operand (register, memory or immediate value), number of frames to sleep.
 
 ## `Console.Pause`
+
+**Added in version 2.5**
 
 **Syntax:**
 
@@ -259,20 +288,28 @@ Pauses console program execution until A, B, C or Start button is pressed on the
 
 ## `KDebug` macros
 
+**Added in version 2.5**
+
 This set of macros provides a convenient interface for debug logging, timing code and breakpoints in emulators that support KMod debug registers.
 
 Currently, the only emulators to support KDebug are:
 - Blastem-nightly;
-- Clownmdemu v.0.8 and above (logging only);
+- Clownmdemu since v0.8 (logging only);
 - Gens KMod (outdated, not recommended).
 
 Under the hood, `KDebug` macros communicate with the emulator via unused VDP registers. This, lucky enough, has no side effects on the real hardware. But be careful when using it in the middle of the code that writes to VDP data port for that very reason: `KDebug` resets the last VDP access address. **This is a hardware quirk.**
+
+> [!NOTE]
+>
+> Since **version 2.6**, you can also use KDebug macros in console programs.
 
 > [!WARNING]
 >
 > Avoid using `KDebug` macros _in-between_ VDP data port writes. Since `KDebug` integration accesses its own VDP registers, this resets the last write address, so your writes may be disrupted. However, if you explicitly set VDP write address after using `KDebug`, everything will be fine. This is what `Console.Write` does for `KDebug` and `Console` interoperability.
 
 ## `KDebug.WriteLine` and `KDebug.Write`
+
+**Added in version 2.5**
 
 **Syntax:**
 
@@ -297,6 +334,8 @@ Unlike `Console.Write`/`.WriteLine`, `KDebug.Write`/`.WriteLine` don't support a
 
 ## `KDebug.BreakLine`
 
+**Added in version 2.5**
+
 **Syntax:**
 
 ```m68k
@@ -314,6 +353,8 @@ Flushes the message to supported emulator's debug window/console. This has no ef
 ```
 
 ## `KDebug.StartTimer` and `KDebug.EndTimer`
+
+**Added in version 2.5**
 
 **Syntax:**
 
@@ -334,6 +375,8 @@ Cycle count is displayed in supported emulator's debug window/console. This has 
 
 ## `KDebug.BreakPoint`
 
+**Added in version 2.5**
+
 **Syntax:**
 
 ```m68k
@@ -344,4 +387,23 @@ Cycle count is displayed in supported emulator's debug window/console. This has 
 
 Sets a hard breakpoint in your code. This pauses program execution and allows you to use emulator's own debugger.
 
-This has no effect in unsupported emulators and on real hardware.
+This has no effect in unsupported emulators and on the real hardware.
+
+## Shadow macros
+
+**Added in version 2.6**
+
+Shadow macros are intended for advanced users that want to take advantage of optimizations in some scenarios.
+
+Almost all MD Debugger macros are designed to be completely side-effect free and always backup and restore SR (and CCR) after execution by generating `move.w sr,-(sp)` and `move.w (sp)+,sr` instructions around the actual macros code.
+
+"Shadow" versions remove these safety instructions on assumption that user don't care about original CCR value being lost after macro execution.
+
+> [!WARNING]
+>
+> Don't use shadow macros unless you know what you're doing! Normal macros are preferable in most scenarios, because debug-only code generally should be reliable, not optimal.
+
+The following shadow macros exist:
+- **`_assert`**
+- **`_Console.*`** (e.g. `_Console.WriteLine`, `_Console.SetXY` etc);
+- **`_KDebug.*`** (e.g. `_KDebug.WriteLine`, `_KDebug.StartTimer` etc);
