@@ -31,14 +31,14 @@ Please refer to [BUILD.md](BUILD.md) for build instructions.
 
 **MD Shell** provides several flavors of headers/objects dubbed "bundles" (similarly to MD Debugger) that target various popular 68K assemblers. Currently, the following bundles are provided:
 
-* `asm68k` (recommended) - a complete header with blob targetting the _ASM68K assembler_;
+* `asm68k` (recommended) - a complete header with blob targeting the _ASM68K assembler_;
 * `asm68k-linkable` - header and an object file for the _ASM68K assembler_, for use with advanced build systems where _Psy-Q Linker_ is required;
-* `as` - a complete header with blob targetting the _AS Macroassembler_ (v.1.42 Bld 55 and above);
+* `as` - a complete header with blob targeting the _AS Macroassembler_ (v.1.42 Bld 212 and above);
 * `headless` - blob-only version, that should be compatible with any ASM68K assembler; it's mostly useless since macros aren't included.
 
 > [!WARNING]
 >
-> The AS Macroassembler version has limited support for some features!
+> The AS Macroassembler version has limited support for some features.
 
 ## Documentation
 
@@ -59,20 +59,21 @@ Please refer to [BUILD.md](BUILD.md) for build instructions.
   - `KDebug.EndTimer`
 - Error handler now uses compact offsets and symbol displacements: offsets are rendered as 24-bit instead of 32-bit (because M68K has a 24-bit bus anyways), and displacements don't have leading zeros (`+000X` is now `+X`);
 - Improved assertions (`assert` macro):
-  - You can now assign a debugger to use when assetion fails, e.g. `assert.w d0, eq, #$1234, MyDebuggerIfItFails`;
+  - You can now assign a debugger to use when assertion fails, e.g. `assert.w d0, eq, #$1234, MyDebuggerIfItFails`;
   - Save/restore CCR in `assert` macro, so conditional flags aren't affected by it (this was already done in other macros);
   - Assertion failed exception now displays the original source code line and the received value;
 - Error handler now also recognizes dynamic VInt/HInt jump handlers if they use `jmp (xxx).w` opcode instead of `jmp (xxx).l`;
 - Performance of `Console.WriteLine`, `Console.Write`, `KDebug.WriteLine`, `KDebug.Write` is now much faster when formatted string doesn't include any printable arguments;
 - Support user-defined `VBlank` and `HBlank` interrupt handlers (`asm68k` and `as` bundles only);
-- Intoduce `_Console.*`, `_KDebug.*`, `_assert` macros ("shadow macros"): they behave like the original ones, but don't save/restore CCR; advanced users may take advantage of them for minor optimizations;
+- Introduce `_Console.*`, `_KDebug.*`, `_assert` macros ("shadow macros"): they behave like the original ones, but don't save/restore CCR; advanced users may take advantage of them for minor optimizations;
 - `Console.WriteLine` and `Console.Write` now always restore last VRAM write location and won't break if your code writes to other VRAM locations in-between them;
 - **AS version:** Support `xxx.w`, `(xxx).w`, `xxx.l` and `(xxx).l` syntax in formatted string arguments;
 - **AS version:** Support missing `vc`, `vs` (overflow set/clear) conditions in `assert` macro (it was already supported in ASM68K version);
 - **ASM68K version:** Fully support projects using "." instead of "@" for local labels (previously debugging macros could break local label scopes);
-- **ASM68K version:** Support projects compiled with `/o ae+` option (it could previously caused issues when storing formatted strings);
-- **ASM68K version:** Don't allow `X(sp)`, `-(sp)`, `(sp)+` in formatted strings (e.g. `"%<.w 4(sp) sym>"`); it was already unsupported in AS version, because this can lead to unexpceted results or crashes;
-- **ASM68K version:** Warn if project `/o ws+` is not set as it breaks most of the debugger macros;
+- **ASM68K version:** Support projects compiled with `/o ae+` option (it could previously cause issues when storing formatted strings);
+- **ASM68K version:** Don't allow `X(sp)`, `-(sp)`, `(sp)+` in formatted strings (e.g. `"%<.w 4(sp) sym>"`); it was already unsupported in AS version, because this can lead to unexpected results or crashes;
+  - **ASM68K version:** Better error reporting in formatted strings: properly report missing a closing bracket for `%<`;
+- **ASM68K version:** Warn if project does not set `/o ws+` flag as it breaks most of the debugger macros;
 - **ASM68K version:** Replace `endc` directives with `endif` for readability;
 - **ASM68K-Linkable version:** place strings of debugger macros (`.Write`, `.WriteLine`, `RaiseError` etc) in a separate section instead of inlining them, making generated code much smaller;
 - Replace `__global__*` prefix for exported labels with `MDDBG__*`;
@@ -118,7 +119,7 @@ Please refer to [BUILD.md](BUILD.md) for build instructions.
   - Renamed "Module:" field in exception header to "Offset:" for clarity;
 - Upgraded ConvSym from version 2.0 to 2.9.1. This adds the following major features for debug symbol generation:
   - Stable AS support;
-  - Improve symbol data compression by force-converting your symbols to upper or lowecase;
+  - Improve symbol data compression by force-converting your symbols to upper or lowercase;
   - Support for multiple labels on the same offset;
   - Support for symbols in RAM section (must be properly implemented in your project);
   - Advanced offset transformations: mask, upper/bottom boundary, add/subtract base address;

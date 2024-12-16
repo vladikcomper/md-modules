@@ -82,7 +82,7 @@ If you'd like to contribute new installation instructions or update the existing
 
 - [Powerful debugging techniques](docs/how-to/Debugging_techniques.md)
 - [How-to add your details in exception headers](docs/how-to/Modify_exception_header.md)
-- [Using KDebug intergration](docs/how-to/Use_KDebug_integration.md)
+- [Using KDebug integration](docs/how-to/Use_KDebug_integration.md)
 - [Troubleshooting](docs/how-to/Troubleshoot.md)
 
 ### References
@@ -94,10 +94,10 @@ If you'd like to contribute new installation instructions or update the existing
 
 Currently, the *MD Debugger and Error Handler* supports integration with the following assemblers:
 
-* __ASM68K__ (`bundle-asm68k`, recommended)
-  * __AXM68K__, a hacked ASM68K usually bundled with macros for Z80 assembly support (`bundle-axm68k`);
-* __The AS Macroassembler__ v.1.42 Bld 212 and above (`bundle-as`, slightly limited support for some macro featers)
-* __GNU Assembler (GAS)__ (`bundle-gas`, error handler only, no debugger macro support)
+* __ASM68K__ (`asm68k` bundle, recommended)
+  * __AXM68K__, a hacked ASM68K usually bundled with macros for Z80 assembly support (`axm68k` bundle);
+* __The AS Macroassembler__ v.1.42 Bld 212 and above (`as` bundle, slightly limited support for some macro features)
+* __GNU Assembler (GAS)__ (`gas` bundle, error handler only, no debugger macro support)
 
 
 ## Version History
@@ -115,22 +115,23 @@ Currently, the *MD Debugger and Error Handler* supports integration with the fol
   - This makes offsets more readable and allows to fit more characters on a line;
   - You can still revert to 32-bit offsets by changing `DEBUGGER__STR_OFFSET_SELECTOR` option in debugger config;
 - Improved assertions (`assert` macro):
-  - You can now assign a debugger to use when assetion fails, e.g. `assert.w d0, eq, #$1234, MyDebuggerIfItFails`;
+  - You can now assign a debugger to use when assertion fails, e.g. `assert.w d0, eq, #$1234, MyDebuggerIfItFails`;
   - Save/restore CCR in `assert` macro, so conditional flags aren't affected by it (this was already done in other macros);
   - Assertion failed exception now displays the original source code line and the received value;
 - Error handler now also recognizes dynamic VInt/HInt jump handlers if they use `jmp (xxx).w` opcode instead of `jmp (xxx).l`;
 - `KDebug` integration is finalized and is no longer experimental:
-  - You can now use `KDebug.Write[Line]` macros in Console programs (they previously were supressed due to VDP access conflicts);
+  - You can now use `KDebug.Write[Line]` macros in Console programs (they previously were suppressed due to VDP access conflicts);
   - `KDebug.Write[Line]` now properly skips unsupported multi-byte flags in formatted strings (e.g. `%<setw,40>`);
 - Performance of `Console.WriteLine`, `Console.Write`, `KDebug.WriteLine`, `KDebug.Write` is now much faster when formatted string doesn't include any printable arguments;
-- Intoduce `_Console.*`, `_KDebug.*`, `_assert` macros ("shadow macros"): they behave like the original ones, but don't save/restore CCR; advanced users may take advantage of them for minor optimizations;
+- Introduce `_Console.*`, `_KDebug.*`, `_assert` macros ("shadow macros"): they behave like the original ones, but don't save/restore CCR; advanced users may take advantage of them for minor optimizations;
 - `Console.WriteLine` and `Console.Write` now always restore last VRAM write location and won't break if your code writes to other VRAM locations in-between them;
 - **AS version:** Support `xxx.w`, `(xxx).w`, `xxx.l` and `(xxx).l` syntax in formatted string arguments;
 - **AS version:** Support missing `vc`, `vs` (overflow set/clear) conditions in `assert` macro (it was already supported in ASM68K version);
 - **ASM68K version:** Fully support projects using "." instead of "@" for local labels (previously debugging macros could break local label scopes);
-- **ASM68K version:** Support projects compiled with `/o ae+` option (it could previously caused issues when storing formatted strings);
-- **ASM68K version:** Don't allow `X(sp)`, `-(sp)`, `(sp)+` in formatted strings (e.g. `"%<.w 4(sp) sym>"`); it was already unsupported in AS version, because this can lead to unexpceted results or crashes;
-- **ASM68K version:** Warn if project `/o ws+` is not set as it breaks most of the debugger macros;
+- **ASM68K version:** Support projects compiled with `/o ae+` option (it could previously cause issues when storing formatted strings);
+- **ASM68K version:** Don't allow `X(sp)`, `-(sp)`, `(sp)+` in formatted strings (e.g. `"%<.w 4(sp) sym>"`); it was already unsupported in AS version, because this can lead to unexpected results or crashes;
+- **ASM68K version:** Better error reporting in formatted strings: properly report missing a closing bracket for `%<`;
+- **ASM68K version:** Warn if project does not set `/o ws+` flag as it breaks most of the debugger macros;
 - **ASM68K version:** Replace `endc` directives with `endif` for readability;
 - **ASM68K-Linkable version:** place strings of debugger macros (`.Write`, `.WriteLine`, `RaiseError` etc) in a separate section instead of inlining them, making generated code much smaller;
 - Replace `__global__*` prefix for exported labels with `MDDBG__*`;
