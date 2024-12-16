@@ -19,9 +19,9 @@ The base disassembly used for this installation is available here: https://githu
 
 ## Step 1. Download and unpack the debugger
 
-1. Open the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.5
-2. Download the AS version of MD Debugger (`errorhandler-as.7z`);
-3. Extract its files into disassembly's root directory.
+1. Open the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.6-mddebugger
+2. Download `errorhandler-2.6.zip` from this page, find `as` directory inside;
+3. Extract files from the `as` directory (AS bundle) into disassembly's root directory.
 
 ## Step 2. Include debugger macros in your disassembly
 
@@ -80,7 +80,7 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 >
 > Sonic 1 Disassembly's Lua build system was refactored in July 2023, but still changes every now and then. At the time of writing, it was last touched in August 2023. If your project is based on the disasembly from an earlier date, code changes may differ for you. Try seeing this file's history in Github to track these changes or use the [old guide](Sonic_1_Github_AS_old_2022.md).
 
-1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.5
+1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.6-mddebugger
 
 2. Download the ConvSym utility for your platform: Windows, Linux, FreeBSD or MacOS;
 

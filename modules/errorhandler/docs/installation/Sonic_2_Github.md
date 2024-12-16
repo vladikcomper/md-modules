@@ -7,9 +7,9 @@ The base disassembly used for this installation is available here: https://githu
 
 ## Step 1. Download and unpack the debugger
 
-1. Open the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.5
-2. Download the AS version of MD Debugger (`errorhandler-as.7z`);
-3. Extract its files into disassembly's root directory.
+1. Open the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.6-mddebugger
+2. Download `errorhandler-2.6.zip` from this page, find `as` directory inside;
+3. Extract files from the `as` directory (AS bundle) into disassembly's root directory.
 
 ## Step 2. Include debugger macros in your disassembly
 
@@ -133,7 +133,7 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 >
 > This step involves changing Lua build system, which can get updated every now and then. If that happens, code changes may differ for you. If you find out that this guide is not up-to-date with the disassembly, please open an issue in this repository or create a pull request with the update.
 
-1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.5
+1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.6-mddebugger
 
 2. Download the ConvSym utility for your platform: Windows, Linux, FreeBSD or MacOS;
 
