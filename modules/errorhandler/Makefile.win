@@ -30,7 +30,7 @@ as:	$(BUILD_DIR)\as\Debugger.asm $(BUILD_DIR)\as\ErrorHandler.asm
 
 as-extsym:	$(BUILD_DIR)\as-extsym\Debugger.asm $(BUILD_DIR)\as-extsym\ErrorHandler.asm
 
-gas:	$(BUILD_DIR)\gas\ErrorHandler.asm
+gas:	$(BUILD_DIR)\gas\ErrorHandler.s
 
 tests:	all
 	make -C tests -f .Makefile.win
@@ -79,7 +79,7 @@ $(BUILD_DIR)\as-extsym\Debugger.asm $(BUILD_DIR)\as-extsym\ErrorHandler.asm &: $
 	$(CBUNDLE) $(SRC_DIR)\Debugger.asm -def BUNDLE-AS -def EXTSYM -out $(BUILD_DIR)\as-extsym\Debugger.asm
 	$(CBUNDLE) $(SRC_DIR)\ErrorHandler.asm -def BUNDLE-AS -def EXTSYM -out $(BUILD_DIR)\as-extsym\ErrorHandler.asm
 
-$(BUILD_DIR)\gas\ErrorHandler.asm:  $(SRC_FILES) $(CORE_BUILD_DIR)\ErrorHandler.GAS.Blob.asm $(CORE_BUILD_DIR)\ErrorHandler.GAS.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
+$(BUILD_DIR)\gas\ErrorHandler.s:  $(SRC_FILES) $(CORE_BUILD_DIR)\ErrorHandler.GAS.Blob.asm $(CORE_BUILD_DIR)\ErrorHandler.GAS.Globals.asm | $(BUILD_DIR) $(CBUNDLE)
 	-md $(BUILD_DIR)\gas
 	$(CBUNDLE) $(SRC_DIR)\ErrorHandler-GAS.asm -out $(BUILD_DIR)\gas\ErrorHandler.s
 

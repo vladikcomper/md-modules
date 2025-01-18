@@ -2,16 +2,17 @@
 
 .PHONY:	all utils modules test clean
 
-MAKEFILE := Makefile
 ifeq ($(OS),Windows_NT)
-	MAKEFILE := Makefile.win
+MAKEFILE := Makefile.win
+include utils\.Makefile.win # For $(CONVSYM), $(CBUNDLE)
+else
+MAKEFILE := Makefile
+include utils/.Makefile # For $(CONVSYM), $(CBUNDLE)
 endif
 
 all:	utils modules
 
-utils:
-	$(MAKE) -C utils/convsym -f $(MAKEFILE)
-	$(MAKE) -C utils/cbundle -f $(MAKEFILE)
+utils: $(CONVSYM) $(CBUNDLE)
 
 modules:
 	$(MAKE) -C modules/mdshell -f $(MAKEFILE)
