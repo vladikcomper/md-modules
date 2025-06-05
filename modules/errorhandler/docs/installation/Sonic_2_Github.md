@@ -15,9 +15,9 @@ The base disassembly used for this installation is available here: https://githu
 
 Open `s2.asm` in your favorite text editor and paste the following right **above** `StartOfRom:`:
 
-	```m68k
-		include	"Debugger.asm"
-	```
+```m68k
+	include	"Debugger.asm"
+```
 
 Don't try to build the ROM just yet. We're still missing one important component: the Error Handler itself!
 
@@ -135,7 +135,7 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 
 1. Go back to the release page for the recent version of MD Debugger on GitHub: https://github.com/vladikcomper/md-modules/releases/tag/v.2.6-mddebugger
 
-2. Download the ConvSym utility for your platform: Windows, Linux, FreeBSD or MacOS;
+2. Download the ConvSym utility (`convsym-2.12.1.zip`) for your platform: Windows or Linux (FreeBSD, MacOS and others are also supported, but you need to build from the source code);
 
 3. Extract the ConvSym executable to the correct path in your disassembly depending on your platform:
 
@@ -160,18 +160,78 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 5. Open `build.lua` and locate the following lines:
 
 	```lua
-	success_continue_wrapper(common.build_rom("s2", "s2built", "", "-p=0 -z=0," .. (improved_sound_driver_compression and "saxman-optimised" or "saxman-bugged") .. ",Size_of_Snd_driver_guess,after", true, repository))
+	message_abort_wrapper(common.build_rom("s2", "s2built", "", "-p=0 -z=0," .. (improved_sound_driver_compression and "saxman-optimised" or "saxman-bugged") .. ",Size_of_Snd_driver_guess,after", true, repository))
 
-	-- Correct some pointers and other data that we couldn't until after the ROM had been assembled.
-	os.execute(tools.fixpointer .. " s2.h s2built.bin   off_3A294 MapRUnc_Sonic 0x2D 0 4   word_728C_user Obj5F_MapUnc_7240 2 2 1")
+	-- Correct the compressed sound driver size, which we couldn't do until p2bin had been ran.
+	local comp_z80_size, movewZ80CompSize
+
+	for line in io.lines("s2.h") do
+		local match_begin, match_end = string.find(line, "comp_z80_size")
+
+		if match_begin ~= nil then
+			comp_z80_size = tonumber(line:match("0x%x+", match_end))
+		end
+
+		local match_begin, match_end = string.find(line, "movewZ80CompSize")
+
+		if match_begin ~= nil then
+			movewZ80CompSize = tonumber(line:match("0x%x+", match_end))
+		end
+	end
+
+	if comp_z80_size ~= nil and movewZ80CompSize ~= nil then
+		local rom = io.open("s2built.bin", "r+b")
+
+		rom:seek("set", movewZ80CompSize + 2)
+		rom:write(string.pack(">I2", comp_z80_size))
+
+		rom:close()
+	end
 	```
 
-6. Just **after** the lines above, insert the following:
+	We want to make the code above reusable, so **replace** it with this:
+
+	```lua
+	-- Correct the compressed sound driver size, which we couldn't do until p2bin had been ran.
+	local function fixZ80CompSize(rompath)
+		local comp_z80_size, movewZ80CompSize
+
+		for line in io.lines("s2.h") do
+			local match_begin, match_end = string.find(line, "comp_z80_size")
+
+			if match_begin ~= nil then
+				comp_z80_size = tonumber(line:match("0x%x+", match_end))
+			end
+
+			local match_begin, match_end = string.find(line, "movewZ80CompSize")
+
+			if match_begin ~= nil then
+				movewZ80CompSize = tonumber(line:match("0x%x+", match_end))
+			end
+		end
+
+		if comp_z80_size ~= nil and movewZ80CompSize ~= nil then
+			local rom = io.open(rompath, "r+b")
+
+			rom:seek("set", movewZ80CompSize + 2)
+			rom:write(string.pack(">I2", comp_z80_size))
+
+			rom:close()
+		end
+	end
+
+	message_abort_wrapper(common.build_rom("s2", "s2built", "", "-p=0 -z=0," .. (improved_sound_driver_compression and "saxman-optimised" or "saxman-bugged") .. ",Size_of_Snd_driver_guess,after", true, repository))
+	fixZ80CompSize("s2built.bin")
+	```
+
+	We basically wrapped it into `local function ... end` block and replaced `"s2built.bin"` with `rompath` parameter. We also moved `common.build_rom` call below it and call our new `fixZ80CompSize` function specifying our ROM name dynamically.
+
+6. Finally, just **after** the code you modified above, add extra calls to build and fix a DEBUG ROM:
 
 	```lua
 	-- Create DEBUG build
-	success_continue_wrapper(common.build_rom("s2", "s2built.debug", "-D __DEBUG__ -OLIST s2.debug.lst", "-p=0 -z=0," .. (improved_sound_driver_compression and "saxman-optimised" or "saxman-bugged") .. ",Size_of_Snd_driver_guess,after", true, repository))
-	os.execute(tools.fixpointer .. " s2.h s2built.debug.bin   off_3A294 MapRUnc_Sonic 0x2D 0 4   word_728C_user Obj5F_MapUnc_7240 2 2 1")
+	message_abort_wrapper(common.build_rom("s2", "s2built.debug", "-D __DEBUG__ -OLIST s2.debug.lst", "-p=0 -z=0," .. (improved_sound_driver_compression and "saxman-optimised" or "saxman-bugged") .. ",Size_of_Snd_driver_guess,after", true, repository))
+	fixZ80CompSize("s2built.debug.bin")
 	```
 
 7. Now, find `os.remove("s2.h")` line just below and right **after** it, insert this fragment:
@@ -184,8 +244,7 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 		os.exit(false)
 	end
 	os.execute(extra_tools.convsym .. " s2.lst s2built.bin -input as_lst -range 0 FFFFFF -a")
-	os.execute(extra_tools.convsym .. " s2.lst s2built.debug.bin -input as_lst -exclude -filter \"z[A-Z].+\" -range 0 FFFFFF -a")
-
+	os.execute(extra_tools.convsym .. " s2.debug.lst s2built.debug.bin -input as_lst -exclude -filter \"z[A-Z].+\" -range 0 FFFFFF -a")
 	```
 
 8. Finally, another few lines below you'll find `common.fix_header("s2built.bin")`. Right **after** it, also add this:
@@ -201,17 +260,66 @@ If you're having issues with insertions listed above or want to double-check, he
 
 ```diff
 diff --git a/build.lua b/build.lua
-index 2699ff3..0c9903b 100755
+index 8da7917..a6d6488 100755
 --- a/build.lua
 +++ b/build.lua
-@@ -157,11 +157,25 @@ success_continue_wrapper(common.build_rom("s2", "s2built", "", "-p=0 -z=0," .. (
- -- Correct some pointers and other data that we couldn't until after the ROM had been assembled.
- os.execute(tools.fixpointer .. " s2.h s2built.bin   off_3A294 MapRUnc_Sonic 0x2D 0 4   word_728C_user Obj5F_MapUnc_7240 2 2 1")
+@@ -172,39 +172,59 @@ hashes_file:close()
+ -- Huzzah: we are done with assembling and compressing the music.
+ -- We can move onto building the rest of the ROM.
  
-+-- Create DEBUG build
-+success_continue_wrapper(common.build_rom("s2", "s2built.debug", "-D __DEBUG__ -OLIST s2.debug.lst", "-p=0 -z=0," .. (improved_sound_driver_compression and "saxman-optimised" or "saxman-bugged") .. ",Size_of_Snd_driver_guess,after", true, repository))
-+os.execute(tools.fixpointer .. " s2.h s2built.debug.bin   off_3A294 MapRUnc_Sonic 0x2D 0 4   word_728C_user Obj5F_MapUnc_7240 2 2 1")
+-message_abort_wrapper(common.build_rom("s2", "s2built", "", "-p=0 -z=0," .. (improved_sound_driver_compression and "saxman-optimised" or "saxman-bugged") .. ",Size_of_Snd_driver_guess,after", true, repository))
+-
+ -- Correct the compressed sound driver size, which we couldn't do until p2bin had been ran.
+-local comp_z80_size, movewZ80CompSize
++local function fixZ80CompSize(rompath)
++	local comp_z80_size, movewZ80CompSize
 +
++	for line in io.lines("s2.h") do
++		local match_begin, match_end = string.find(line, "comp_z80_size")
++
++		if match_begin ~= nil then
++			comp_z80_size = tonumber(line:match("0x%x+", match_end))
++		end
+ 
+-for line in io.lines("s2.h") do
+-	local match_begin, match_end = string.find(line, "comp_z80_size")
++		local match_begin, match_end = string.find(line, "movewZ80CompSize")
+ 
+-	if match_begin ~= nil then
+-		comp_z80_size = tonumber(line:match("0x%x+", match_end))
++		if match_begin ~= nil then
++			movewZ80CompSize = tonumber(line:match("0x%x+", match_end))
++		end
+ 	end
+ 
+-	local match_begin, match_end = string.find(line, "movewZ80CompSize")
++	if comp_z80_size ~= nil and movewZ80CompSize ~= nil then
++		local rom = io.open(rompath, "r+b")
+ 
+-	if match_begin ~= nil then
+-		movewZ80CompSize = tonumber(line:match("0x%x+", match_end))
++		rom:seek("set", movewZ80CompSize + 2)
++		rom:write(string.pack(">I2", comp_z80_size))
++
++		rom:close()
+ 	end
+ end
+ 
+-if comp_z80_size ~= nil and movewZ80CompSize ~= nil then
+-	local rom = io.open("s2built.bin", "r+b")
++message_abort_wrapper(common.build_rom("s2", "s2built", "", "-p=0 -z=0," .. (improved_sound_driver_compression and "saxman-optimised" or "saxman-bugged") .. ",Size_of_Snd_driver_guess,after", true, repository))
+ 
+-	rom:seek("set", movewZ80CompSize + 2)
+-	rom:write(string.pack(">I2", comp_z80_size))
++fixZ80CompSize("s2built.bin")
+ 
+-	rom:close()
+-end
++-- Create DEBUG build
++message_abort_wrapper(common.build_rom("s2", "s2built.debug", "-D __DEBUG__ -OLIST s2.debug.lst", "-p=0 -z=0," .. (improved_sound_driver_compression and "saxman-optimised" or "saxman-bugged") .. ",Size_of_Snd_driver_guess,after", true, repository))
++
++fixZ80CompSize("s2built.debug.bin")
+ 
  -- Remove the header file, since we no longer need it.
  os.remove("s2.h")
  
@@ -222,14 +330,15 @@ index 2699ff3..0c9903b 100755
 +	os.exit(false)
 +end
 +os.execute(extra_tools.convsym .. " s2.lst s2built.bin -input as_lst -range 0 FFFFFF -a")
-+os.execute(extra_tools.convsym .. " s2.lst s2built.debug.bin -input as_lst -exclude -filter \"z[A-Z].+\" -range 0 FFFFFF -a")
++os.execute(extra_tools.convsym .. " s2.debug.lst s2built.debug.bin -input as_lst -exclude -filter \"z[A-Z].+\" -range 0 FFFFFF -a")
 +
  -- Correct the ROM's header with a proper checksum and end-of-ROM value.
  common.fix_header("s2built.bin")
-+common.fix_header("s2built.debug.bin")
  
++common.fix_header("s2built.debug.bin")
++
  -- A successful build; we can quit now.
- os.exit(exit_code)
+ os.exit(exit_code, false)
 ```
 </details>
 
@@ -263,7 +372,7 @@ We can display additional information about our exception if needed:
 
 ```diff
 -	RaiseError "Intentional crash test"
-+	RaiseError "Intentional crash test:%<endl>Level ID: %<.w Current_ZoneAndAct>%<endl>Frame: %<.w Timer_frames>"
++	RaiseError "Intentional crash test:%<endl>Level ID: %<.w Current_ZoneAndAct>"
 ```
 
 Now, let's test a sample debugger, shall we? Create a new `SampleDebugger.asm` file in your disassembly's root and paste the following code to it:
@@ -299,8 +408,8 @@ Include your new file somewhere in `s2.asm`. I recommend including it right abov
 
 To use this debugger in `RaiseError`, pass its label (`SampleDebugger`) as the second argument:
 ```diff
--	RaiseError "Intentional crash test:%<endl>Level ID: %<.w v_zone>%<endl>Frame: %<.w v_framecount>"
-+	RaiseError "Intentional crash test:%<endl>Level ID: %<.w Current_ZoneAndAct>%<endl>Frame: %<.w Timer_frames>", SampleDebugger
+-	RaiseError "Intentional crash test:%<endl>Level ID: %<.w Current_ZoneAndAct>"
++	RaiseError "Intentional crash test:%<endl>Level ID: %<.w Current_ZoneAndAct>", SampleDebugger
 ```
 
 If you now try to run it, you should see a differently looking exception screen. It now displays camera coordinates and object slots.
