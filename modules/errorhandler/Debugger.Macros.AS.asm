@@ -112,7 +112,7 @@ RaiseError:	macro	string, consoleprogram, opts
 	move.w	sr, -(sp)
 	__FSTRING_GenerateArgumentsCode string
 	jsr		MDDBG__ErrorHandler
-	__FSTRING_GenerateDecodedString string
+	__FSTRING_GenerateDecodedString string, 0 ; 0 = no automatic newline
 	if ("consoleprogram"<>"")			; if console program offset is specified ...
 		.__align_flag:	set	((((*)&1)!1)*_eh_align_offset)
 		if "opts"<>""
@@ -212,7 +212,7 @@ _Console:	macro	argument1, argument2
 
 		bra.w	.__leave
 	.__data:
-		__FSTRING_GenerateDecodedString argument1
+		__FSTRING_GenerateDecodedString argument1, 0 ; 0 = no automatic newline
 		!align	2
 	.__leave:
 
@@ -224,7 +224,7 @@ _Console:	macro	argument1, argument2
 			movem.l	a0-a2/d7, -(sp)
 			lea		4*4(sp), a2
 			lea		.__data(pc), a1
-			jsr		MDDBG__Console_WriteLine_Formatted
+			jsr		MDDBG__Console_Write_Formatted
 			movem.l	(sp)+, a0-a2/d7
 			if (.__sp>8)
 				lea		.__sp(sp), sp
@@ -235,12 +235,12 @@ _Console:	macro	argument1, argument2
 		else
 			move.l	a0, -(sp)
 			lea		.__data(pc), a0
-			jsr		MDDBG__Console_WriteLine
+			jsr		MDDBG__Console_Write
 			move.l	(sp)+, a0
 		endif
 		bra.w	.__leave
 	.__data:
-		__FSTRING_GenerateDecodedString argument1
+		__FSTRING_GenerateDecodedString argument1, 1 ; 1 = automatic newline at the end
 		!align	2
 	.__leave:
 
@@ -349,7 +349,7 @@ _KDebug	macro	argument1
 
 		bra.w	.__leave
 	.__data:
-		__FSTRING_GenerateDecodedString argument1
+		__FSTRING_GenerateDecodedString argument1, 0 ; 0 = no automatic newline
 		!align	2
 	.__leave:
 
@@ -379,7 +379,7 @@ _KDebug	macro	argument1
 
 		bra.w	.__leave
 	.__data:
-		__FSTRING_GenerateDecodedString argument1
+		__FSTRING_GenerateDecodedString argument1, 0 ; 0 = no automatic newline
 		!align	2
 	.__leave:
 
@@ -408,7 +408,7 @@ _KDebug	macro	argument1
 __ErrorMessage:	macro string, opts
 		__FSTRING_GenerateArgumentsCode string
 		jsr		MDDBG__ErrorHandler
-		__FSTRING_GenerateDecodedString string
+		__FSTRING_GenerateDecodedString string, 0 ; 0 = no automatic newline
 
 		if DEBUGGER__EXTENSIONS__ENABLE
 		.__align_flag: set (((*)&1)!1)*_eh_align_offset
@@ -591,7 +591,7 @@ __FSTRING_GenerateArgumentsCode: macro string
 	endm
 
 ; ---------------------------------------------------------------
-__FSTRING_GenerateDecodedString:	macro string
+__FSTRING_GenerateDecodedString:	macro string, addnewline
 
 	.__lpos:	set		0		; start position
 	.__pos:	set		strstr(string, "%<")
@@ -652,6 +652,10 @@ __FSTRING_GenerateDecodedString:	macro string
 	endm
 
 	; Write part of string before the end
-	dc.b	substr(string, .__lpos, 0), 0
+	dc.b	substr(string, .__lpos, 0)
+	if addnewline
+		dc.b	endl
+	endif
+	dc.b	0
 
 	endm

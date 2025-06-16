@@ -113,15 +113,15 @@ RaiseError:	macro	string, console_program, opts
 	opt l-
 @data\@:
 	popo
-	__FSTRING_GenerateDecodedString \string
+	__FSTRING_GenerateDecodedString \string, 0 ; 0 = no automatic newline
 
 #else
 @data\@:
-	__FSTRING_GenerateDecodedString \string
+	__FSTRING_GenerateDecodedString \string, 0 ; 0 = no automatic newline
 
 #endif
 #else
-	__FSTRING_GenerateDecodedString \string
+	__FSTRING_GenerateDecodedString \string, 0 ; 0 = no automatic newline
 #endif
 	if strlen("\console_program")			; if console program offset is specified ...
 		dc.b	\opts+_eh_enter_console|(((*&1)^1)*_eh_align_offset)	; add flag "_eh_align_offset" if the next byte is at odd offset ...
@@ -205,7 +205,7 @@ _Console	macro
 #else
 			lea		@str\@, a1
 #endif
-			jsr		MDDBG__Console_\0\_Formatted
+			jsr		MDDBG__Console_Write_Formatted
 			movem.l	(sp)+, a0-a2/d7
 			if (__sp>8)
 				lea		__sp(sp), sp
@@ -221,14 +221,14 @@ _Console	macro
 #else
 			lea		@str\@, a0
 #endif
-			jsr		MDDBG__Console_\0
+			jsr		MDDBG__Console_Write
 			move.l	(sp)+, a0
 		endif
 
 #ifndef LINKABLE-WITH-DATA-SECTION
 		bra.w	@instr_end\@
 	@str\@:
-		__FSTRING_GenerateDecodedString \1
+		__FSTRING_GenerateDecodedString \1, <strcmp("\0","writeline")|strcmp("\0","WriteLine")> ; add automatic newline if method is ".WriteLine"
 		even
 	@instr_end\@:
 #else
@@ -236,7 +236,7 @@ _Console	macro
 		pushs
 		section dbgstrings
 	@str\@:
-		__FSTRING_GenerateDecodedString \1
+		__FSTRING_GenerateDecodedString \1, <strcmp("\0","writeline")|strcmp("\0","WriteLine")> ; add automatic newline if method is ".WriteLine"
 		even
 
 		; Back to previous section (it should be 'rom' for this trick to work)
@@ -373,7 +373,7 @@ _KDebug:	macro
 #ifndef LINKABLE-WITH-DATA-SECTION
 		bra.w	@instr_end\@
 	@str\@:
-		__FSTRING_GenerateDecodedString \1
+		__FSTRING_GenerateDecodedString \1, 0 ; 0 = no automatic newline
 		even
 	@instr_end\@:
 #else
@@ -381,7 +381,7 @@ _KDebug:	macro
 		pushs
 		section dbgstrings
 	@str\@:
-		__FSTRING_GenerateDecodedString \1
+		__FSTRING_GenerateDecodedString \1, 0 ; 0 = no automatic newline
 		even
 
 		; Back to previous section
@@ -416,7 +416,7 @@ _KDebug:	macro
 __ErrorMessage:	macro	string, opts
 		__FSTRING_GenerateArgumentsCode \string
 		jsr		MDDBG__ErrorHandler
-		__FSTRING_GenerateDecodedString \string
+		__FSTRING_GenerateDecodedString \string, 0 ; 0 = no automatic newline
 		if DEBUGGER__EXTENSIONS__ENABLE
 			dc.b	\opts+_eh_return|(((*&1)^1)*_eh_align_offset)	; add flag "_eh_align_offset" if the next byte is at odd offset ...
 			even													; ... to tell Error handler to skip this byte, so it'll jump to ...
@@ -498,7 +498,7 @@ __FSTRING_GenerateArgumentsCode:	macro string
 	endm
 
 ; ---------------------------------------------------------------
-__FSTRING_GenerateDecodedString:	macro string
+__FSTRING_GenerateDecodedString:	macro string, addnewline
 
 	__lpos:	= 1							; start position
 	__pos:	= instr(\string,'%<')		; token position
@@ -558,6 +558,9 @@ __FSTRING_GenerateDecodedString:	macro string
 	; Write part of string before the end
 	__substr:	substr	__lpos,,\string
 	dc.b	"\__substr"
+	if addnewline
+		dc.b	endl
+	endif
 	dc.b	0
 
 	endm
