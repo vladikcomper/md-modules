@@ -392,7 +392,7 @@ _KDebug:	macro
 #endif
 
 	elseif strcmp("\0","breakline")|strcmp("\0","BreakLine")
-		jsr		MDDBG__KDebug_FlushLine
+		move.w	#$9E00, ($C00004).l
 
 	elseif strcmp("\0","starttimer")|strcmp("\0","StartTimer")
 		move.w	#$9FC0, ($C00004).l

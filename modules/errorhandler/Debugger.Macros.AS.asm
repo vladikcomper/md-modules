@@ -384,7 +384,7 @@ _KDebug	macro	argument1
 	.__leave:
 
 	case "breakline"
-		jsr		MDDBG__KDebug_FlushLine
+		move.w	#$9E00, ($C00004).l
 
 	case "starttimer"
 		move.w	#$9FC0, ($C00004).l
