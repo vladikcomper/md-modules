@@ -15,7 +15,7 @@ The base disassembly used for this installation is available here: https://githu
 
 ## Step 2. Include debugger macros in your disassembly
 
-Open `sonic.asm` file in your favorite text editor and add the following like at the beginning to include Error Handler's main definitions:
+Open `sonic.asm` file in your favorite text editor and add the following line at the beginning to include Error Handler's main definitions:
 
 ```m68k
 	include	"Debugger.asm"
@@ -60,7 +60,7 @@ The `Debugger.asm` file you've included earlier is just a set of macros definiti
 
 	You need to remove all the code from the `BusError:` line through the end of "ErrorWaitForC:" (look for `; End of function ErrorWaitForC` line). This is approx. 175 lines of code to remove.
 
-3. After removing the old exceptions code, run `build.bat` and make sure your ROM builds properly.
+3. After removing the old exceptions code, run `build.bat` and make sure your ROM builds properly. You may get a warning regarding assembler options; don't worry, this will be fixed in the next step!
 
 Once everything's done, congratulations, the Error Handler is installed, you're almost there!
 
@@ -75,7 +75,9 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 4. Now, open `build.bat` and locate the following lines:
 
 	```shell
-	asm68k /k /p /o ae-,c+ sonic.asm, s1built.bin >errors.txt, , sonic.lst
+	IF EXIST s1built.bin move /Y s1built.bin s1built.prev.bin >NUL
+	asm68k /k /m /p /o ae-,oz+,c+,l+ sonic.asm, s1built.bin >errors.txt, , sonic.lst
+	type errors.txt
 	fixheadr.exe s1built.bin
 	```
 
@@ -83,14 +85,13 @@ Once everything's done, congratulations, the Error Handler is installed, you're 
 
 	```shell
 	rem RELEASE BUILD
-	asm68k /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o ae- /o v+ /o c+ /p sonic.asm, s1built.bin, s1built.sym, sonic.lst
-	convsym.exe s1built.sym s1built.bin -a
+	asm68k /k /m /o ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae-,v+,c+,l+ /p sonic.asm, s1built.bin, s1built.sym, sonic.lst
+	convsym.exe s1built.sym s1built.bin -a -range 0 FFFFFF -inopt "/localSign=." -exclude -filter "(SMPS_(Track|RAM).*)|(.+_(END|End|end))"
 	fixheadr.exe s1built.bin
 
 	rem DEBUG BUILD
-	asm68k /k /m /o ws+ /o op+ /o os+ /o ow+ /o oz+ /o oaq+ /o osq+ /o omq+ /o ae- /o v+ /o c+ /p /e __DEBUG__=1 sonic.asm, s1built.debug.bin, s1built.debug.sym, s1built.debug.lst
-	convsym.exe s1built.debug.sym s1built.debug.bin -a
-	rompad.exe s1built.debug.bin 255 0
+	asm68k /k /m /o ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae-,v+,c+,l+ /p /e __DEBUG__=1 sonic.asm, s1built.debug.bin, s1built.debug.sym, s1built.debug.lst
+	convsym.exe s1built.debug.sym s1built.debug.bin -a -range 0 FFFFFF -inopt "/localSign=." -exclude -filter "(SMPS_(Track|RAM).*)|(.+_(END|End|end))"
 	fixheadr.exe s1built.debug.bin
 
 	pause
@@ -108,7 +109,7 @@ That's it! Save `build.bat` and run it. Make sure the are no errors in the outpu
 
 Now, let's try your freshly installed debugger in action. For testing purposes, let's make it so the game shows custom exception if you press A playing as Sonic. We then extend and customize our exception a little.
 
-In `sonic.asm`, find `Sonic_Normal:`. Right below it, add the following lines as shown:
+In `_incObj/01 Sonic.asm`, find `Sonic_Normal:`. Right below it, add the following lines as shown:
 
 ```m68k
 Sonic_Normal:
