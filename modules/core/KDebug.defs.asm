@@ -24,8 +24,7 @@ __KDEBUG_TEXT_BUFFER_SIZE__:	equ	$30
 	endif
 
 
-KDebug &
-	macro
+KDebug: macro
 
 	if def(__DEBUG__)	; KDebug interface is only available in DEBUG builds
 	if strcmp("\0","write")|strcmp("\0","writeline")|strcmp("\0","Write")|strcmp("\0","WriteLine")
@@ -57,7 +56,7 @@ KDebug &
 		move.w	(sp)+, sr
 		bra.w	@instr_end\@
 	@str\@:
-		__FSTRING_GenerateDecodedString \1
+		__FSTRING_GenerateDecodedString \1, 0 ; 0 = no automatic newline
 		even
 	@instr_end\@:
 
