@@ -6,7 +6,8 @@
 UTILS_DIR := ../../../utils
 include ../../../utils/.Makefile
 
-ASM68K := wine $(realpath ../../exec/asm68k.exe)
+ASM68K := wine ../../exec/asm68k.exe
+ASM68K_UPPER_DIR := wine ../exec/asm68k.exe
 ASFLAGS := /q /k /m /o c+,ws+,op+,os+,ow+,oz+,oaq+,osq+,omq+,ae-,v+
 
 TEST_BUILD_DIR := ../../../build/modules/errorhandler-core/tests
@@ -27,11 +28,11 @@ formatstring:	| $(TEST_BUILD_DIR) $(CONVSYM)
 	$(CONVSYM) $(TEST_BUILD_DIR)/FormatString.sym $(TEST_BUILD_DIR)/FormatString.gen -a -ref 200
 
 fullexception:	| $(TEST_BUILD_DIR) $(CONVSYM)
-	cd .. && $(ASM68K) $(ASFLAGS) /p tests/FullException.asm, tests/$(TEST_BUILD_DIR)/FullException.gen, tests/$(TEST_BUILD_DIR)/FullException.sym, tests/$(TEST_BUILD_DIR)/FullException.lst
+	cd .. && $(ASM68K_UPPER_DIR) $(ASFLAGS) /p tests/FullException.asm, tests/$(TEST_BUILD_DIR)/FullException.gen, tests/$(TEST_BUILD_DIR)/FullException.sym, tests/$(TEST_BUILD_DIR)/FullException.lst
 	$(CONVSYM) $(TEST_BUILD_DIR)/FullException.sym $(TEST_BUILD_DIR)/FullException.gen -a
 
 guesscaller:	| $(TEST_BUILD_DIR) $(CONVSYM)
-	cd .. && $(ASM68K) $(ASFLAGS) /p tests/GuessCaller.asm, tests/$(TEST_BUILD_DIR)/GuessCaller.gen, tests/$(TEST_BUILD_DIR)/GuessCaller.sym, tests/$(TEST_BUILD_DIR)/GuessCaller.lst
+	cd .. && $(ASM68K_UPPER_DIR) $(ASFLAGS) /p tests/GuessCaller.asm, tests/$(TEST_BUILD_DIR)/GuessCaller.gen, tests/$(TEST_BUILD_DIR)/GuessCaller.sym, tests/$(TEST_BUILD_DIR)/GuessCaller.lst
 	$(CONVSYM) $(TEST_BUILD_DIR)/GuessCaller.sym $(TEST_BUILD_DIR)/GuessCaller.gen -a -ref 200
 
 
