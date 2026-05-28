@@ -27,6 +27,15 @@ Main:
 	; found at "RegisterData" byte-array (see below)
 	movem.l	RegisterData(pc), d0-a6
 
+	; Test static assertions
+#ifdef ASM68K
+		static_assert 2+2=4
+		static_assert def(__DEBUG__)
+#else
+		static_assert '2+2=4'
+		static_assert '__DEBUG__=1'
+#endif
+
 	Console.Run TestProgram
 
 ; --------------------------------------------------------------

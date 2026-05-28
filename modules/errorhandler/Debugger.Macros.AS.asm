@@ -8,8 +8,27 @@
 	supmode on				; bypass warnings on privileged instructions
 
 ; ---------------------------------------------------------------
-; Creates assertions for debugging
+; Creates compile-time assertions
 ; ---------------------------------------------------------------
+; EXAMPLES:
+;	static_assert '2+2=4'
+;	static_assert 'MY_CONST=42'
+; ---------------------------------------------------------------
+
+static_assert:	macro EXPR
+	if VAL(EXPR)
+	else
+		!error "Assertion failed: EXPR"
+	endif
+	endm
+
+
+; ---------------------------------------------------------------
+; Creates run-time assertions for debugging
+; ---------------------------------------------------------------
+; NOTE:
+;	Run-time asserts only work if `__DEBUG__` is defined.
+;
 ; EXAMPLES:
 ;	assert.b	d0, eq, #1		; d0 must be $01, or else crash
 ;	assert.w	d5, pl			; d5 must be positive
