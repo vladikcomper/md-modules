@@ -2,7 +2,9 @@
 # WARNING! It's not recommended to invoke this Makefile manually, since it doesn't track test dependencies.
 # Please run `make tests` from the upper directory instead.
 
-include ../../../utils/.Makefile # For $(CONVSYM), $(CBUNDLE) etc
+# For $(CONVSYM), $(CBUNDLE) etc
+UTILS_DIR := ../../../utils
+include ../../../utils/.Makefile
 
 ASM68K := wine ../../exec/asm68k.exe
 PSYLINK := wine ../../exec/psylink.exe

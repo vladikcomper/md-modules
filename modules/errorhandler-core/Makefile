@@ -1,5 +1,7 @@
 
-include ../../utils/.Makefile # For $(CONVSYM), $(CBUNDLE) etc
+# For $(CONVSYM), $(CBUNDLE) etc
+UTILS_DIR := ../../utils
+include ../../utils/.Makefile
 
 
 BUILD_DIR ?= ../../build/modules/errorhandler-core

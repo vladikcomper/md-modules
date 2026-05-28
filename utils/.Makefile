@@ -1,7 +1,9 @@
 
-# WARNING! Please don't invoke this Makefile directly
+# This Makfile shouldn't be invoked directly!
 
-UTILS_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+ifndef UTILS_DIR
+$(error UTILS_DIR wasn't specified. Don't invoke this file directly!)
+endif
 
 CONVSYM := $(UTILS_DIR)/../build/utils/convsym
 CBUNDLE := $(UTILS_DIR)/../build/utils/cbundle

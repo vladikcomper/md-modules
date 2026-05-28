@@ -9,7 +9,7 @@ This repository includes modules for Mega-Drive projects (`modules/` directory) 
 ### Modules
 
 * [MD Debugger and Error Handler](modules/errorhandler) - also known as _The Advanced Error Handler and Debugger_, handles exceptions and helps to debug your Mega-Drive ROMs in any emulators and on the real hardware;
-* [MD-Shell](modules/mdshell) - a stand-alone easy to use "assembly header" to run small programs as Mega-Drive ROMs, ncludes MD Debugger.
+* [MD-Shell](modules/mdshell) - a stand-alone easy to use "assembly header" to run small programs as Mega-Drive ROMs, includes MD Debugger.
 
 ### Utilities
 
@@ -31,30 +31,11 @@ This repository aims to be cross-platform, designed with Linux, Windows, MacOS (
 
 ### Windows
 
-> [!NOTE]
+Please install WSL2 with Ubuntu (see [How to install Linux on Windows with WSL](https://learn.microsoft.com/en-us/windows/wsl/install)), then follow Linux instructions.
+
+> [!WARNING]
 >
-> Only Windows 7 or newer is supported because of Python 3.8 and C++20 requirements. This guide targets Windows 10 or later; for Windows 7 you need alternative ways to install dependencies which are not covered here.
-
-Make sure you have all the dependencies. This example uses Chocolatey to automate dependency installation, but you may choose any other option that works for you:
-
-```sh
-choco install mingw python3 make
-```
-
-Once dependencies are installed, build process is the same as on Unix-like systems. In Command Prompt (`cmd.exe`), use one of the following commands:
-
-```sh
-make
-# or separately:
-make utils
-make modules
-```
-
-> [!NOTE]
->
-> You must have `make.exe`, `gcc.exe`, `python3.exe` and a few others available via `PATH` environment variable for all commands to work properly. Chocolatey and other package managers usually take care of that, but if you get "XXX is not recognized as an internal or external command ..." errors, then your shell cannot locate those executables, so you have to find their installation paths and append to the `PATH` variable manually.
-
-If you want to invoke `make` from individual directories however (not root), be sure to use `make -f Makefile.win` instead (the root Makefile does it automatically).
+> Make sure to install this repository on Linux-side file system, otherwise a lot of executables may not run!
 
 ### Linux
 
