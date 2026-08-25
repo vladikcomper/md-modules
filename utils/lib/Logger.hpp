@@ -42,11 +42,12 @@ namespace Logger {
 		}
 	}
 
+	// WARNING! Do not inline `Logger::debug` calls; consider them unlikely; inlining breaks hot paths
     template <typename... Args>
-    inline void debug(std::format_string<Args...> fmt, Args&&... args) {
+    void debug(std::format_string<Args...> fmt, Args&&... args) {
         internal::log(Level::DEBUG, "[DEBUG] ", fmt, std::forward<Args>(args)...);
     }
-	inline void debug(const std::string_view msg) {
+	void debug(const std::string_view msg) {
 		internal::log(Level::DEBUG, "[DEBUG] ", msg);
 	}
 
