@@ -14,6 +14,7 @@
 #include <Huffman.hpp>
 #include <BitStream.hpp>
 #include <IO.hpp>
+#include <Logger.hpp>
 #include <utils.hpp>
 
 #include "OutputWrapper.hpp"
@@ -57,7 +58,7 @@ struct Output__Deb2 : public OutputWrapper {
 		uint16_t lastBlock = (lastSymbolPtr->first) >> 16;
 
 		if (lastBlock > 0xFF) {		// blocks index table is limited to $100 entries (which is enough to cover all the 24-bit addressable space)
-			IO::Log(IO::error, "Too many memory blocks to allocate ($%X), truncating to $100 blocks. Some symbols will be lost.", lastBlock+1);
+			Logger::error("Too many memory blocks to allocate (${:X}), truncating to $100 blocks. Some symbols will be lost.", lastBlock+1);
 			lastBlock = 0xFF;
 		}
 
@@ -72,7 +73,7 @@ struct Output__Deb2 : public OutputWrapper {
 		/* Generate Huffman-codes and create decoding table */
 		/* ------------------------------------------------ */
 
-		IO::Log( IO::debug, "Building an encoding table...");
+		Logger::debug("Building an encoding table...");
 
 		/* Generate table of character frequencies based on symbol names */
 		uint32_t freqTable[0x100] = { 0 };
@@ -107,7 +108,7 @@ struct Output__Deb2 : public OutputWrapper {
 		/* ------------------------------------- */
 
 		{
-			IO::Log(IO::debug, "Generating symbol data blocks...");
+			Logger::debug("Generating symbol data blocks...");
 
 			auto symbolPtr = symbols.begin();
 			struct SymbolRecord { uint16_t offset; uint16_t symbolDataPtr; };
@@ -143,12 +144,12 @@ struct Output__Deb2 : public OutputWrapper {
 					}
 
 					if (SymbolsHeap.getCurrentPos() > 0xFFFF) {
-						IO::Log(IO::error,"Symbols heap for block %02X exceeded 64kb limit, no more symbols can be stored in this block.", block);
+						Logger::error("Symbols heap for block {:02X} exceeded 64kb limit, no more symbols can be stored in this block.", block);
 						break;
 					}
 					
 					else if (offsetsData.size() > 0x3FFF) {
-						IO::Log(IO::error, "Too many symbols in block %02X, no more symbols can be stored in this block.", block);
+						Logger::error("Too many symbols in block {:02X}, no more symbols can be stored in this block.", block);
 						break;
 					}
 
@@ -177,8 +178,8 @@ struct Output__Deb2 : public OutputWrapper {
 
 				/* Write offsets block and their corresponding encoded symbols heap */
 				if ( offsetsData.size() > 0 ) {
-					IO::Log(IO::debug,
-						"Block %02X: %d bytes (offsets list: %d bytes, symbols heap: %d bytes)",
+					Logger::debug(
+						"Block {:02X}: {} bytes (offsets list: {} bytes, symbols heap: {} bytes)",
 						block, 2+offsetsData.size()*4+SymbolsHeap.size(), offsetsData.size()*4, SymbolsHeap.size()
 					);
 

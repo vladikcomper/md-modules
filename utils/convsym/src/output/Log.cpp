@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include <IO.hpp>
+#include <Logger.hpp>
 
 #include "OptsParser.hpp"
 #include "OutputWrapper.hpp"
@@ -32,7 +33,7 @@ struct Output__Log : public OutputWrapper {
 		bool alignOnAppend = true
 	) {
 		if (appendOffset || pointerOffset || !alignOnAppend) {
-			IO::Log(IO::warning, "Append options aren't supported by the \"log\" output parser.");
+			Logger::warn("Append options aren't supported by the \"log\" output parser.");
 		}
 
 		// Supported options:
@@ -53,12 +54,12 @@ struct Output__Log : public OutputWrapper {
 		}
 		auto numSpecifiers = std::ranges::count(lineFormat, '%');
 		if (numSpecifiers < 2) {
-			IO::Log(IO::warning, "Line format string likely has too few arguments (try '%%X: %%s')");
+			Logger::warn("Line format string likely has too few arguments (try '%%X: %%s')");
 		}
 
 		IO::FileOutput output = IO::FileOutput(fileName, IO::text);
 		if (!output.good()) {
-			IO::Log(IO::fatal, "Couldn't open file \"%s\"", fileName);
+			Logger::error("Couldn't open file \"{}\"", fileName);
 			throw "IO error";
 		}
 

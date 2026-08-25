@@ -9,6 +9,7 @@
 #include <map>
 
 #include <IO.hpp>
+#include <Logger.hpp>
 #include <OptsParser.hpp>
 
 #include "InputWrapper.hpp"
@@ -73,7 +74,7 @@ struct Input__ASM68K_Sym : public InputWrapper {
 			if (label[0] == localLabelSymbol) {
 				// Ignore local labels if "processLocals" is disabled
 				if ( !optProcessLocalLabels ) {
-					IO::Log(IO::debug, "Local symbol ignored: %s", label.c_str());
+					Logger::debug("Local symbol ignored: {}", label);
 					continue;
 				}
 

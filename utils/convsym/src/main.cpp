@@ -14,6 +14,7 @@
 #include <regex>
 
 #include <IO.hpp>
+#include <Logger.hpp>
 #include <ArgvParser.hpp>
 #include <string_view>
 #include <sys/types.h>
@@ -29,7 +30,7 @@ int main (int argc, const char ** argv) {
 
 	/* Provide help if no sufficient arguments were passed */
 	if (argc<2) {
-		printf(
+		std::cout <<
 			"ConvSym utility version 2.12.1\n"
 			"(c) 2016-2024, vladikcomper\n"
 			"\n"
@@ -115,7 +116,7 @@ int main (int argc, const char ** argv) {
 			"\n"
 			"  -exclude\n"
 			"    If set, filter works in \"exclude mode\": all labels that DO match the -filter regex are removed from the list, everything else stays.\n"
-		);
+		;
 		return -1;
 	}
 
@@ -174,26 +175,26 @@ int main (int argc, const char ** argv) {
 			});
 		}
 		catch (const char* err) {
-			IO::Log(IO::fatal, err);
+			Logger::error(err);
 			return -1;
 		}
 	}
 
 	/* Apply configuration based off the parameters parsed ... */
-	IO::LogLevel = optDebug ? IO::debug : IO::warning;
+	Logger::logLevel = optDebug ? Logger::Level::DEBUG : Logger::Level::WARN;
 	if (optAppend == true) {
 		if (!appendOffsetRaw.empty()) {
-			IO::Log(IO::warning, "Using conflicting parameters: -a and -org. The -org parameter has no effect");
+			Logger::warn("Using conflicting parameters: -a and -org. The -org parameter has no effect");
 			appendOffsetRaw = "";
 		}
 		appendOffset = -1;
 	}
 	if (optFilterExclude && !filterRegexStr.length()) {
-		IO::Log(IO::warning, "Using -exclude parameter without -filter [regex]. The -exclude parameter has no effect");
+		Logger::warn("Using -exclude parameter without -filter [regex]. The -exclude parameter has no effect");
 		optFilterExclude = false;
 	}
 	if (optToUpper && optToLower) {
-		IO::Log(IO::warning, "Using conflicting parameters: -toupper and -tolower. The -toupper parameter has no effect");
+		Logger::warn("Using conflicting parameters: -toupper and -tolower. The -toupper parameter has no effect");
 		optToUpper = false;
 	}
 
@@ -217,7 +218,7 @@ int main (int argc, const char ** argv) {
 					offset = std::stoul(offsetStrRaw, 0, 16);
 				}
 				catch (std::invalid_argument const &) {
-					IO::Log(IO::fatal, "Couldn't parse hex number in parameters: %s", offsetStrRaw.c_str());
+					Logger::error("Couldn't parse hex number in parameters: {}", offsetStrRaw);
 					return -2;
 				}
 			}
@@ -231,14 +232,14 @@ int main (int argc, const char ** argv) {
 		input->parse(symbolTable, inputFileName, inputOpts.c_str());
 	}
 	catch (const char* err) {
-		IO::Log(IO::fatal, "Input file parsing failed: %s", err); 
+		Logger::error("Input file parsing failed: {}", err);
 		return -1;
 	}
 
 	/* Make sure all symbols referenced in options (e.g. "-ref", "-org"), if any, were resolved */
 	for (const auto & [label, ptr] : symbolToOffsetResolveTable) {
 		if (ptr.get() == (uint32_t)-2) {
-			IO::Log(IO::fatal, "Couldn't resolve symbol \"%s\"", std::string(label).c_str());
+			Logger::error("Couldn't resolve symbol \"{}\"", label);
 			return -2;
 		}
 	}
@@ -287,12 +288,12 @@ int main (int argc, const char ** argv) {
 			output->parse(symbolTable.symbols, outputFileName, appendOffset, pointerOffset, outputOpts.c_str(), !optNoAlignOnAppend);
 		}
 		catch (const char* err) {
-			IO::Log(IO::fatal, "Output generation failed: %s", err);
+			Logger::error("Output generation failed: {}", err);
 			return -2;
 		}
 	}
 	else {
-		IO::Log(IO::error, "No symbols passed for output, operation aborted");
+		Logger::error("No symbols passed for output, operation aborted");
 		return -3;
 	}
 

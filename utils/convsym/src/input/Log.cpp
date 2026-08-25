@@ -10,6 +10,7 @@
 #include <set>
 
 #include <IO.hpp>
+#include <Logger.hpp>
 #include <OptsParser.hpp>
 
 #include "InputWrapper.hpp"
@@ -76,7 +77,7 @@ struct Input__Log : public InputWrapper {
 		
 			// If line doesn't include proper separator, skip this line ...
 			if ( *ptr++ != labelSeparator ) {
-				IO::Log(IO::debug, "Failed to parse line %d, skipping", lineNum);
+				Logger::debug("Failed to parse line {}, skipping", lineNum);
 				continue;
 			} 
 			SKIP_SPACES(ptr);

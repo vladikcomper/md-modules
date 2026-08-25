@@ -9,6 +9,7 @@
 #include <map>
 
 #include <IO.hpp>
+#include <Logger.hpp>
 
 #include "InputWrapper.hpp"
 
@@ -21,7 +22,7 @@ struct Input__AS_Listing_Experimental : public InputWrapper {
 	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts) {
 		const int sBufferSize = 1024;
 		if (*opts) {
-			IO::Log(IO::warning, "-inopt is not supported by this parser");
+			Logger::warn("-inopt is not supported by this parser");
 		}
 
 		// Variables
@@ -123,7 +124,7 @@ struct Input__AS_Listing_Experimental : public InputWrapper {
 						}
 					}
 					else {
-						IO::Log( IO::debug, "Symbol %s at offset %X ignored: its offset is less than the previous symbol successfully fetched", label, offset );
+						Logger::debug("Symbol {} at offset {:X} ignored: its offset is less than the previous symbol successfully fetched", (const char*)label, offset);
 					}
 				}
 			}

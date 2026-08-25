@@ -13,6 +13,7 @@
 #include <algorithm>
 
 #include <IO.hpp>
+#include <Logger.hpp>
 #include <OptsParser.hpp>
 
 #include "InputWrapper.hpp"
@@ -51,7 +52,7 @@ struct Input__TXT : public InputWrapper {
 
 		auto numSpecifiers = std::ranges::count(lineFormat, '%');
 		if (numSpecifiers < 2) {
-			IO::Log(IO::warning, "Line format string likely has too few arguments (try '%%s %%X')");
+			Logger::warn("Line format string likely has too few arguments (try '%%s %%X')");
 		}
 
 		int lineNum = 0;
@@ -66,7 +67,7 @@ struct Input__TXT : public InputWrapper {
 				? sscanf((const char*)sBuffer, lineFormat_cstr, &offset, sLabel)
 				: sscanf((const char*)sBuffer, lineFormat_cstr, sLabel, &offset);
 			if (result != 2) {
-				IO::Log(IO::debug, "Failed to parse line %d, skipping (result=%d)", lineNum, result);
+				Logger::debug("Failed to parse line {}, skipping (result={})", lineNum, result);
 				continue;
 			}
 

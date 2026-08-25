@@ -10,6 +10,7 @@
 #include <set>
 
 #include <IO.hpp>
+#include <Logger.hpp>
 #include <OptsParser.hpp>
 
 #include "InputWrapper.hpp"
@@ -90,7 +91,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 			// If line is too short, do not proceed
 			if ( lineLength <= 36 ) {
-				IO::Log( IO::debug, "Line %d is too short, skipping", lineCounter );
+				Logger::debug("Line {} is too short, skipping", lineCounter);
 				continue;
 			}
 
@@ -116,7 +117,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 					ptr++;
 				}
 				if (!hasProperOffset) {
-					IO::Log(IO::debug, "Line %d doesn't have a proper offset, skipping...", lineCounter);
+					Logger::debug("Line {} doesn't have a proper offset, skipping...", lineCounter);
 					continue;
 				}
 				*ptr++ = 0x00;					// separate offset, so "sLineOffset" is proper c-string, containing only offset
@@ -144,7 +145,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 			// Scenario #1 : Line doesn't have indention, meaning it starts with a name
 			// NOTICE: In this case, label may use a wider range of allowed characters, hence it's referenced as "NAME" below ...
 			if (IS_START_OF_NAME(*ptr)) {
-				IO::Log(IO::debug, "Line %d: Possible label at the beginning of line", lineCounter);
+				Logger::debug("Line {}: Possible label at the beginning of line", lineCounter);
 				sLabel = ptr++;						// assume this as label
 				while (IS_NAME_CHAR(*ptr)) ptr++;	// iterate through label characters
 
@@ -160,7 +161,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 			// Scenario #2 : Line starts with idention (space or tab)
 			// NOTICE: In this case, label cannot include certain characters allowed otherwise...
 			else if (IS_WHITESPACE(*ptr)) {
-				IO::Log(IO::debug, "Line %d: Possible label with idention", lineCounter);
+				Logger::debug("Line {}: Possible label with idention", lineCounter);
 				do { ptr++; } while (IS_WHITESPACE(*ptr)); 	// skip idention
 				if (IS_START_OF_LABEL(*ptr)) {
 					sLabel = ptr++;							// assume this as label
@@ -178,7 +179,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 			// Scenario #3: Line doesn't seem to contain a label ...
 			else {
-				IO::Log(IO::debug, "Line %d: Didn't identify label, skipping", lineCounter);
+				Logger::debug("Line {}: Didn't identify label, skipping", lineCounter);
 				continue;
 			}
 
@@ -208,7 +209,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 					strOpcode += (char*)ptr_start+1;	// +1 to skip local label symbol itself
 				}
 
-				IO::Log(IO::debug, "Processing: %s: %s", strLabel.c_str(), strOpcode.c_str());
+				Logger::debug("Processing: {}: {}", strLabel, strOpcode);
 
 				// Make sure this label doesn't name any special object ...
 				auto opcodeRef = NamingOpcodes.find(strOpcode);
@@ -216,7 +217,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 					// If this label names a macro ...
 					if (!opcodeRef->compare("macro")) {	// TODOh: Optimize by handling pointer to "macro" record within set
 
-						IO::Log(IO::debug, "%s recognized as macro declaration", strLabel.c_str());
+						Logger::debug("{} recognized as macro declaration", strLabel);
 
 						// If macro processing option is on ...
 						if (optRegisterMacrosAsOpcodes) {
@@ -239,10 +240,10 @@ struct Input__ASM68K_Listing : public InputWrapper {
 							) {
 								// Maintain line counter to warn if suspiciously many lines were processed as macro definition alone
 								if (macroLineCounter >= 1000) {
-									IO::Log(IO::warning,
+									Logger::warn(
 										// TODOh: Advise to enable ignore macro definitions option?
-										"Too many lines (>=1000) found in definition of \"%s\" macro. This could be missing \"endm\" statement or a parsing error.",
-										strLabel.c_str()
+										"Too many lines (>=1000) found in definition of \"{}\" macro. This could be missing \"endm\" statement or a parsing error.",
+										strLabel
 									);
 									break;
 								}
@@ -267,9 +268,9 @@ struct Input__ASM68K_Listing : public InputWrapper {
 								
 								// If opcode is "endm", stop processing
 								if (!strcmp((char*)ptr_start, "endm")) {
-									IO::Log(IO::debug,
-										"Skipped definition of macro \"%s\" (lines %d-%d)",
-										strLabel.c_str(), lineCounter, lineCounter+macroLineCounter
+									Logger::debug(
+										"Skipped definition of macro \"{}\" (lines {}-{})",
+										strLabel, lineCounter, lineCounter+macroLineCounter
 									);
 									lineCounter += macroLineCounter;
 									endmDirectiveReached = true;
@@ -279,10 +280,10 @@ struct Input__ASM68K_Listing : public InputWrapper {
 							
 							// If end of file was reached before "endm"
 							if (!endmDirectiveReached) {
-								IO::Log(IO::error,
+								Logger::error(
 									// TODOh: Advise to enable ignore macro definitions option?
-									"Couldn't reach end of \"%s\" macro. This is possibly due to a parsing error.",
-									strLabel.c_str()
+									"Couldn't reach end of \"{}\" macro. This is possibly due to a parsing error.",
+									strLabel
 								);
 								break;
 							}
@@ -294,7 +295,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 						}
 					}
 
-					IO::Log(IO::debug, "%s recognized as macro symbol", strLabel.c_str());
+					Logger::debug("{} recognized as macro symbol", strLabel);
 					continue;				// cancel further processing
 				}
 
@@ -314,7 +315,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 					}
 				}
 				else {
-					IO::Log( IO::debug, "Symbol %s at offset %X ignored: its offset is less than the previous symbol successfully fetched", strLabel.c_str(), offset );
+					Logger::debug("Symbol {} at offset {:X} ignored: its offset is less than the previous symbol successfully fetched", strLabel, offset);
 				}
 			}
 		}

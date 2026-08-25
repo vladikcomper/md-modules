@@ -13,6 +13,7 @@
 #include <functional>
 
 #include <IO.hpp>
+#include <Logger.hpp>
 
 #include "OutputWrapper.hpp"
 
@@ -34,7 +35,7 @@ std::unique_ptr<OutputWrapper> getOutputWrapper( const std::string& name ) {
 
 	auto entry = wrapperTable.find(name);
 	if (entry == wrapperTable.end()) {
-		IO::Log(IO::fatal, "Unknown output format specifier: %s", name.c_str());
+		Logger::error("Unknown output format specifier: {}", name);
 		throw "Bad output format specifier";
 	}
 

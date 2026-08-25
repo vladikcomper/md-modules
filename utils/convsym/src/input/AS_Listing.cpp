@@ -11,6 +11,7 @@
 #include <map>
 
 #include <IO.hpp>
+#include <Logger.hpp>
 #include <OptsParser.hpp>
 
 #include "InputWrapper.hpp"
@@ -68,7 +69,7 @@ struct Input__AS_Listing : public InputWrapper {
 				if (strLine.starts_with("symbol table") || strLine.starts_with("Symbol Table")) {
 					foundSymbolTable = true;
 
-					IO::Log(IO::debug, "Found symbols table header on line %d", lineCounter);
+					Logger::debug("Found symbols table header on line {}", lineCounter);
 				}
 			}
 

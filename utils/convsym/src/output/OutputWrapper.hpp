@@ -6,6 +6,7 @@
 #include <string>
 
 #include <IO.hpp>
+#include <Logger.hpp>
 
 
 /* Base class for the output formats handlers */
@@ -23,7 +24,7 @@ struct OutputWrapper {
 
 			// Make sure IO operation was successful
 			if (!output->good()) {
-				IO::Log(IO::fatal, "Couldn't open file \"%s\"", fileName);
+				Logger::error("Couldn't open file \"{}\"", fileName);
 				throw "IO error";
 			}
 
@@ -34,14 +35,14 @@ struct OutputWrapper {
 
 				// If align on append option is on (default), make sure to pad `appendOffset` if it's not even
 				if (alignOnAppend && ((appendOffset & 1) != 0)) {
-					IO::Log(IO::debug, "Auto-aligning append offset.");
+					Logger::debug("Auto-aligning append offset.");
 					output->writeByte(0);
 					appendOffset++;
 				}
 			}
 			else {
 				if (alignOnAppend && ((appendOffset & 1) != 0)) {
-					IO::Log(IO::warning, "An odd append offset is specified; the offset wasn't auto-aligned.");
+					Logger::warn("An odd append offset is specified; the offset wasn't auto-aligned.");
 				}
 
 				output->setOffset( appendOffset );		// move pointer to the specified append offset

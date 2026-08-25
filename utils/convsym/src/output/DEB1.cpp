@@ -13,6 +13,7 @@
 #include <Huffman.hpp>
 #include <BitStream.hpp>
 #include <IO.hpp>
+#include <Logger.hpp>
 #include <utils.hpp>
 
 #include "OutputWrapper.hpp"
@@ -56,7 +57,7 @@ struct Output__Deb1 : public OutputWrapper {
 		uint16_t lastBlock = (lastSymbolPtr->first) >> 16;
 
 		if (lastBlock > 63) {		// blocks index table is limited to $40 entries (which is only enough to ROM section)
-			IO::Log( IO::error, "Too many memory blocks to allocate ($%X), truncating to $40 blocks. Some symbols will be lost.", lastBlock+1 );
+			Logger::error("Too many memory blocks to allocate (${:X}), truncating to $40 blocks. Some symbols will be lost.", lastBlock+1);
 			lastBlock = 0x3F;
 		}
 
@@ -70,7 +71,7 @@ struct Output__Deb1 : public OutputWrapper {
 		/* Generate Huffman-codes and create decoding table */
 		/* ------------------------------------------------ */
 
-		IO::Log(IO::debug, "Building an encoding table...");
+		Logger::debug("Building an encoding table...");
 
 		/* Generate table of character frequencies based on symbol names */
 		uint32_t freqTable[0x100] = { 0 };
@@ -99,7 +100,7 @@ struct Output__Deb1 : public OutputWrapper {
 		/* ------------------------------------- */
 
 		{
-			IO::Log(IO::debug, "Generating symbol data blocks...");
+			Logger::debug("Generating symbol data blocks...");
 
 			auto symbolPtr = symbols.begin();
 
@@ -111,7 +112,7 @@ struct Output__Deb1 : public OutputWrapper {
 					output->writeByte(0x00);
 				}
 
-				IO::Log( IO::debug, "Block %02X:", block);
+				Logger::debug("Block {:02X}:", block);
 				uint32_t loc_Block = output->getCurrentOffset();	// remember offset, where this block starts ...
 
 				std::vector<uint16_t> offsetsData;
@@ -123,7 +124,7 @@ struct Output__Deb1 : public OutputWrapper {
 						continue;
 					}
 
-					IO::Log( IO::debug, "\t%08X\t%s", symbolPtr->first, symbolPtr->second.c_str() );
+					Logger::debug("\t{:08X}\t{}", symbolPtr->first, symbolPtr->second);
 
 					/* 
 					 * For records with the same offsets, fetch only the last or the first processed symbol,
@@ -168,7 +169,7 @@ struct Output__Deb1 : public OutputWrapper {
 					/* Check for pointer capacity limits */
 					if ( (loc_Block - loc_BlockOffsets)>>1 > 0xFFFF
 						|| (loc_Block+offsetsData.size()*2 - loc_BlockOffsets)>>1 > 0xFFFF ) {
-						IO::Log( IO::error, "Block %02X is either too large, or symbol file has exceeded its size limits; unable to write the block", block );
+						Logger::error("Block {:02X} is either too large, or symbol file has exceeded its size limits; unable to write the block", block);
 						continue;
 					}
 

@@ -11,6 +11,7 @@
 #include <functional>
 
 #include <IO.hpp>
+#include <Logger.hpp>
 
 #include "InputWrapper.hpp"
 
@@ -36,7 +37,7 @@ std::unique_ptr<InputWrapper> getInputWrapper(const std::string& name) {
 
 	auto entry = wrapperTable.find(name);
 	if (entry == wrapperTable.end()) {
-		IO::Log(IO::fatal, "Unknown input format specifier: %s", name.c_str());
+		Logger::error("Unknown input format specifier: {}", name);
 		throw "Bad input format specifier";
 	}
 

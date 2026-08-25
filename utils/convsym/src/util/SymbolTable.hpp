@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "IO.hpp"
+#include "Logger.hpp"
 
 struct OffsetConversionOptions {
 	uint32_t baseOffset;
@@ -41,7 +42,7 @@ struct SymbolTable {
 			const auto symbolToOffsetEntry = symbolToOffsetResolveTable.find(label);
 			if (symbolToOffsetEntry != symbolToOffsetResolveTable.end()) {
 				symbolToOffsetEntry->second.get() = correctedOffset;
-				IO::Log(IO::debug, "Resolved requested symbol offset: %X", correctedOffset);
+				Logger::debug("Resolved requested symbol offset: {:X}", correctedOffset);
 			}
 		}
 
@@ -52,9 +53,7 @@ struct SymbolTable {
 			return false;	// symbol is not inserted when offset is out of range
 		}
 
-		if (IO::LogLevel <= IO::debug) {
-			IO::Log(IO::debug, "Adding symbol: %s", std::string(label).c_str());
-		}
+		Logger::debug("Adding symbol: {}", label);
 		symbols.emplace(correctedOffset, std::string(label));
 
 		return true;
