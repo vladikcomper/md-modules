@@ -8,16 +8,12 @@
 
 // Standard C-libraries
 #include <cstdio>			// for I/O operations and file accesses
-#include <cstdint>			// for uint8_t, uint16_t, etc.
-#include <cstdarg>			// for va_start, va_end, etc.
-#include <cstring>			// for strlen, strncspn, etc.
 #include <filesystem>
 
 // Standard C++ libraries
 #include <string>			// for strings processing
 #include <vector>			// standard containers
 #include <set>				// ''
-#include <map>				// ''
 
 // Helper classes
 #include <IO.hpp>
@@ -92,17 +88,14 @@ int main (int argc, const char ** argv) {
 
 	bool optDebug = false;
 	{
-		const std::map <std::string, ArgvParser::record>
-			ParametersList {
-				{ "-debug",	{ .type = ArgvParser::record::flag, 		.target = &optDebug 			} },
-				{ "-cwd",	{ .type = ArgvParser::record::string,		.target = &currentPathOverride 	} },
-				{ "-out",	{ .type = ArgvParser::record::string,		.target = &outputFileName 		} },
-				{ "-def",	{ .type = ArgvParser::record::string_list,	.target = &predefinedSymbols 	} },
-			};
-
 		/* Decode parameters acording to list defined by "ParametersList" variable */
 		try {
-			ArgvParser::parse( argv+2, argc-2, ParametersList );
+			ArgvParser::parse(argv+2, argc-2, {
+				{ "-debug",	ArgvParser::Arg::flag { &optDebug } },
+				{ "-cwd",	ArgvParser::Arg::string { &currentPathOverride 	} },
+				{ "-out",	ArgvParser::Arg::string { &outputFileName } },
+				{ "-def",	ArgvParser::Arg::stringList { &predefinedSymbols } },
+			});
 		}
 		catch (const char* err) {
 			IO::Log( IO::fatal, err );

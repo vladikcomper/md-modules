@@ -18,7 +18,6 @@
 #include <string_view>
 #include <sys/types.h>
 #include <tuple>
-#include <variant>
 
 #include "input/Wrappers.cpp"	// for getInputWrapper[..]() and their linkage
 #include "output/Wrappers.cpp"	// for getOutputWrapper[..]() and their linkage
@@ -150,32 +149,29 @@ int main (int argc, const char ** argv) {
 	const char *inputFileName = argv[1];
 	const char *outputFileName = argv[2];
 	{
-		const std::map<std::string, ArgvParser::record>
-			ParametersList {
-				{ "-base",		{ .type = ArgvParser::record::hexNumber,	.target = &offsetConversionOptions.baseOffset					} },
-				{ "-mask",		{ .type = ArgvParser::record::hexNumber,	.target = &offsetConversionOptions.offsetMask 					} },
-				{ "-range",		{ .type = ArgvParser::record::hexRange,		.target = &offsetConversionOptions.offsetLeftBoundary,	.target2 = &offsetConversionOptions.offsetRightBoundary	} },
-				{ "-a",			{ .type = ArgvParser::record::flag,			.target = &optAppend											} },
-				{ "-noalign",	{ .type = ArgvParser::record::flag,			.target = &optNoAlignOnAppend 									} },
-				{ "-debug",		{ .type = ArgvParser::record::flag,			.target = &optDebug												} },
-				{ "-in",		{ .type = ArgvParser::record::string,		.target = &inputWrapperName										} },
-				{ "-input",		{ .type = ArgvParser::record::string,		.target = &inputWrapperName										} },
-				{ "-inopt",		{ .type = ArgvParser::record::string,		.target = &inputOpts											} },
-				{ "-out",		{ .type = ArgvParser::record::string,		.target = &outputWrapperName									} },
-				{ "-output",	{ .type = ArgvParser::record::string,		.target = &outputWrapperName									} },
-				{ "-outopt",	{ .type = ArgvParser::record::string,		.target = &outputOpts											} },
-				{ "-org",		{ .type = ArgvParser::record::string,		.target = &appendOffsetRaw,										} },
-				{ "-ref",		{ .type = ArgvParser::record::string,		.target = &pointerOffsetRaw,									} },
-				{ "-filter",	{ .type = ArgvParser::record::string,		.target = &filterRegexStr										} },
-				{ "-exclude",	{ .type = ArgvParser::record::flag,			.target = &optFilterExclude										} },
-				{ "-addprefix",	{ .type = ArgvParser::record::string,		.target = &prefixStr											} },
-				{ "-toupper",	{ .type = ArgvParser::record::flag,			.target = &optToUpper											} },
-				{ "-tolower",	{ .type = ArgvParser::record::flag,			.target = &optToLower											} }
-			};
-
 		/* Decode parameters acording to list defined by "ParametersList" variable */
 		try {
-			ArgvParser::parse(argv+3, argc-3, ParametersList);
+			ArgvParser::parse(argv+3, argc-3, {
+				{ "-base", 		ArgvParser::Arg::hexNumber{ &offsetConversionOptions.baseOffset } },
+				{ "-mask",		ArgvParser::Arg::hexNumber{ &offsetConversionOptions.offsetMask } },
+				{ "-range",		ArgvParser::Arg::hexRange{ &offsetConversionOptions.offsetLeftBoundary,	&offsetConversionOptions.offsetRightBoundary } },
+				{ "-a",			ArgvParser::Arg::flag{ &optAppend } },
+				{ "-noalign",	ArgvParser::Arg::flag{ &optNoAlignOnAppend } },
+				{ "-debug",		ArgvParser::Arg::flag{ &optDebug } },
+				{ "-in",		ArgvParser::Arg::string{ &inputWrapperName } },
+				{ "-input",		ArgvParser::Arg::string{ &inputWrapperName } },
+				{ "-inopt",		ArgvParser::Arg::string{ &inputOpts } },
+				{ "-out",		ArgvParser::Arg::string{ &outputWrapperName } },
+				{ "-output",	ArgvParser::Arg::string{ &outputWrapperName } },
+				{ "-outopt",	ArgvParser::Arg::string{ &outputOpts } },
+				{ "-org",		ArgvParser::Arg::string{ &appendOffsetRaw } },
+				{ "-ref",		ArgvParser::Arg::string{ &pointerOffsetRaw } },
+				{ "-filter",	ArgvParser::Arg::string{ &filterRegexStr } },
+				{ "-exclude",	ArgvParser::Arg::flag{ &optFilterExclude } },
+				{ "-addprefix",	ArgvParser::Arg::string{ &prefixStr } },
+				{ "-toupper",	ArgvParser::Arg::flag{ &optToUpper } },
+				{ "-tolower",	ArgvParser::Arg::flag{ &optToLower } }
+			});
 		}
 		catch (const char* err) {
 			IO::Log(IO::fatal, err);
