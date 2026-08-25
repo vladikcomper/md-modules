@@ -11,6 +11,7 @@
 #include <string>
 
 #include "IO.hpp"
+#include "Logger.hpp"
 
 namespace OptsParser {
 
@@ -53,7 +54,7 @@ namespace OptsParser {
 					while ( *ptr!='\'' && *ptr ) ptr++;
 					ptr_end = ptr;
 					if ( !*ptr ) {				// if string ended before fetching a closing quote, issue error
-						IO::Log( IO::warning, "Missed closing quote for value of parameter %s", strOptionName.c_str() );
+						Logger::warn("Missed closing quote for value of parameter {}", strOptionName);
 					}
 					else {						// otherwise, skip the quote
 						ptr++;
@@ -88,7 +89,7 @@ namespace OptsParser {
 					}
 				}
 				else {
-					IO::Log( IO::error, "Unknown option: /%s, skipping", strOptionName.c_str() );
+					Logger::error("Unknown option: /{}, skipping", strOptionName);
 				}
 			}
 
@@ -99,7 +100,7 @@ namespace OptsParser {
 				if ( *ptr!=' ' ) {
 					if ( illegalCharactersFound == false ) {
 						illegalCharactersFound = true;
-						IO::Log( IO::warning, "Illegal characters found while parsing option string" );
+						Logger::warn("Illegal characters found while parsing option string");
 					}
 				}
 	

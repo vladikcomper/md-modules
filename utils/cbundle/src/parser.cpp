@@ -13,6 +13,7 @@
 #include <set>
 
 #include <IO.hpp>
+#include <Logger.hpp>
 
 namespace Parser {
 
@@ -112,7 +113,7 @@ namespace Parser {
 						};
 					}
 					else {
-						IO::Log( IO::error, "%s:%d: Unknown directive \"#%s\"", in->fileName, in->lineNumber, strDirective.c_str() );
+						Logger::error("{}:{}: Unknown directive \"#{}\"", in->fileName, in->lineNumber, strDirective);
 						return {
 							.type = error,
 							.content = std::string()
@@ -170,7 +171,7 @@ namespace Parser {
 					break;
 
 				case eof:
-					IO::Log( IO::error, "%s: Unexpected end of file while skipping block", in->fileName );
+					Logger::error("{}: Unexpected end of file while skipping block", in->fileName);
 					return error;
 
 				default:
@@ -201,18 +202,18 @@ namespace Parser {
 						((IO::FileOutput*)out->file)->putLine( data.content.c_str() );
 					}
 					else {
-						IO::Log( IO::debug, "%s:%d: No valid output specified. Unable to write out line: \"%s\".", in->fileName, in->lineNumber, data.content.c_str() );
+						Logger::debug("{}:{}: No valid output specified. Unable to write out line: \"{}\".", in->fileName, in->lineNumber, data.content);
 					}
 					break;
 
 				case dir_define:
 					symbols.insert( data.content );
-					IO::Log( IO::debug, "%s:%d: Add \"%s\" to defined symbols list.", in->fileName, in->lineNumber, data.content.c_str() );
+					Logger::debug("{}:{}: Add \"{}\" to defined symbols list.", in->fileName, in->lineNumber, data.content);
 					break;
 					
 				case dir_undef:
 					symbols.erase( data.content );
-					IO::Log( IO::debug, "%s:%d: Remove \"%s\" from defined symbols list.", in->fileName, in->lineNumber, data.content.c_str() );
+					Logger::debug("{}:{}: Remove \"{}\" from defined symbols list.", in->fileName, in->lineNumber, data.content);
 					break;
 
 				case dir_file:
@@ -224,7 +225,7 @@ namespace Parser {
 						};
 
 						if (!out_inner.file->good()) {
-							IO::Log( IO::error, "%s:%d: Couldn't open file \"%s\" for writing.", in->fileName, in->lineNumber, data.content.c_str() );
+							Logger::error("{}:{}: Couldn't open file \"{}\" for writing.", in->fileName, in->lineNumber, data.content);
 						
 							return error;
 						}
@@ -296,11 +297,11 @@ namespace Parser {
 					break;
 
 				case eof:
-					IO::Log( IO::error, "%s: Unexpected end of file", in->fileName );
+					Logger::error("{}: Unexpected end of file", in->fileName);
 					return error;
 
 				default:
-					IO::Log( IO::error, "%s:%d: Unexpected or unsupported directive", in->fileName, in->lineNumber );
+					Logger::error("{}:{}: Unexpected or unsupported directive", in->fileName, in->lineNumber);
 					return error;
 			}
 
@@ -320,7 +321,7 @@ namespace Parser {
 		};
 
 		if (!in.file->good()) {
-			IO::Log( IO::error, "Failed to open \"%s\" for input.", path );
+			Logger::error("Failed to open \"{}\" for input.", path);
 
 			return false;
 		}

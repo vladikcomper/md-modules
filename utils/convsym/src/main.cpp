@@ -5,7 +5,6 @@
  * (c) 2017-2018, 2020-2024, Vladikcomper						*
  * ------------------------------------------------------------	*/
 
-#include <cstdio>
 #include <cstdint>
 #include <stdexcept>
 #include <string>

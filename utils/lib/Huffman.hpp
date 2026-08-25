@@ -8,6 +8,7 @@
 #pragma once
 
 #include "IO.hpp"
+#include "Logger.hpp"
 
 #include <cassert>
 #include <cstdint>
@@ -182,17 +183,16 @@ struct Huffman {
 
 		const auto treeDepth = endNodesMap.crbegin()->first;
 		if (treeDepth > maxTreeDepth) {
-			IO::Log(IO::debug, "Huffman tree is too deep, flattening... (treeDepth=%d)", treeDepth);
+			Logger::debug("Huffman tree is too deep, flattening... (treeDepth={})", treeDepth);
 
-			IO::Log(IO::debug, "endNodesMap:");
+			Logger::debug("endNodesMap:");
 			for (const auto & [depth, nodes] : endNodesMap) {
 				for (const auto & nodeRef : nodes) {
 					const auto & [ node, parent ] = nodeRef.get();
-					IO::Log(IO::debug, "depth = %d, (Node) data = %X, leafs: [%p, %p]", depth, node->data, node->leaf[0], node->leaf[1]);
+					Logger::debug("depth = {}, (Node) data = {:X}, leafs: [{}, {}]", depth, node->data, (const void*)node->leaf[0], (const void*)node->leaf[1]);
 				}
 			}
 
-			IO::Log(IO::debug, "huffmanTree:");
 			const auto traverseTree = [&](Node* node, uint32_t code, uint8_t depth, auto& traverseTreeRef) -> void {
 				if (node->leaf[0]) {
 					traverseTreeRef(node->leaf[0], (code<<1)|0, depth + 1, traverseTreeRef);
@@ -201,9 +201,11 @@ struct Huffman {
 					traverseTreeRef(node->leaf[1], (code<<1)|1, depth + 1, traverseTreeRef);
 				}
 				if (!node->leaf[0] && !node->leaf[1]) {
-					IO::Log(IO::debug, "(Node) data = %X, code = %X (%d bits)", node->data, code, depth);
+					Logger::debug("(Node) data = {:X}, code = {:X} ({} bits)", node->data, code, depth);
 				}
 			};
+
+			Logger::debug("huffmanTree:");
 			traverseTree(rootNode, 0, 0, traverseTree);
 
 			/* Source nodes tracking: Get the last 2 nodes from the lowest nodes list */
@@ -216,19 +218,18 @@ struct Huffman {
 				auto lowestTreeNodeA = std::prev(lowestTreeNodeB);
 				auto & lowestTreeNodeARef = lowestTreeNodeA->get();
 				auto & lowestTreeNodeBRef = lowestTreeNodeB->get();
-				IO::Log(IO::debug, "lowestTreeNodeA: %p (NODE) data=%X, depth=%d, parent=%p (NODE) leafs=[%p, %p]",
-					lowestTreeNodeARef.node, lowestTreeNodeARef.node->data, lowestLevelRef->first, lowestTreeNodeARef.parent, lowestTreeNodeARef.parent->leaf[0], lowestTreeNodeARef.parent->leaf[1]);
-				IO::Log(IO::debug, "lowestTreeNodeB: %p (NODE) data=%X, depth=%d, parent=%p (NODE) leafs=[%p, %p]",
-					lowestTreeNodeBRef.node, lowestTreeNodeBRef.node->data, lowestLevelRef->first, lowestTreeNodeBRef.parent, lowestTreeNodeBRef.parent->leaf[0], lowestTreeNodeBRef.parent->leaf[1]);
+				Logger::debug("lowestTreeNodeA: {} (NODE) data={:X}, depth={}, parent={} (NODE) leafs=[{}, {}]",
+					(const void*)lowestTreeNodeARef.node, lowestTreeNodeARef.node->data, lowestLevelRef->first, (const void*)lowestTreeNodeARef.parent, (const void*)lowestTreeNodeARef.parent->leaf[0], (const void*)lowestTreeNodeARef.parent->leaf[1]);
+				Logger::debug("lowestTreeNodeB: {} (NODE) data={:X}, depth={}, parent={} (NODE) leafs=[{}, {}]",
+					(const void*)lowestTreeNodeBRef.node, lowestTreeNodeBRef.node->data, lowestLevelRef->first, (const void*)lowestTreeNodeBRef.parent, (const void*)lowestTreeNodeBRef.parent->leaf[0], (const void*)lowestTreeNodeBRef.parent->leaf[1]);
 
 				/* Sanity check: Last 2 nodes from the "end nodes map" should have the same parent */
 				if (lowestTreeNodeARef.parent != lowestTreeNodeBRef.parent) {
 					{
-						IO::Log(IO::debug, "Pre-exception dump: All end nodes with on the same depth:");
+						Logger::debug("Pre-exception dump: All end nodes with on the same depth:");
 						for (const auto & node : lowestLevelRef->second) {
-							IO::Log(IO::debug, "%p (NODE) data=%X, parent=%p (NODE) leafs=[%p, %p]",
-								node.get().node, node.get().node->data, node.get().parent, node.get().parent->leaf[0], node.get().parent->leaf[1]
-							);
+							Logger::debug("{} (NODE) data={:X}, parent={} (NODE) leafs=[{}, {}]",
+								(const void*)node.get().node, node.get().node->data, (const void*)node.get().parent, (const void*)node.get().parent->leaf[0], (const void*)node.get().parent->leaf[1]);
 						}
 					}
 					throw "Internal Huffman tree flattening error: Lowest node pair is corrupted.";
@@ -241,7 +242,7 @@ struct Huffman {
 				auto targetEndNode = std::prev(targetLevelRef->second.end());
 				auto & targetEndNodeRef = targetEndNode->get();
 
-				IO::Log(IO::debug, "targetEndNodeRef: (NODE) data=%X, depth=%d, parent=%p", targetEndNodeRef.node->data, targetLevelRef->first, lowestTreeNodeBRef.parent);
+				Logger::debug("targetEndNodeRef: (NODE) data={:X}, depth={}, parent={}", targetEndNodeRef.node->data, targetLevelRef->first, (const void*)lowestTreeNodeBRef.parent);
 
 				/* Detach `lowestTreeNodeA`, `lowestTreeNodeB` from its original parent, attach to `--targetEndNode` */
 				Node * lowestTreeParentNode = lowestTreeNodeARef.parent;
@@ -284,7 +285,7 @@ struct Huffman {
 				}
 			};
 
-			IO::Log(IO::debug, "huffmanTree: (after flatenning)");
+			Logger::debug("huffmanTree: (after flatenning)");
 			traverseTree(rootNode, 0, 0, traverseTree);
 		}
 	}

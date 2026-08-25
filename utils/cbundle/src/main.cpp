@@ -7,7 +7,6 @@
  * ------------------------------------------------------------	*/
 
 // Standard C-libraries
-#include <cstdio>			// for I/O operations and file accesses
 #include <filesystem>
 
 // Standard C++ libraries
@@ -16,6 +15,7 @@
 #include <set>				// ''
 
 // Helper classes
+#include <Logger.hpp>
 #include <IO.hpp>
 #include <ArgvParser.hpp>
 
@@ -26,7 +26,7 @@ int main (int argc, const char ** argv) {
 
 	/* Provide help if called without enough options */
 	if (argc<2) {
-		printf(
+		std::cout <<
 			"CBundle utility version 2.0.1\n"
 			"2017-2023, vladikcomper\n"
 			"\n"
@@ -76,7 +76,7 @@ int main (int argc, const char ** argv) {
 			"\n"
 			"  #endif\n"
 			"    Ends IF-ELSE-block.\n"
-		);
+		;
 		return 1;
 	}
 
@@ -98,12 +98,12 @@ int main (int argc, const char ** argv) {
 			});
 		}
 		catch (const char* err) {
-			IO::Log( IO::fatal, err );
+			Logger::error(err);
 			return -1;
 		}
 	}
 
-	IO::LogLevel = optDebug ? IO::debug : IO::warning;
+	Logger::logLevel = optDebug ? Logger::Level::DEBUG : Logger::Level::WARN;
 
 	/* Pre-define symbols of requested */
 	if (!predefinedSymbols.empty()) {
@@ -132,7 +132,7 @@ int main (int argc, const char ** argv) {
 	}
 
 	if (result == false) {
-		IO::Log( IO::fatal, "Bundle generation failed." );
+		Logger::error("Bundle generation failed.");
 		return -1;
 	}
 
