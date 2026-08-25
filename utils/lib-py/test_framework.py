@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 from typing import cast, Union, List, Literal, NamedTuple
+from time import monotonic_ns
+from statistics import mean
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 import platform
@@ -54,9 +57,22 @@ CommandResult = Union['tuple[Literal[True], DataSource]', 'tuple[Literal[False],
 class Command:
 	output: Union[DataSource, None] = None
 	input: Union[DataSource, None] = None
+	total_exec_time_ns: Union[float, None] = None
 
 	def execute(self, input: DataSource, output: DataSource) -> CommandResult:
 		return (False, 'Unable to execute command: not implemented')
+
+	def _withMeasureExecTime[T](self, runner: Callable[[],T], samples: int = 10) -> T:
+		def measureOnce():
+			nonlocal result
+			start = monotonic_ns()
+			runner()
+			return monotonic_ns() - start
+
+		result = runner() # Waste one run on warm-up, also to store result
+		mean_exec_time = mean(sorted(measureOnce() for _ in range(samples))[1:-1])
+		self.total_exec_time_ns = (self.total_exec_time_ns or 0.0) + mean_exec_time
+		return result
 
 @dataclass
 class CheckMatch(Command):
@@ -110,20 +126,23 @@ def runTests(tests: 'tuple[Test, ...]') -> bool:
 	for test_id, test in enumerate(tests):
 		print(f'[Test {test_id:d}] {test.description} ... ', flush=True, end='')
 
+		total_exec_time_ns = 0.0
 		pipeline_result: CommandResult = (True, Buffer())
 
 		for command in test.pipeline:
 			try:
 				input, output = command.input or pipeline_result[1], command.output or Buffer()
+				command.total_exec_time_ns = None
 				pipeline_result = command.execute(input, output)
 				if pipeline_result[0] == False: break
+				total_exec_time_ns += command.total_exec_time_ns or 0.0
 
 			except Exception as e:
 				pipeline_result = (False, str(e)); break
 
 		success, value = pipeline_result
 		if success:
-			print("OK") 
+			print(f"OK ({total_exec_time_ns/1e6:.3f} ms)")
 		else:
 			print(f'FAILED: {value}')
 			has_failed_tests = True

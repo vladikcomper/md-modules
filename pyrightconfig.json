@@ -1,4 +1,4 @@
 {
-	"pythonVersion": "3.8",
+	"pythonVersion": "3.14",
 	"extraPaths": ["utils/lib-py"]
 }

@@ -22,7 +22,8 @@ class ConvSym(Command):
 		args = [CONVSYM_PATH, '-', '-', *self.options]
 		args[1] = '-' if use_stdin else str(cast(File, input).getPath())
 		args[2] = '-' if use_stdout else str(cast(File, output).getPath())
-		result = subprocess.run(args, input=None if isinstance(input, File) else input.read(), text=False, capture_output=True)
+		process_input = None if isinstance(input, File) else input.read()
+		result = self._withMeasureExecTime(lambda: subprocess.run(args, input=process_input, text=False, capture_output=True))
 
 		# Collect output
 		if result.returncode != 0: return (False, f'ConvSym returned non-zero exit code (stderr="{result.stderr}")')
@@ -244,6 +245,30 @@ tests: 'tuple[Test, ...]' = (
 		),
 	),
 	Test(
+		description = 'asm68k_lst->log symbol generation (Sonic 1 Git 26.08 Disassembly - ASM68K)',
+		pipeline=(
+			ConvSym(
+				input = File('input/sonic-1-git-2026-08-asm68k.lst'),
+				output = File('output/sonic-1-git-2026-08-asm68k.lst.log'),
+				# WARNING! `-range 0 FFFFFF` doesn't work for `asm68k_lst` in 2026 disassembly because parser ignores all ROM symbols if RAM symbols are fetched first
+				# Note that `asm68k_lst` is deprecated and no longer produces good results for modern disassemblies
+				options = ('-in', 'asm68k_lst', '-out', 'log', '-inopt', '/localSign=.', '-exclude', '-filter', '(SMPS_(Track|RAM).*)|(.+_(END|End|end))')
+			),
+			CheckMatch(output=File('output-expected/sonic-1-git-2026-08-asm68k.lst.log'), text=True),
+		),
+	),
+	Test(
+		description = 'asm68k_sym->deb2 symbol generation (Sonic 1 Git 26.08 Disassembly - ASM68K)',
+		pipeline=(
+			ConvSym(
+				input = File('input/sonic-1-git-2026-08-asm68k.sym'),
+				output = File('output/sonic-1-git-2026-08-asm68k.sym.deb2'),
+				options = ('-range', '0', 'FFFFFF', '-inopt', '/localSign=.', '-exclude', '-filter', '(SMPS_(Track|RAM).*)|(.+_(END|End|end))')
+			),
+			CheckMatch(output=File('output-expected/sonic-1-git-2026-08-asm68k.sym.deb2'), text=True),
+		),
+	),
+	Test(
 		description = 'as_lst->log symbol generation (Sonic 1 Git 2022 Disassembly - AS)',
 		pipeline=(
 			ConvSym(
@@ -252,6 +277,17 @@ tests: 'tuple[Test, ...]' = (
 				options = ('-in', 'as_lst', '-out', 'log', '-exclude', '-filter', 'z.+')
 			),
 			CheckMatch(output=File('output-expected/sonic-1-git-2022-as.log'), text=True),
+		),
+	),
+	Test(
+		description = 'as_lst->log symbol generation (Sonic 1 Git 26.08 Disassembly - AS)',
+		pipeline=(
+			ConvSym(
+				input = File('input/sonic-1-git-2026-08-as.lst'),
+				output = File('output/sonic-1-git-2026-08-as.log'),
+				options = ('-in', 'as_lst', '-out', 'log', '-range', '0', 'FFFFFF', '-exclude', '-filter', '(z.+)|(id_.+)|(plcid_.+)|(palid_.+)|(col_[0-9]+x.+)')
+			),
+			CheckMatch(output=File('output-expected/sonic-1-git-2026-08-as.log'), text=True),
 		),
 	),
 	Test(
