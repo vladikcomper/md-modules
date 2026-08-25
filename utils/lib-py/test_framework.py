@@ -58,20 +58,23 @@ class Command:
 	output: Union[DataSource, None] = None
 	input: Union[DataSource, None] = None
 	total_exec_time_ns: Union[float, None] = None
+	total_stddev_ns: Union[float, None] = None
 
 	def execute(self, input: DataSource, output: DataSource) -> CommandResult:
 		return (False, 'Unable to execute command: not implemented')
 
 	def _withMeasureExecTime[T](self, runner: Callable[[],T], samples: int = 10) -> T:
 		def measureOnce():
-			nonlocal result
 			start = monotonic_ns()
 			runner()
 			return monotonic_ns() - start
 
 		result = runner() # Waste one run on warm-up, also to store result
-		mean_exec_time = mean(sorted(measureOnce() for _ in range(samples))[1:-1])
-		self.total_exec_time_ns = (self.total_exec_time_ns or 0.0) + mean_exec_time
+		times = list(measureOnce() for _ in range(samples))
+		mu = mean(times)
+		variance = sum((t - mu) ** 2 for t in times) / samples
+		self.total_exec_time_ns = (self.total_exec_time_ns or 0.0) + mu
+		self.total_stddev_ns = (self.total_stddev_ns or 0.0) + variance ** 0.5
 		return result
 
 @dataclass
@@ -127,22 +130,26 @@ def runTests(tests: 'tuple[Test, ...]') -> bool:
 		print(f'[Test {test_id:d}] {test.description} ... ', flush=True, end='')
 
 		total_exec_time_ns = 0.0
+		total_stddev_var = 0.0
 		pipeline_result: CommandResult = (True, Buffer())
 
 		for command in test.pipeline:
 			try:
 				input, output = command.input or pipeline_result[1], command.output or Buffer()
 				command.total_exec_time_ns = None
+				command.total_stddev_ns = None
 				pipeline_result = command.execute(input, output)
 				if pipeline_result[0] == False: break
 				total_exec_time_ns += command.total_exec_time_ns or 0.0
+				total_stddev_var += (command.total_stddev_ns or 0.0) ** 2
 
 			except Exception as e:
 				pipeline_result = (False, str(e)); break
 
 		success, value = pipeline_result
 		if success:
-			print(f"OK ({total_exec_time_ns/1e6:.3f} ms)")
+			total_stddev_ns = total_stddev_var ** 0.5
+			print(f"OK ({total_exec_time_ns/1e6:.3f} ± {total_stddev_ns/1e6:.3f} ms)")
 		else:
 			print(f'FAILED: {value}')
 			has_failed_tests = True
