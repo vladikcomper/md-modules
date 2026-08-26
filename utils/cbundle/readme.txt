@@ -1,5 +1,5 @@
-CBundle utility version 2.0.1
-2017-2023, vladikcomper
+CBundle utility version 2.1
+2017-2026, vladikcomper
 
 Command line arguments:
   cbundle [script_file_path|-] [OPTIONS]

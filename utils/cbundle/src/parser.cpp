@@ -1,18 +1,22 @@
 
 /* ------------------------------------------------------------ *
- * Bundle Compilation utility v.2.0.1							*
+ * Bundle Compilation utility v.2.1								*
  *																*
  * Script parser module											*
- * (c) 2017-2023, Vladikcomper									*
+ * (c) 2017-2026, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
+#include <fstream>
+#include <iostream>
+#include <istream>
+#include <ostream>
+#include <string_view>
+#include <unordered_map>
 #define LINE_BUFFER_SIZE 4096
 
 #include <string>
-#include <map>
 #include <set>
 
-#include <IO.hpp>
 #include <Logger.hpp>
 
 namespace Parser {
@@ -45,15 +49,13 @@ namespace Parser {
 	};
 
 	struct parseData {
-		IO::File * file;
+		std::istream& file;
 		const char * fileName;
 		long lineNumber;
-
-		~parseData() { delete this->file; }
 	};
 
 	/* Directive definitions */
-	const std::map<std::string, lineType> directives {
+	const std::unordered_map<std::string, lineType> directives {
 		{ "define",	dir_define	},
 		{ "undef",	dir_undef	},
 		{ "include",dir_include	},
@@ -69,20 +71,17 @@ namespace Parser {
 	std::set<std::string> symbols;
 
 	/* Prototypes */
-    bool parseFile(const char* path, parseData * out);
+    bool parseFile(const char* path, std::ostream * out);
 
 	/**
 	 * Function to parse line
 	 */
 	lineData parseLine(parseData * in) {
-
-		const int sBufferSize = LINE_BUFFER_SIZE;
-		uint8_t sBuffer[ sBufferSize ];
-
 		// Attempt to read string from the input file
-		if ( in && in->file && ( ((IO::FileInput*)in->file)->readLine( sBuffer, sBufferSize ) >= 0 ) ) {
+		std::string line;
+		if ( in && in->file && std::getline(in->file, line)) {
 			in->lineNumber++;
-			uint8_t * ptr = sBuffer;
+			uint8_t* ptr = reinterpret_cast<uint8_t*>(line.data());
 
 			// If line is a script directive ...
 			if ( *ptr++ == '#' ) {
@@ -136,7 +135,7 @@ namespace Parser {
 			else {
 				return {
 					.type = raw,
-					.content = std::string( (char*)sBuffer )
+					.content = line
 				};
 			}
 		}
@@ -185,7 +184,7 @@ namespace Parser {
 	/**
 	 * Function to parse block
 	 */
-	lineType parseBlock(parseData *in, parseData *out, lineType terminator = eof) {
+	lineType parseBlock(parseData *in, std::ostream *out, lineType terminator = eof) {
 
 		while (1) {
 
@@ -197,9 +196,9 @@ namespace Parser {
 			// Process line type
 			switch (data.type) {
 				case raw:
-					if ( out && out->file ) {
-						out->lineNumber++;
-						((IO::FileOutput*)out->file)->putLine( data.content.c_str() );
+					if (out && *out) {
+						out->write(data.content.c_str(), data.content.size());
+						out->put('\n');
 					}
 					else {
 						Logger::debug("{}:{}: No valid output specified. Unable to write out line: \"{}\".", in->fileName, in->lineNumber, data.content);
@@ -218,19 +217,14 @@ namespace Parser {
 
 				case dir_file:
 					{
-						parseData out_inner = {
-							.file = new IO::FileOutput( data.content.c_str(), IO::text ),
-							.fileName = data.content.c_str(),
-							.lineNumber = 0
-						};
-
-						if (!out_inner.file->good()) {
+						std::ofstream innerFile(data.content);
+						if (innerFile.fail()) {
 							Logger::error("{}:{}: Couldn't open file \"{}\" for writing.", in->fileName, in->lineNumber, data.content);
-						
+
 							return error;
 						}
 
-                        lineType lastDirective = parseBlock( in, &out_inner, dir_endf );
+                        lineType lastDirective = parseBlock( in, &innerFile, dir_endf );
 
                         if (lastDirective == error) {
                         	return error;
@@ -312,19 +306,19 @@ namespace Parser {
 	/**
 	 * Function to parse a file
 	 */
-	bool parseFile(const char* path, parseData * out = nullptr) {
+	bool parseFile(const char* path, std::ostream * out = nullptr) {
+		std::ifstream fileInput;
+		std::istream& input = (std::string_view(path) == "-") ? std::cin : (fileInput.open(path), fileInput);
+		if (input.fail()) {
+			Logger::error("Failed to open \"{}\" for input.", path);
+			return false;
+		}
 
 		parseData in = {
-			.file = new IO::FileInput( path, IO::text ),
+			.file = input,
 			.fileName = path,
 			.lineNumber = 0
 		};
-
-		if (!in.file->good()) {
-			Logger::error("Failed to open \"{}\" for input.", path);
-
-			return false;
-		}
 
 		// Parsing loop
 		lineType lastDirective = parseBlock( &in, out, eof );

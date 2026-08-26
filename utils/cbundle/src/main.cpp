@@ -1,9 +1,9 @@
 
 /* ------------------------------------------------------------ *
- * Bundle Compilation utility v.2.0.1							*
+ * Bundle Compilation utility v.2.1								*
  *																*
  * Main definitions file										*
- * (c) 2017-2023, Vladikcomper									*
+ * (c) 2017-2026, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 // Standard C-libraries
@@ -11,6 +11,7 @@
 #include <filesystem>
 
 // Standard C++ libraries
+#include <fstream>
 #include <string>			// for strings processing
 #include <vector>			// standard containers
 #include <set>				// ''
@@ -29,8 +30,8 @@ int main (int argc, const char ** argv) {
 	/* Provide help if called without enough options */
 	if (argc<2) {
 		std::cout <<
-			"CBundle utility version 2.0.1\n"
-			"2017-2023, vladikcomper\n"
+			"CBundle utility version 2.1\n"
+			"2017-2026, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
 			"  cbundle [script_file_path|-] [OPTIONS]\n"
@@ -122,11 +123,13 @@ int main (int argc, const char ** argv) {
 	/* Process input file */
 	bool result = false;
 	if (!outputFileName.empty()) {
-		Parser::parseData out = {
-			.file = new IO::FileOutput(outputFileName.c_str()),
-			.fileName = outputFileName.c_str(),
-			.lineNumber = 0
-		};
+		std::ofstream outFile;
+		std::ostream& out = (outputFileName == "-") ? std::cout : (outFile.open(outputFileName), outFile);
+		if (out.fail()) {
+			Logger::error("Failed to open \"{}\" for output.", outputFileName);
+			return -2;
+		}
+
 		result = Parser::parseFile( inputFileName, &out );
 	}
 	else {
