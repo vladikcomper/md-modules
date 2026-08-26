@@ -13,6 +13,7 @@
 #include <string>			// for strings processing
 #include <vector>			// standard containers
 #include <set>				// ''
+#include <iostream>			// for std::cout
 
 // Helper classes
 #include <Logger.hpp>

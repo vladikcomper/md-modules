@@ -11,6 +11,7 @@
 #include <memory>
 #include <functional>
 #include <regex>
+#include <iostream>
 
 #include <IO.hpp>
 #include <Logger.hpp>

@@ -6,7 +6,7 @@ LIB_DIR ?= ../lib
 EXEC_NAME = cbundle
 EXECUTABLE = $(BUILD_DIR)/$(EXEC_NAME)
 
-CXXFLAGS ?= -std=c++20 -O2 -pedantic-errors -Wall -I../lib
+CXXFLAGS ?= -std=c++23 -O2 -pedantic-errors -Wall -I../lib
 LDFLAGS ?= -s
 
 .PHONY:	all cbundle test clean

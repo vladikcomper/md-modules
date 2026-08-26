@@ -1,44 +1,29 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cstddef>
-#include <iostream>
+#include <cstdio>
 #include <string_view>
-#include <format>
+#include <print>
 
 namespace Logger {
 	enum class Level { DEBUG, INFO, WARN, ERROR, QUIET };
 	inline Level logLevel = Level::INFO;
 
 	namespace internal {
-		inline thread_local std::array<char, 4096> linebuffer{};
-
 		/* Log wrapper - Fast overload (no string formatting) */
 		inline void log(Level level, const std::string_view prefix, const std::string_view msg) {
 			if (logLevel > level) return;
-			constexpr std::size_t cap = 4096 - 1; // reserve 1 byte for '\n'
-			auto out = linebuffer.begin();
-			if (!prefix.empty())
-				out = std::copy_n(prefix.data(), std::min(prefix.size(), cap), out);
-		    const auto remaining = cap - static_cast<std::size_t>(out - linebuffer.data());
-			out = std::copy_n(msg.data(), std::min(msg.size(), remaining), out);
-			*out++ = '\n';
-			std::cerr << std::string_view(linebuffer.begin(), out);
+			std::fwrite(prefix.data(), 1, prefix.size(), stderr);
+			std::fwrite(msg.data(), 1, msg.size(), stderr);
+			std::fputc('\n', stderr);
 		}
 
-		/* Log wrapper with `std::format` support */
+		/* Log wrapper with `std::format_string` support */
 	    template <typename... Args>
 		inline void log(Level level, const std::string_view prefix, std::format_string<Args...> fmt, Args&&... args) {
 			if (logLevel > level) return;
-			constexpr std::size_t cap = 4096 - 1; // reserve 1 byte for '\n'
-			auto out = linebuffer.begin();
-			if (!prefix.empty())
-				out = std::copy_n(prefix.data(), std::min(prefix.size(), cap), out);
-		    const auto remaining = cap - static_cast<std::size_t>(out - linebuffer.data());
-			out = std::format_to_n(out, remaining, fmt, std::forward<Args>(args)...).out;
-			*out++ = '\n';
-			std::cerr << std::string_view(linebuffer.begin(), out);
+			std::fwrite(prefix.data(), 1, prefix.size(), stderr);
+			std::println(stderr, fmt, std::forward<Args>(args)...);
 		}
 	}
 

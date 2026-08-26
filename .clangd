@@ -1,2 +1,2 @@
 CompileFlags:
-	Add: [-std=c++20, -Wall, -pedantic-errors, -I../../lib, -I../../../lib]
+	Add: [-std=c++23, -Wall, -pedantic-errors, -I../../lib, -I../../../lib]

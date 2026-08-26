@@ -6,7 +6,7 @@ LIB_DIR ?= ../lib
 EXEC_NAME = convsym
 EXECUTABLE = $(BUILD_DIR)/$(EXEC_NAME)
 
-CXXFLAGS ?= -std=c++20 -O2 -pedantic-errors -Wall -I$(LIB_DIR)
+CXXFLAGS ?= -std=c++23 -O2 -pedantic-errors -Wall -I$(LIB_DIR)
 LDFLAGS ?= -s
 
 .PHONY:	all convsym test clean
