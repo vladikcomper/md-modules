@@ -13,13 +13,11 @@
 #include <functional>
 #include <regex>
 #include <iostream>
+#include <tuple>
+#include <string_view>
 
-#include <IO.hpp>
 #include <Logger.hpp>
 #include <ArgvParser.hpp>
-#include <string_view>
-#include <sys/types.h>
-#include <tuple>
 
 #include "input/Wrappers.cpp"	// for getInputWrapper[..]() and their linkage
 #include "output/Wrappers.cpp"	// for getOutputWrapper[..]() and their linkage
@@ -237,11 +235,6 @@ int main (int argc, const char ** argv) {
 		Logger::error("Input file parsing failed: {}", err.what());
 		return -1;
 	}
-	/* FIXME: Remove this */
-	catch (const char* err) {
-		Logger::error("Input file parsing failed: {}", err);
-		return -1;
-	}
 
 	/* Make sure all symbols referenced in options (e.g. "-ref", "-org"), if any, were resolved */
 	for (const auto & [label, ptr] : symbolToOffsetResolveTable) {
@@ -277,6 +270,7 @@ int main (int argc, const char ** argv) {
 	/* Pre-filter symbols based on regular expression */
 	if (filterRegexStr.length() > 0) {
 		const auto regexExpression = std::regex(filterRegexStr);
+		/* FIXME: `std::erase_if`? */
 		for (auto it = symbolTable.symbols.cbegin(); it != symbolTable.symbols.cend(); /*it++*/) {	// NOTICE: Do not increment iterator here (but see below)
 			bool matched = std::regex_match(it->second, regexExpression);
 			if (matched == optFilterExclude) {	// will erase element: if mode=exclude and matched, if mode=include and !matched

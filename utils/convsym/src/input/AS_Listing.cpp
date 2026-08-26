@@ -9,6 +9,7 @@
 #include <optional>
 #include <iostream>
 #include <fstream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <map>
@@ -97,7 +98,7 @@ struct Input__AS_Listing : public InputWrapper {
 		}
 
 		if (!foundSymbolTable) {
-			throw "Coudn't find symbols table";
+			throw std::runtime_error("Coudn't find symbols table");
 		}
 	}
 

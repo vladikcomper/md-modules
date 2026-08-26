@@ -12,8 +12,8 @@
 
 #include "Logger.hpp"
 
+/* FIXME: Refactor */
 namespace OptsParser {
-
 
 	/* Structure that handles option definition */
 	struct record {
@@ -24,7 +24,7 @@ namespace OptsParser {
 	/**
 	 * Function to parse string consisting of options and their values
 	 */
-	void parse(const char* opts, std::map<std::string, record> OptsList) {
+	void parse(const char* opts, const std::map<std::string, record>& OptsList) {
 
 		const char * ptr = opts;
 		bool illegalCharactersFound = false;

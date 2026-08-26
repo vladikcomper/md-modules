@@ -32,19 +32,22 @@ struct SymbolTable {
 	SymbolTable(const SymbolTable& symbolTable) = delete;
 	SymbolTable& operator=(const SymbolTable& symbolTable) = delete;
 
+	/* FIXME: Move this complexity outside of .add calls */
+	/* FIXME: If symbols are sorted, we can cut off unwanted offsets early */
 	template<typename LabelType>
 	inline bool add(uint32_t offset, LabelType label) {
 		const uint32_t correctedOffset = (offset - offsetConversionOpts.baseOffset) & offsetConversionOpts.offsetMask;
 
 		/* If we have symbols to resolve for some options (e.g. `-ref sym:MySymbolName`), resolve to offset if name matches */
 		if (!symbolToOffsetResolveTable.empty()) {
+			/* FIXME: Do this resolution AFTER processing the entire input, use hash table */
 			const auto symbolToOffsetEntry = symbolToOffsetResolveTable.find(label);
 			if (symbolToOffsetEntry != symbolToOffsetResolveTable.end()) {
 				symbolToOffsetEntry->second.get() = correctedOffset;
 				Logger::debug("Resolved requested symbol offset: {:X}", correctedOffset);
 			}
 		}
-
+		/* FIXME: Do this resolution AFTER processing the entire input, allows to specify left/right boundary as symbols! */
 		if (!(
 			correctedOffset >= offsetConversionOpts.offsetLeftBoundary && 
 			correctedOffset <= offsetConversionOpts.offsetRightBoundary

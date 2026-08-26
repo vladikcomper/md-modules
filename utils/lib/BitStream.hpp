@@ -35,6 +35,7 @@ public:
 	 * Subroutine to flush the buffer
 	 */
 	void flush() {
+		// WARNING! This leaves trailing zero byte even if no bits will be written since!
 		buffer.push_back(0x00);
 		currentBitPos = 8;
 		currentBytePos++;
