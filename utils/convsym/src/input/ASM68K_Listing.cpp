@@ -13,6 +13,7 @@
 #include <unordered_set>
 
 #include <IO.hpp>
+#include <utils.hpp>
 #include <Logger.hpp>
 #include <OptsParser.hpp>
 
@@ -86,7 +87,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 		// For every string in a listing file ...
 		std::size_t lineCounter = 0;
-		while (std::getline(input, line)) {
+		while (getline_safe(input, line)) {
 			lineCounter++;
 			if (line.size() <= 36) continue;	// If line is too short, do not proceed
 
@@ -225,7 +226,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 							bool endmDirectiveReached = false;
 
 							std::size_t macroLineCounter = 0;
-							while (std::getline(input, line)) {
+							while (getline_safe(input, line)) {
 								// Maintain line counter to warn if suspiciously many lines were processed as macro definition alone
 								macroLineCounter++;
 								if (macroLineCounter >= 1000) {

@@ -15,6 +15,7 @@
 #include <Logger.hpp>
 #include <OptsParser.hpp>
 #include <string_view>
+#include <utils.hpp>
 
 #include "InputWrapper.hpp"
 
@@ -55,7 +56,7 @@ struct Input__Log : public InputWrapper {
 		}
 
 		std::size_t lineNum = 0;
-		while (std::getline(input, line)) {
+		while (getline_safe(input, line)) {
 			lineNum++;
 
 			uint8_t* ptr = reinterpret_cast<uint8_t*>(line.data());						// WARNING: Unsigned type is required here for certain range-based optimizations

@@ -16,6 +16,7 @@
 #include <IO.hpp>
 #include <Logger.hpp>
 #include <OptsParser.hpp>
+#include <utils.hpp>
 
 #include "InputWrapper.hpp"
 
@@ -53,7 +54,7 @@ struct Input__AS_Listing : public InputWrapper {
 
 		// For every string in a listing file ...
 		std::size_t lineCounter = 0;
-		while (std::getline(input, line)) {
+		while (getline_safe(input, line)) {
 			lineCounter++;
 			if (line.size() < 8) continue;	// if line is too short, ignore it
 

@@ -13,6 +13,7 @@
 #include <algorithm>
 
 #include <IO.hpp>
+#include <utils.hpp>
 #include <Logger.hpp>
 #include <OptsParser.hpp>
 
@@ -55,7 +56,7 @@ struct Input__TXT : public InputWrapper {
 
 		std::size_t lineNum = 0;
 		const auto lineFormat_cstr = lineFormat.c_str();
-		while (std::getline(input, line)) {
+		while (getline_safe(input, line)) {
 			lineNum++;
 
 			uint32_t offset = 0;
