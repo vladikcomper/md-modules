@@ -10,7 +10,6 @@
 #include <map>
 #include <string>
 
-#include "IO.hpp"
 #include "Logger.hpp"
 
 namespace OptsParser {

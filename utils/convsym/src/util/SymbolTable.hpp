@@ -13,7 +13,7 @@ struct OffsetConversionOptions {
 	uint32_t baseOffset;
 	uint32_t offsetLeftBoundary;
 	uint32_t offsetRightBoundary;
-	uint32_t offsetMask;	
+	uint32_t offsetMask;
 };
 
 typedef std::unordered_map<std::string_view, std::reference_wrapper<uint32_t>> SymbolToOffsetResolveTable;

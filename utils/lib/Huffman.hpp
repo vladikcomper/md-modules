@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "IO.hpp"
 #include "Logger.hpp"
 
 #include <cassert>

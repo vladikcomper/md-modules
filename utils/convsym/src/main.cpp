@@ -6,6 +6,7 @@
  * ------------------------------------------------------------	*/
 
 #include <cstdint>
+#include <exception>
 #include <stdexcept>
 #include <string>
 #include <memory>
@@ -29,7 +30,7 @@
 int main (int argc, const char ** argv) {
 
 	/* Provide help if no sufficient arguments were passed */
-	if (argc<2) {
+	if (argc < 3) {
 		std::cout <<
 			"ConvSym utility version 2.12.1\n"
 			"(c) 2016-2024, vladikcomper\n"
@@ -159,6 +160,7 @@ int main (int argc, const char ** argv) {
 				{ "-a",			ArgvParser::Arg::flag{ &optAppend } },
 				{ "-noalign",	ArgvParser::Arg::flag{ &optNoAlignOnAppend } },
 				{ "-debug",		ArgvParser::Arg::flag{ &optDebug } },
+				/* FIXME: "-quiet" option */
 				{ "-in",		ArgvParser::Arg::string{ &inputWrapperName } },
 				{ "-input",		ArgvParser::Arg::string{ &inputWrapperName } },
 				{ "-inopt",		ArgvParser::Arg::string{ &inputOpts } },
@@ -174,8 +176,8 @@ int main (int argc, const char ** argv) {
 				{ "-tolower",	ArgvParser::Arg::flag{ &optToLower } }
 			});
 		}
-		catch (const char* err) {
-			Logger::error(err);
+		catch (const std::exception& err) {
+			Logger::error(err.what());
 			return -1;
 		}
 	}

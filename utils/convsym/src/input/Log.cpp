@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <string>
 #include <map>
-#include <set>
 
 #include <IO.hpp>
 #include <Logger.hpp>
@@ -45,7 +44,7 @@ struct Input__Log : public InputWrapper {
 		IO::FileInput input = IO::FileInput( fileName, IO::text );
 		if ( !input.good() ) { 
 			throw "Couldn't open input file"; 
-		}	
+		}
 
 		// Define re-usable conditions
 		#define IS_HEX_CHAR(X) 			((unsigned)(X-'0')<10||(unsigned)(X-'A')<6||(unsigned)(X-'a')<6)  

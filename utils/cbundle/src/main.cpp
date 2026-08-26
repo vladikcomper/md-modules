@@ -7,6 +7,7 @@
  * ------------------------------------------------------------	*/
 
 // Standard C-libraries
+#include <exception>
 #include <filesystem>
 
 // Standard C++ libraries
@@ -98,8 +99,8 @@ int main (int argc, const char ** argv) {
 				{ "-def",	ArgvParser::Arg::stringList { &predefinedSymbols } },
 			});
 		}
-		catch (const char* err) {
-			Logger::error(err);
+		catch (const std::exception& err) {
+			Logger::error(err.what());
 			return -1;
 		}
 	}
