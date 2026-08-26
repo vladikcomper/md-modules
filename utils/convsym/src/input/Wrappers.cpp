@@ -4,8 +4,8 @@
  * Input formats base controller								*
  * ------------------------------------------------------------	*/
 
-#include <algorithm>
-#include <map>
+#include <stdexcept>
+#include <unordered_map>
 #include <string>
 #include <memory>
 #include <functional>
@@ -25,7 +25,7 @@
 
 /* Input wrappers map */
 std::unique_ptr<InputWrapper> getInputWrapper(const std::string& name) {
-	static const std::map<std::string, std::function<std::unique_ptr<InputWrapper>()> >
+	static const std::unordered_map<std::string, std::function<std::unique_ptr<InputWrapper>()> >
 	wrapperTable {
 		{ "asm68k_sym", 	[]() { return std::unique_ptr<InputWrapper>(new Input__ASM68K_Sym()); } },
 		{ "asm68k_lst", 	[]() { return std::unique_ptr<InputWrapper>(new Input__ASM68K_Listing()); } },
@@ -38,7 +38,7 @@ std::unique_ptr<InputWrapper> getInputWrapper(const std::string& name) {
 	auto entry = wrapperTable.find(name);
 	if (entry == wrapperTable.end()) {
 		Logger::error("Unknown input format specifier: {}", name);
-		throw "Bad input format specifier";
+		throw std::runtime_error("Bad input format specifier");
 	}
 
 	return (entry->second)();

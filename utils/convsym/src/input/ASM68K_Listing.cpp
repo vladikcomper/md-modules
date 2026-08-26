@@ -4,10 +4,13 @@
  * Input wrapper for the ASM68K listing format					*
  * ------------------------------------------------------------	*/
 
+#include <cstddef>
 #include <cstdint>
+#include <iostream>
+#include <fstream>
 #include <string>
 #include <map>
-#include <set>
+#include <unordered_set>
 
 #include <IO.hpp>
 #include <Logger.hpp>
@@ -59,17 +62,16 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		OptsParser::parse( opts, OptsList );
 
 		// Setup buffer, symbols list and file for input
-		const int sBufferSize = 1024;
-		uint8_t sBuffer[sBufferSize];
-		std::multimap<uint32_t, std::string> SymbolMap;
-		IO::FileInput input = IO::FileInput(fileName, IO::text);
-		if (!input.good()) {
-			throw "Couldn't open input file";
+		std::string line;
+		std::ifstream fileStream;
+		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
+		if (input.fail()) {
+			throw std::runtime_error("Failed to open input file");
 		}
 
 		// Vocabulary for assembly directives that support labels
 		// NOTICE: This will be also extended with macro names
-		std::set<std::string> NamingOpcodes = {
+		std::unordered_set<std::string> NamingOpcodes = {
 			"=", "equ", "equs", "equr", "reg", "rs", "rsset", "set", "macro", "substr", "section", "group"
 		};
 
@@ -83,23 +85,12 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		#define IS_ENDOFLINE(X)			(X=='\n'||X=='\r'||X==0x00)
 
 		// For every string in a listing file ...
-		for ( 
-				int lineCounter = 0, lineLength; 
-				lineLength = input.readLine( sBuffer, sBufferSize ), lineLength >= 0; 
-				++lineCounter 
-			) {
+		std::size_t lineCounter = 0;
+		while (std::getline(input, line)) {
+			lineCounter++;
+			if (line.size() <= 36) continue;	// If line is too short, do not proceed
 
-			// If line is too short, do not proceed
-			if ( lineLength <= 36 ) {
-				Logger::debug("Line {} is too short, skipping", lineCounter);
-				continue;
-			}
-
-			//// Bugfix: for when string separation was forced at null-terminator
-			//if ( lineLength < sBufferSize ) {
-			//	sBuffer[ lineLength+1 ] = 0x00;
-			//}
-
+			uint8_t* const sBuffer = reinterpret_cast<uint8_t*>(line.data());
 			uint8_t* const sLineOffset = sBuffer;		// E.g.: "00000AEE 301F <..>move.w (sp)+, d0\n"
 			uint8_t* const sLineText = sBuffer+36;		// E.g.: "move.w (sp)+, d0\n"
 			uint8_t* const cMacroMark = sBuffer+34;		// If contains "M" at the specified column (column 34), the line is macro expansion
@@ -233,12 +224,10 @@ struct Input__ASM68K_Listing : public InputWrapper {
 						if (optIgnoreMacroDefinitions) {
 							bool endmDirectiveReached = false;
 
-							for (
-								int macroLineCounter = 0, macroLineLength;
-								macroLineLength = input.readLine( sBuffer, sBufferSize ), macroLineLength >= 0;
-								++macroLineCounter
-							) {
+							std::size_t macroLineCounter = 0;
+							while (std::getline(input, line)) {
 								// Maintain line counter to warn if suspiciously many lines were processed as macro definition alone
+								macroLineCounter++;
 								if (macroLineCounter >= 1000) {
 									Logger::warn(
 										// TODOh: Advise to enable ignore macro definitions option?
@@ -248,12 +237,9 @@ struct Input__ASM68K_Listing : public InputWrapper {
 									break;
 								}
 
-								// Make sure this line includes assembly text
-								if (macroLineLength <= 36) {
-									continue;
-								}
+								if (line.size() <= 36) continue;	// Make sure this line includes assembly text
 
-								ptr = sBuffer+36;
+								ptr = reinterpret_cast<uint8_t*>(line.data()) + 36;
 
 								// If line starts with label, skip it ...
 								if (!IS_WHITESPACE(*ptr)) {

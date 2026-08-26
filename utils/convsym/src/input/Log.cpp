@@ -4,13 +4,17 @@
  * Input wrapper for log files									*
  * ------------------------------------------------------------	*/
 
+#include <cstddef>
 #include <cstdint>
+#include <fstream>
+#include <stdexcept>
 #include <string>
 #include <map>
+#include <iostream>
 
-#include <IO.hpp>
 #include <Logger.hpp>
 #include <OptsParser.hpp>
+#include <string_view>
 
 #include "InputWrapper.hpp"
 
@@ -24,39 +28,38 @@ struct Input__Log : public InputWrapper {
 		// Supported options:
 		//	/separator=x	- determines character that separates labes and offsets, default: ":"
 		//	/useDecimal?	- set if offsets should be treat as decimal numbers; default: -
-				
+
 		// Variables and options
 		char labelSeparator = ':';
 		bool optUseDecimal = false;
-		
+
 		const std::map<std::string, OptsParser::record>
 			OptsList {
 				{ "separator",	{ .type = OptsParser::record::p_char, .target = &labelSeparator	} },
 				{ "useDecimal",	{ .type = OptsParser::record::p_bool, .target = &optUseDecimal	} }
 			};
 			
-		OptsParser::parse( opts, OptsList );		
-		
-		// Setup buffer, symbols list and file for input
-		const int sBufferSize = 1024;
-		uint8_t sBuffer[ sBufferSize ];
-		std::multimap<uint32_t, std::string> SymbolMap;
-		IO::FileInput input = IO::FileInput( fileName, IO::text );
-		if ( !input.good() ) { 
-			throw "Couldn't open input file"; 
-		}
+		OptsParser::parse( opts, OptsList );
+
 
 		// Define re-usable conditions
 		#define IS_HEX_CHAR(X) 			((unsigned)(X-'0')<10||(unsigned)(X-'A')<6||(unsigned)(X-'a')<6)  
 		#define IS_NUMERIC(X) 			((unsigned)(X-'0')<10)
 		#define SKIP_SPACES(X)			while ( *X==' ' || *X=='\t' ) X++
 
-		int lineNum = 0;
-		while (input.readLine( sBuffer, sBufferSize ) >= 0) {
+		std::string line;
+		std::ifstream fileStream;
+		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
+		if (input.fail()) {
+			throw std::runtime_error("Failed to open input file");
+		}
+
+		std::size_t lineNum = 0;
+		while (std::getline(input, line)) {
 			lineNum++;
 
-			uint8_t* ptr = sBuffer;						// WARNING: Unsigned type is required here for certain range-based optimizations
-			
+			uint8_t* ptr = reinterpret_cast<uint8_t*>(line.data());						// WARNING: Unsigned type is required here for certain range-based optimizations
+
 			SKIP_SPACES(ptr);
 			
 			// Decode the offset ...

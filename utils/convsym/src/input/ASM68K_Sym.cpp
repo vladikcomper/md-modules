@@ -5,10 +5,12 @@
  * ------------------------------------------------------------	*/
 
 #include <cstdint>
+#include <ios>
+#include <iostream>
+#include <fstream>
 #include <string>
 #include <map>
 
-#include <IO.hpp>
 #include <Logger.hpp>
 #include <OptsParser.hpp>
 
@@ -21,8 +23,12 @@ struct Input__ASM68K_Sym : public InputWrapper {
 	~Input__ASM68K_Sym() {}
 
 	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts) {
-		IO::FileInput input = IO::FileInput(fileName);
-		if (!input.good()) { throw "Couldn't open input file"; }
+		std::ifstream fileStream;
+		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName, std::ios_base::binary), fileStream);
+		if (input.fail()) {
+			throw std::runtime_error("Failed to open input file");
+		}
+		input.exceptions(std::ios_base::failbit | std::ios_base::badbit);
 
 		// Supported options:
 		//	/localSign=x			- determines character used to specify local labels
@@ -47,25 +53,29 @@ struct Input__ASM68K_Sym : public InputWrapper {
 
 		// NOTICE: Symbols are usually written OUT OF ORDER in the symbols file,
 		//	so we have to map them first before filtering
+		/* FIXME: Bypass `UnfilteredSymbolsMap` when no local symbols are needed? */
 		std::multimap<uint32_t, std::string> UnfilteredSymbolsMap;
-		input.setOffset(0x0008);
+		input.seekg(8);
 
-		for(;;) {
+		/* FIXME: Read the entire data to buffer, construct string_view for labels */
+		while (input) {
 			uint32_t offset;
-			try {				// read 32-bit label offset
-				offset = input.readLong();
+			try {
+				input.read((char*)&offset, 4);	// read 32-bit label offset
 			} catch(...) {		// if reading failed, break
 				break;
 			}
 
-			input.setOffset( 1, IO::current );					// skip 1 byte
+			input.seekg(1, std::ios::cur);					// skip 1 byte
 
-			const size_t labelLength = (size_t)input.readByte();
+			const size_t labelLength = input.get();
 			char sLabel[255];
-			input.readData((uint8_t*)&sLabel, labelLength);	// read label
+			input.read(sLabel, labelLength);	// read label
 
 			UnfilteredSymbolsMap.insert({ offset, std::string((const char*)&sLabel, labelLength)});
 		}
+
+		/* FIXME: Convert UnfilteredSymbolsMap to array, do std::sort here */
 
 		// Now we can properly process symbols list IN ORDER
 		const std::string *lastGlobalLabelRef = &UnfilteredSymbolsMap.cbegin()->second;	// default global label name

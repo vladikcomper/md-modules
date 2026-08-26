@@ -233,6 +233,11 @@ int main (int argc, const char ** argv) {
 		auto input = getInputWrapper(inputWrapperName);
 		input->parse(symbolTable, inputFileName, inputOpts.c_str());
 	}
+	catch (const std::exception& err) {
+		Logger::error("Input file parsing failed: {}", err.what());
+		return -1;
+	}
+	/* FIXME: Remove this */
 	catch (const char* err) {
 		Logger::error("Input file parsing failed: {}", err);
 		return -1;

@@ -6,7 +6,8 @@
 
 #include <cstdint>
 #include <string>
-#include <map>
+#include <iostream>
+#include <fstream>
 
 #include <IO.hpp>
 #include <Logger.hpp>
@@ -20,26 +21,25 @@ struct Input__AS_Listing_Experimental : public InputWrapper {
 	~Input__AS_Listing_Experimental() {}
 
 	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts) {
-		const int sBufferSize = 1024;
-		if (*opts) {
-			Logger::warn("-inopt is not supported by this parser");
+		if (*opts) Logger::warn("-inopt is not supported by this parser");
+
+		std::string line;
+		std::ifstream fileStream;
+		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
+		if (input.fail()) {
+			throw std::runtime_error("Failed to open input file");
 		}
 
-		// Variables
-		uint8_t sBuffer[ sBufferSize ];
-		std::multimap<uint32_t, std::string> SymbolMap;
-		IO::FileInput input = IO::FileInput( fileName, IO::text );
-		if ( !input.good() ) { throw "Couldn't open input file"; }
 		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
 
 		// For every string in a listing file ...
-		while ( input.readLine( sBuffer, sBufferSize ) >= 0 ) {
+		while (std::getline(input, line)) {
 
 			// Known issues for the Sonic 2 disassembly:
 			//	* Some macros somehow define labels that looks like global ones (notably, _MOVE and such)
 			//	* Labels from injected Z80 code sometimes make it to the list ...
 
-			uint8_t* ptr = sBuffer;		// WARNING: dereffed type should be UNSIGNED, as it's used for certain range-based optimizations
+			uint8_t* ptr = reinterpret_cast<uint8_t*>(line.data());		// WARNING: dereffed type should be UNSIGNED, as it's used for certain range-based optimizations
 
 			// Check if this line has file idention number (pattern: "(d)", where d is a decimal digit)
 			if ( *ptr == '(' ) {
@@ -87,7 +87,7 @@ struct Input__AS_Listing_Experimental : public InputWrapper {
 
 			// Check if line matches a label definition ...
 			if ( *ptr == ' ' && *(ptr+1) == '(' ) continue;
-			while ( *ptr && (ptr-sBuffer < 40) ) { ptr++; }			// align to column 40 (where line starts)
+			while ( *ptr && (ptr-(uint8_t*)line.data() < 40) ) { ptr++; }			// align to column 40 (where line starts)
 			while ( *ptr==' ' || *ptr=='\t' ) { ptr++; }			// skip spaces or tabs, if present
 			uint8_t* const label = ptr;								// remember location, where label presumably starts...
 			

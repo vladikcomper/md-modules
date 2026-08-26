@@ -4,8 +4,11 @@
  * Input wrapper for the AS listing format						*
  * ------------------------------------------------------------	*/
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <iostream>
+#include <fstream>
 #include <string>
 #include <string_view>
 #include <map>
@@ -41,23 +44,20 @@ struct Input__AS_Listing : public InputWrapper {
 			};
 
 		// Setup buffer and file for input
-		const int sBufferSize = 1024;
-		uint8_t sBuffer[ sBufferSize ];
-		IO::FileInput input = IO::FileInput( fileName, IO::text );
-		if ( !input.good() ) { throw "Couldn't open input file"; }
+		std::string line;
+		std::ifstream fileStream;
+		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
+		if (input.fail()) {
+			throw std::runtime_error("Failed to open input file");
+		}
 
 		// For every string in a listing file ...
-		for ( 
-			int lineCounter = 0, lineLength; 
-			lineLength = input.readLine( sBuffer, sBufferSize ), lineLength >= 0; 
-			++lineCounter 
-		) {
-			// If line is too short, do not proceed
-			if (lineLength < 8) {
-				continue;
-			}
+		std::size_t lineCounter = 0;
+		while (std::getline(input, line)) {
+			lineCounter++;
+			if (line.size() < 8) continue;	// if line is too short, ignore it
 
-			std::string_view strLine((char*)sBuffer, (size_t)lineLength);
+			std::string_view strLine(line);
 
 			// Phase 1: Search for symbol table header ...
 			if (!foundSymbolTable) {

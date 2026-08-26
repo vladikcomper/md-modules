@@ -6,10 +6,10 @@
 
 #include <cstdint>
 #include <cstdio>
-#include <cstdlib>
+#include <iostream>
+#include <fstream>
 #include <string>
 #include <map>
-#include <set>
 #include <algorithm>
 
 #include <IO.hpp>
@@ -40,14 +40,12 @@ struct Input__TXT : public InputWrapper {
 				{ "offsetFirst",	{ .type = OptsParser::record::p_bool,	.target = &offsetFirst } },
 			};
 		OptsParser::parse(opts, OptsList);
-		
-		// Setup buffer, symbols list and file for input
-		const int sBufferSize = 1024;
-		uint8_t sBuffer[sBufferSize];
-		std::multimap<uint32_t, std::string> SymbolMap;
-		IO::FileInput input = IO::FileInput(fileName, IO::text);
-		if (!input.good()) { 
-			throw "Couldn't open input file"; 
+
+		std::string line;
+		std::ifstream fileStream;
+		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
+		if (input.fail()) {
+			throw std::runtime_error("Failed to open input file");
 		}
 
 		auto numSpecifiers = std::ranges::count(lineFormat, '%');
@@ -55,17 +53,17 @@ struct Input__TXT : public InputWrapper {
 			Logger::warn("Line format string likely has too few arguments (try '%%s %%X')");
 		}
 
-		int lineNum = 0;
+		std::size_t lineNum = 0;
 		const auto lineFormat_cstr = lineFormat.c_str();
-		while (input.readLine(sBuffer, sBufferSize) >= 0) {
+		while (std::getline(input, line)) {
 			lineNum++;
 
 			uint32_t offset = 0;
 			char sLabel[512];
 
 			const auto result = offsetFirst
-				? sscanf((const char*)sBuffer, lineFormat_cstr, &offset, sLabel)
-				: sscanf((const char*)sBuffer, lineFormat_cstr, sLabel, &offset);
+				? sscanf(line.c_str(), lineFormat_cstr, &offset, sLabel)
+				: sscanf(line.c_str(), lineFormat_cstr, sLabel, &offset);
 			if (result != 2) {
 				Logger::debug("Failed to parse line {}, skipping (result={})", lineNum, result);
 				continue;
