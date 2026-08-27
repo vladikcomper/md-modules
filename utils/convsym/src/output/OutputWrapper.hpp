@@ -3,6 +3,7 @@
 #include <map>
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include <IO.hpp>
@@ -25,7 +26,7 @@ struct OutputWrapper {
 			// Make sure IO operation was successful
 			if (!output->good()) {
 				Logger::error("Couldn't open file \"{}\"", fileName);
-				throw "IO error";
+				throw std::runtime_error("IO error");
 			}
 
 			// If append mode is specified: append to the end of file

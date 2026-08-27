@@ -288,8 +288,8 @@ int main (int argc, const char ** argv) {
 			auto output = getOutputWrapper(outputWrapperName);
 			output->parse(symbolTable.symbols, outputFileName, appendOffset, pointerOffset, outputOpts.c_str(), !optNoAlignOnAppend);
 		}
-		catch (const char* err) {
-			Logger::error("Output generation failed: {}", err);
+		catch (const std::exception& err) {
+			Logger::error("Output generation failed: {}", err.what());
 			return -2;
 		}
 	}

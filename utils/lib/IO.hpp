@@ -8,7 +8,6 @@
 #pragma once
 
 #include <cstdio>
-#include <cstdarg>
 #include <cstring>
 #include <cstdint>
 
@@ -133,30 +132,6 @@ namespace IO {
 		inline void writeData(const void * buffer, int size) {	// write series of data
 			fwrite((char*)buffer, 1, size, file);
 		};
-
-		inline void putString(const char * str) {				// put *unformatted* string
-			fputs(str, file);
-		}
-
-		inline void putLine(const char * str) {				// put *unformatted* string
-			fputs( str, file );
-			fputc( '\n', file );
-		}
-
-		inline void writeString(const char * format, ...) {	// write a formatted string to file
-			va_list args;
-			va_start(args, format);
-			vfprintf(file, format, args);
-			va_end(args);
-		}
-
-		inline void writeLine(const char * format, ...) {	// write a formatted string to file
-			va_list args;
-			va_start(args, format);
-			vfprintf(file, format, args);
-			va_end(args);
-			fputc('\n', file);
-		}
 
 	};
 }

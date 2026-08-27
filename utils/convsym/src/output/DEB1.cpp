@@ -88,6 +88,11 @@ struct Output__Deb1 : public OutputWrapper {
 		/* Write down the decoding table */
 		const Huffman::Record* characterToRecord[0x100] = { nullptr };	// LUT that links each character to its Huffman-coding record
 		for (auto& entry : codesTable) {
+			/* FIXME: This shouldn't happen as Huffman encoder auto-flattens tree */
+			if (entry.codeLength > 16) {
+				throw std::runtime_error("Some encoding table code lengths exceed 16 bits, try -tolower or -toupper option to reduce entropy");
+			}
+
 			characterToRecord[entry.data] = &entry;		// assign character this Huffman::Record entity
 			output->writeBEWord(entry.code);			// write Huffman-code
 			output->writeByte(entry.codeLength);		// write Huffman-code length (in bits)

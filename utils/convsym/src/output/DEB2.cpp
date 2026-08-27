@@ -7,6 +7,7 @@
 #include <cassert>
 #include <map>
 #include <cstdint>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -91,9 +92,9 @@ struct Output__Deb2 : public OutputWrapper {
 		/* Write down the decoding table */
 		const Huffman::Record* characterToRecord[0x100] = { nullptr };	// LUT that links each character to its Huffman-coding record
 		for (auto& entry : codesTable) {
+			/* FIXME: This shouldn't happen as Huffman encoder auto-flattens tree */
 			if (entry.codeLength > 16) {
-				const char * errorMessage = "Some encoding table code lengths exceed 16 bits, try -tolower or -toupper option to reduce entropy";
-				throw errorMessage;
+				throw std::runtime_error("Some encoding table code lengths exceed 16 bits, try -tolower or -toupper option to reduce entropy");
 			}
 
 			characterToRecord[entry.data] = &entry;		// assign character this Huffman::Record entity

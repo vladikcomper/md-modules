@@ -5,11 +5,12 @@
  * ------------------------------------------------------------	*/
 
 #include <map>
+#include <cstdio>
 #include <cstdint>
 #include <string>
 #include <algorithm>
+#include <string_view>
 
-#include <IO.hpp>
 #include <Logger.hpp>
 
 #include "OptsParser.hpp"
@@ -57,15 +58,16 @@ struct Output__Asm : public OutputWrapper {
 			Logger::warn("Line format string likely has too few arguments (try '%%s:\tequ\t$%%X')");
 		}
 
-		IO::FileOutput output = IO::FileOutput(fileName, IO::text);
-		if (!output.good()) {
-			Logger::error("Couldn't open file \"{}\"", fileName);
-			throw "IO error";
+		std::FILE * output = std::string_view(fileName) == "-" ? stdout : std::fopen(fileName, "w");
+		if (!output) {
+			throw std::runtime_error("Failed to open output file");
 		}
 
-		const auto lineFormat_cstr = lineFormat.c_str();
-		for (auto& symbol : SymbolList) {
-			output.writeLine(lineFormat_cstr, symbol.second.c_str(), symbol.first);
+		for (const auto & symbol : SymbolList) {
+			std::fprintf(output, lineFormat.c_str(), symbol.second.c_str(), symbol.first);
+			std::fputc('\n', output);
 		}
+
+		if (output != stdout) std::fclose(output);
 	}
 };

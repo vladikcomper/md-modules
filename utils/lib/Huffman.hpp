@@ -15,6 +15,7 @@
 #include <iterator>
 #include <set>
 #include <map>
+#include <stdexcept>
 #include <utility>
 
 
@@ -231,7 +232,7 @@ struct Huffman {
 								(const void*)node.get().node, node.get().node->data, (const void*)node.get().parent, (const void*)node.get().parent->leaf[0], (const void*)node.get().parent->leaf[1]);
 						}
 					}
-					throw "Internal Huffman tree flattening error: Lowest node pair is corrupted.";
+					throw std::runtime_error("Internal Huffman tree flattening error: Lowest node pair is corrupted.");
 				}
 
 				/* Get the first available node at level "maxTreeDepth - 1" or above */
@@ -246,7 +247,7 @@ struct Huffman {
 				/* Detach `lowestTreeNodeA`, `lowestTreeNodeB` from its original parent, attach to `--targetEndNode` */
 				Node * lowestTreeParentNode = lowestTreeNodeARef.parent;
 				if (targetEndNodeRef.node->leaf[0] || targetEndNodeRef.node->leaf[1]) {
-					throw "Internal Huffman tree flattening error: Target end node is corrupted.";
+					throw std::runtime_error("Internal Huffman tree flattening error: Target end node is corrupted.");
 				}
 				targetEndNodeRef.node->leaf[0] = lowestTreeParentNode->leaf[0];
 				targetEndNodeRef.node->leaf[1] = lowestTreeParentNode->leaf[1];
@@ -265,7 +266,7 @@ struct Huffman {
 				/* `lowestTreeParentNode` itself becomes a new end node */
 				auto lowestTreeParentNodeRef = nodeRefMap.find(lowestTreeParentNode);
 				if (lowestTreeParentNodeRef == nodeRefMap.end()) {
-					throw "Internal Huffman tree flattening error: Failed to locate parent of a current lowest parent node.";
+					throw std::runtime_error("Internal Huffman tree flattening error: Failed to locate parent of a current lowest parent node.");
 				}
 
 				/* Rebalance `endNodesMap` tree: Relocate `lowestTreeNodeA` and `lowestTreeNodeA` to a different level/depth, remove `targetEndNode` */

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <map>
+#include <stdexcept>
 #include <string>
 
 #include "Logger.hpp"
@@ -83,7 +84,7 @@ namespace OptsParser {
 							break;
 
 						default:
-							throw "Incorrect or broken option list entry";
+							throw std::runtime_error("Incorrect or broken option list entry");
 
 					}
 				}
