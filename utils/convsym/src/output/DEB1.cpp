@@ -54,7 +54,7 @@ struct Output__Deb1 : public OutputWrapper {
 		uint16_t lastBlock = (lastSymbolPtr->first) >> 16;
 
 		if (lastBlock > 63) {		// blocks index table is limited to $40 entries (which is only enough to ROM section)
-			Logger::error("Too many memory blocks to allocate (${:X}), truncating to $40 blocks. Some symbols will be lost.", lastBlock+1);
+			Logger::warn("Too many memory blocks to allocate (${:X}), truncating to $40 blocks. Some symbols will be lost.", lastBlock+1);
 			lastBlock = 0x3F;
 		}
 
@@ -171,7 +171,7 @@ struct Output__Deb1 : public OutputWrapper {
 					/* Check for pointer capacity limits */
 					if ( (loc_Block - loc_BlockOffsets)>>1 > 0xFFFF
 						|| (loc_Block+offsetsData.size()*2 - loc_BlockOffsets)>>1 > 0xFFFF ) {
-						Logger::error("Block {:02X} is either too large, or symbol file has exceeded its size limits; unable to write the block", block);
+						Logger::warn("Block {:02X} is either too large, or symbol file has exceeded its size limits; unable to write the block", block);
 						continue;
 					}
 
