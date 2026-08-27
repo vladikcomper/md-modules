@@ -12,7 +12,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <map>
 
 #include <IO.hpp>
 #include <Logger.hpp>
@@ -103,7 +102,7 @@ struct Input__AS_Listing : public InputWrapper {
 	}
 
 private:
-	std::optional<std::pair<uint32_t, std::string>> parseSymbolTableEntry(const std::string_view &strEntry, bool optProcessLocalLabels, char localLabelSymbol) {
+	inline std::optional<std::pair<uint32_t, std::string>> parseSymbolTableEntry(const std::string_view &strEntry, bool optProcessLocalLabels, char localLabelSymbol) {
 		#define IS_HEX_CHAR(X) 			((unsigned)(X-'0')<10||(unsigned)(X-'A')<6)
 		#define IS_START_OF_LABEL(X)	((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||X=='_')
 		#define IS_LABEL_CHAR(X)		((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(optProcessLocalLabels&&X==localLabelSymbol)||(unsigned)(X-'0')<10||X=='_')
