@@ -44,11 +44,11 @@ struct Output__Log : public OutputWrapper {
 		std::string lineFormat = "%X: %s";
 
 		if (*opts && opts[0] == '/') {
-			const std::map<std::string, OptsParser::record>
-			OptsList {
-				{ "fmt", { .type = OptsParser::record::p_string, .target = &lineFormat	} }
-			};
-			OptsParser::parse(opts, OptsList);
+			std::string_view lineFormatSv;
+			OptsParser::parse(std::string_view(opts), {
+				{ "fmt", OptsParser::Opt::String{ &lineFormatSv } }
+			});
+			lineFormat = std::string(lineFormatSv);
 		}
 		else if (*opts) {
 			lineFormat = opts;

@@ -7,6 +7,7 @@
 #include <cassert>
 #include <map>
 #include <cstdint>
+#include <stdexcept>
 #include <string>
 
 #include <OptsParser.hpp>
@@ -41,13 +42,9 @@ struct Output__Deb1 : public OutputWrapper {
 
 		/* Parse options from "-inopt" agrument's value */
 		bool optFavorLastLabels = false;
-
-		const std::map<std::string, OptsParser::record>
-			OptsList {
-				{ "favorLastLabels",	{ .type = OptsParser::record::p_bool,	.target =&optFavorLastLabels } }
-			};
-			
-		OptsParser::parse(opts, OptsList);
+		OptsParser::parse(std::string_view(opts), {
+			{ "favorLastLabels", OptsParser::Opt::Bool{ &optFavorLastLabels } }
+		});
 
 		/* Write format version token */
 		output->writeBEWord(0xDEB1);

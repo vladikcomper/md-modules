@@ -10,6 +10,7 @@
 #include <fstream>
 #include <string>
 #include <map>
+#include <string_view>
 #include <unordered_set>
 
 #include <IO.hpp>
@@ -50,20 +51,16 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
 
 		// Fetch options from "-inopt" agrument's value
-		const std::map<std::string, OptsParser::record>
-			OptsList {
-				{ "localSign",			{ .type = OptsParser::record::p_char,	.target = &localLabelSymbol				} },
-				{ "localJoin",			{ .type = OptsParser::record::p_char,	.target = &localLabelRef				} },
-				{ "ignoreMacroDefs",	{ .type = OptsParser::record::p_bool,	.target = &optIgnoreMacroDefinitions	} },
-				{ "ignoreMacroExp",		{ .type = OptsParser::record::p_bool,	.target = &optIgnoreMacroExpansions		} },
-				{ "addMacrosAsOpcodes",	{ .type = OptsParser::record::p_bool,	.target = &optRegisterMacrosAsOpcodes	} },
-				{ "processLocals",		{ .type = OptsParser::record::p_bool,	.target = &optProcessLocalLabels		} }
-			};
-			
-		OptsParser::parse( opts, OptsList );
+		OptsParser::parse(std::string_view(opts), {
+			{ "localSign",			OptsParser::Opt::Char{ &localLabelSymbol } },
+			{ "localJoin",			OptsParser::Opt::Char{ &localLabelRef } },
+			{ "ignoreMacroDefs",	OptsParser::Opt::Bool{ &optIgnoreMacroDefinitions } },
+			{ "ignoreMacroExp",		OptsParser::Opt::Bool{ &optIgnoreMacroExpansions } },
+			{ "addMacrosAsOpcodes",	OptsParser::Opt::Bool{ &optRegisterMacrosAsOpcodes } },
+			{ "processLocals",		OptsParser::Opt::Bool{ &optProcessLocalLabels } }
+		});
 
 		// Setup buffer, symbols list and file for input
-		std::string line;
 		std::ifstream fileStream;
 		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
 		if (input.fail()) {
@@ -86,6 +83,8 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		#define IS_ENDOFLINE(X)			(X=='\n'||X=='\r'||X==0x00)
 
 		// For every string in a listing file ...
+		std::string line;
+		line.reserve(1024);
 		std::size_t lineCounter = 0;
 		while (getline_safe(input, line)) {
 			lineCounter++;

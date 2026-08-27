@@ -6,7 +6,6 @@
  * ------------------------------------------------------------	*/
 
 #include <cstdint>
-#include <exception>
 #include <stdexcept>
 #include <string>
 #include <memory>

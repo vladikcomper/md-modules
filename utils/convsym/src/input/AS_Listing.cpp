@@ -38,15 +38,13 @@ struct Input__AS_Listing : public InputWrapper {
 		bool foundSymbolTable = false;
 
 		// Fetch options from "-inopt" argument's value
-		const std::map<std::string, OptsParser::record>
-			OptsList {
-				{ "localJoin",				{ .type = OptsParser::record::p_char,	.target = &localLabelSymbol				} },
-				{ "processLocals",			{ .type = OptsParser::record::p_bool,	.target = &optProcessLocalLabels		} },
-				{ "ignoreInternalSymbols",	{ .type = OptsParser::record::p_bool,	.target = &optIgnoreInternalSymbols		} }
-			};
+		OptsParser::parse(std::string_view(opts), {
+			{ "localJoin", 				OptsParser::Opt::Char{ &localLabelSymbol } },
+			{ "processLocals",			OptsParser::Opt::Bool{ &optProcessLocalLabels } },
+			{ "ignoreInternalSymbols",	OptsParser::Opt::Bool{ &optIgnoreInternalSymbols } },
+		});
 
 		// Setup buffer and file for input
-		std::string line;
 		std::ifstream fileStream;
 		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
 		if (input.fail()) {
@@ -54,6 +52,8 @@ struct Input__AS_Listing : public InputWrapper {
 		}
 
 		// For every string in a listing file ...
+		std::string line;
+		line.reserve(1024);
 		std::size_t lineCounter = 0;
 		while (getline_safe(input, line)) {
 			lineCounter++;

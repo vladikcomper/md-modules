@@ -2,113 +2,110 @@
 /* ------------------------------------------------------------ *
  * Debugging Modules Utilities Core								*
  * Options parser helper class									*
- * (c) 2017-2018, Vladikcomper									*
+ * (c) 2017-2026, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 #pragma once
 
-#include <map>
+#include <algorithm>
+#include <cctype>
+#include <format>
+#include <initializer_list>
 #include <stdexcept>
-#include <string>
+#include <string_view>
+#include <variant>
 
-#include "Logger.hpp"
 
-/* FIXME: Refactor */
 namespace OptsParser {
 
-	/* Structure that handles option definition */
-	struct record {
-		enum { p_bool, p_char, p_string } type;
-		void * target;
+	namespace Opt {
+		struct Char {
+			char* target;
+			inline void operator()(const std::string_view name, const std::string_view value) const {
+				if (value.size() != 1) {
+					throw std::runtime_error(std::format("Option \"/{}\": Expected a single character.", name));
+				}
+				*target = value[0];
+			}
+		};
+
+		struct Bool {
+			bool* target;
+			inline void operator()(const std::string_view name, const std::string_view value) const {
+				if (value.size() != 1 || !(value[0] == '-' || value[0] == '+')) {
+					throw std::runtime_error(std::format("Option \"/{}\": Expected \"+\" or \"-\" as option value.", name));
+				}
+				*target = value[0] == '+';
+			}
+		};
+
+		struct String {
+			std::string_view* target;
+			inline void operator()(const std::string_view, const std::string_view value) const {
+				*target = value;
+			}
+		};
+	}
+
+	struct entry {
+		std::string_view name;
+		std::variant<Opt::Char, Opt::Bool, Opt::String> def;
 	};
 
-	/**
-	 * Function to parse string consisting of options and their values
-	 */
-	void parse(const char* opts, const std::map<std::string, record>& OptsList) {
+	void parse(std::string_view opts, std::initializer_list<entry> defList) {
+		auto curr = opts.cbegin();
+		while (curr != opts.cend()) {
+			/* Skip any white space */
+			while (curr != opts.cend() && (*curr == ' ' || *curr == '\t')) curr++;
+			if (curr == opts.cend()) break;
 
-		const char * ptr = opts;
-		bool illegalCharactersFound = false;
-		
-		#define IS_VALID_OPERATOR(X) (X=='='||X=='+'||X=='-')
+			/* Fetch option name */
+			if (*curr != '/') {
+				throw std::runtime_error(std::format("Expected \"/\", got \"{}\"", *curr));
+			}
+			const auto optionNameStart = ++curr;
+			while (curr != opts.cend() && std::isalnum(static_cast<unsigned char>(*curr))) curr++;
+			const auto optionNameEnd = curr;
+			if (optionNameStart == optionNameEnd) {
+				throw std::runtime_error("Got empty option name: Expected [A-z0-9]+ after \"/\"");
+			}
 
-		while ( *ptr ) {
+			const auto optionName = std::string_view(optionNameStart, optionNameEnd);
+			if (curr == opts.cend() || *curr == ' ' || *curr == '\t') {
+				throw std::runtime_error(std::format("Expected a value after \"/{}\"", optionName));
+			}
 
-			// Fetch option start token
-			if ( *ptr == '/' ) {
+			/* Locate option definition */
+			const auto optDef = std::ranges::find(defList, optionName, &entry::name);
+			if (optDef == defList.end()) {
+				throw std::runtime_error(std::format("Unknown option \"/{}\"", optionName));
+			}
 
-				const char *ptr_start, *ptr_end;
-
-				// Fetch option name
-				ptr_start = ++ptr;
-				while ( !IS_VALID_OPERATOR(*ptr) && *ptr ) ptr++;
-				std::string strOptionName( ptr_start, ptr-ptr_start );
-				
-				// Fetch option operator
-				char cOptionOperator = *ptr;
-
-				// Fetch option value
-				ptr_start = ++ptr;
-				if ( *ptr == '\'' ) {		// if quote fetched, seek for closing quote, capture string inbetween
-					ptr_start = ++ptr;			// correct string pointer to pass the quote itself ...
-					while ( *ptr!='\'' && *ptr ) ptr++;
-					ptr_end = ptr;
-					if ( !*ptr ) {				// if string ended before fetching a closing quote, issue error
-						Logger::warn("Missed closing quote for value of parameter {}", strOptionName);
-					}
-					else {						// otherwise, skip the quote
-						ptr++;
-					}
+			/* Fetch option value */
+			auto optionValue = std::string_view(curr, 1);
+			if (*curr++ == '=') {
+				if (curr == opts.cend()) {
+					throw std::runtime_error("Expected a value after \"=\"");
 				}
-				else {						// otherwise, seek for space
-					while ( *ptr!=' ' && *ptr ) ptr++;
-					ptr_end = ptr;
-				}
-				std::string strOptionValue( ptr_start, ptr_end-ptr_start );
-
-				// Decode option according to the options list
-				auto option = OptsList.find(strOptionName);
-				if ( option != OptsList.end() ) {
-					switch ( option->second.type ) {
-						
-						case record::p_bool:
-							*((bool*)option->second.target) = (cOptionOperator == '+');
-							break;
-
-						case record::p_char:
-							*((char*)option->second.target) = strOptionValue[0];
-							break;
-
-						case record::p_string:
-							*((std::string*)option->second.target) = strOptionValue;
-							break;
-
-						default:
-							throw std::runtime_error("Incorrect or broken option list entry");
-
+				if (*curr == '\'') {
+					const auto optionValueStart = ++curr;
+					while (curr != opts.cend() && *curr != '\'') curr++;
+					optionValue = std::string_view(optionValueStart, curr);
+					if (curr != opts.cend() && *curr == '\'') curr++;
+					else {
+						throw std::runtime_error("Missing closing \"'\"");
 					}
 				}
 				else {
-					Logger::error("Unknown option: /{}, skipping", strOptionName);
+					const auto optionValueStart = curr;
+					while (curr != opts.cend() && *curr != ' ' && *curr != '\t') curr++;
+					optionValue = std::string_view(optionValueStart, curr);
 				}
 			}
 
-			// ... otherwise
-			else {
-
-				// If character is not a whitespace, issue warning once
-				if ( *ptr!=' ' ) {
-					if ( illegalCharactersFound == false ) {
-						illegalCharactersFound = true;
-						Logger::warn("Illegal characters found while parsing option string");
-					}
-				}
-	
-				// Skip character
-				ptr++;
-			}
+			/* Parse option */
+			std::visit([&](auto&& def) { def(optionName, optionValue); }, optDef->def);
 		}
-
 	}
 
 }

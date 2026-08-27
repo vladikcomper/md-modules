@@ -24,7 +24,6 @@ struct Input__AS_Listing_Experimental : public InputWrapper {
 	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts) {
 		if (*opts) Logger::warn("-inopt is not supported by this parser");
 
-		std::string line;
 		std::ifstream fileStream;
 		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
 		if (input.fail()) {
@@ -34,6 +33,8 @@ struct Input__AS_Listing_Experimental : public InputWrapper {
 		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
 
 		// For every string in a listing file ...
+		std::string line;
+		line.reserve(1024);
 		while (getline_safe(input, line)) {
 
 			// Known issues for the Sonic 2 disassembly:

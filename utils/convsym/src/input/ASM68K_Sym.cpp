@@ -41,15 +41,12 @@ struct Input__ASM68K_Sym : public InputWrapper {
 		// Variables and options
 		char localLabelSymbol = '@';		// default symbol for local labels
 		char localLabelRef = '.';			// default symbol to reference local labels within global ones
-		
-		const std::map<std::string, OptsParser::record>
-			OptsList {
-				{ "localSign",			{ .type = OptsParser::record::p_char,	.target = &localLabelSymbol			} },
-				{ "localJoin",			{ .type = OptsParser::record::p_char,	.target = &localLabelRef			} },
-				{ "processLocals",		{ .type = OptsParser::record::p_bool,	.target = &optProcessLocalLabels	} }
-			};
-			
-		OptsParser::parse(opts, OptsList);
+
+		OptsParser::parse(std::string_view(opts), {
+			{ "localSign",		OptsParser::Opt::Char{ &localLabelSymbol } },
+			{ "localJoin",		OptsParser::Opt::Char{ &localLabelRef } },
+			{ "processLocals",	OptsParser::Opt::Bool{ &optProcessLocalLabels } }
+		});
 
 		// NOTICE: Symbols are usually written OUT OF ORDER in the symbols file,
 		//	so we have to map them first before filtering

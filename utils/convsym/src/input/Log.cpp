@@ -34,27 +34,24 @@ struct Input__Log : public InputWrapper {
 		char labelSeparator = ':';
 		bool optUseDecimal = false;
 
-		const std::map<std::string, OptsParser::record>
-			OptsList {
-				{ "separator",	{ .type = OptsParser::record::p_char, .target = &labelSeparator	} },
-				{ "useDecimal",	{ .type = OptsParser::record::p_bool, .target = &optUseDecimal	} }
-			};
-			
-		OptsParser::parse( opts, OptsList );
-
+		OptsParser::parse(std::string_view(opts), {
+			{ "separator",	OptsParser::Opt::Char{ &labelSeparator } },
+			{ "useDecimal",	OptsParser::Opt::Bool{ &optUseDecimal } }
+		});
 
 		// Define re-usable conditions
 		#define IS_HEX_CHAR(X) 			((unsigned)(X-'0')<10||(unsigned)(X-'A')<6||(unsigned)(X-'a')<6)  
 		#define IS_NUMERIC(X) 			((unsigned)(X-'0')<10)
 		#define SKIP_SPACES(X)			while ( *X==' ' || *X=='\t' ) X++
 
-		std::string line;
 		std::ifstream fileStream;
 		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
 		if (input.fail()) {
 			throw std::runtime_error("Failed to open input file");
 		}
 
+		std::string line;
+		line.reserve(512);
 		std::size_t lineNum = 0;
 		while (getline_safe(input, line)) {
 			lineNum++;
