@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <istream>
 #include <string>
+#include <string_view>
 
 namespace Utils {
 

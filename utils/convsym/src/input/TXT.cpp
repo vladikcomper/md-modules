@@ -27,7 +27,7 @@ struct Input__TXT : public InputWrapper {
 
 	/** Supported options:
 	  *	- `/fmt='format-string'`	- C-style format string (default: '%s %X')
-	  *	- `/options.offsetFirst?`	- specifies whether offset comes first in the input string (default is label followed by offset)
+	  *	- `/offsetFirst?`			- specifies whether offset comes first in the input string (default is label followed by offset)
 	  */
 	struct {
 		std::string_view fmt;

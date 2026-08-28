@@ -22,6 +22,25 @@ struct Output__Log : public OutputWrapper {
 	Output__Log() {};
 	~Output__Log() {};
 
+	/** Supported options:
+	  *	- `/fmt='format-string'`	- overrides C-style format string (default: '%X: %s')
+	  */
+	struct {
+		std::string_view fmt;
+	} options = { .fmt = "%X: %s" };
+
+	void parseOptions(const std::string_view opts) {
+		if (opts.empty()) return;
+		if (opts[0] == '/') {
+			OptsParser::parse(opts, {
+				{ "fmt", OptsParser::Opt::String{ &options.fmt } }
+			});
+		}
+		else {
+			options.fmt = opts;
+		}
+	}
+
 	/**
 	 * Main function that generates the output
 	 */
@@ -30,30 +49,13 @@ struct Output__Log : public OutputWrapper {
 		const char * fileName,
 		uint32_t appendOffset = 0,
 		uint32_t pointerOffset = 0,
-		const char * opts = "",
 		bool alignOnAppend = true
 	) {
 		if (appendOffset || pointerOffset || !alignOnAppend) {
 			Logger::warn("Append options aren't supported by the \"log\" output parser.");
 		}
 
-		// Supported options:
-		//	/fmt='format-string' 	- overrides C-style format string (default: '%X: %s')
-
-		// Default options
-		std::string lineFormat = "%X: %s";
-
-		if (*opts && opts[0] == '/') {
-			std::string_view lineFormatSv;
-			OptsParser::parse(std::string_view(opts), {
-				{ "fmt", OptsParser::Opt::String{ &lineFormatSv } }
-			});
-			lineFormat = std::string(lineFormatSv);
-		}
-		else if (*opts) {
-			lineFormat = opts;
-		}
-		auto numSpecifiers = std::ranges::count(lineFormat, '%');
+		auto numSpecifiers = std::ranges::count(options.fmt, '%');
 		if (numSpecifiers < 2) {
 			Logger::warn("Line format string likely has too few arguments (try '%%X: %%s')");
 		}
@@ -63,8 +65,10 @@ struct Output__Log : public OutputWrapper {
 			throw std::runtime_error("Failed to open output file");
 		}
 
+		const auto sLineFormat = std::string(options.fmt);	/* FIXME: Avoid re-allocation because string_view is not null-terminated */
+
 		for (const auto & symbol : SymbolList) {
-			std::fprintf(output, lineFormat.c_str(), symbol.first, symbol.second.c_str());
+			std::fprintf(output, sLineFormat.c_str(), symbol.first, symbol.second.c_str());
 			std::fputc('\n', output);
 		}
 

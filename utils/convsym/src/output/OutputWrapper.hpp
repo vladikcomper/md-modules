@@ -5,9 +5,11 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 #include <IO.hpp>
 #include <Logger.hpp>
+#include <OptsParser.hpp>
 
 
 /* Base class for the output formats handlers */
@@ -69,13 +71,15 @@ struct OutputWrapper {
 
 	}
 
-	// Virtual function interface that handles generating output data
+	virtual void parseOptions(const std::string_view opts) {
+		OptsParser::parse(opts, {});
+	}
+
 	virtual void parse( 
 		std::multimap<uint32_t, std::string>& SymbolMap, 
 		const char * fileName, 
 		uint32_t appendOffset = 0, 
 		uint32_t pointerOffset = 0,
-		const char * opts = "",
 		bool alignOnAppend = true
 	) = 0;
 

@@ -26,6 +26,19 @@ struct Output__Deb2 : public OutputWrapper {
 	Output__Deb2() {};
 	~Output__Deb2() {};
 
+	/** Supported options:
+	  *	- `/favorLastLabels?`	- load only the last label for duplicated offsets (default: first)
+	  */
+	struct {
+		bool favorLastLabels;
+	} options = { .favorLastLabels = false };
+
+	void parseOptions(const std::string_view opts) {
+		OptsParser::parse(opts, {
+			{ "favorLastLabels", OptsParser::Opt::Bool{ &options.favorLastLabels } }
+		});
+	}
+
 	/**
 	 * Main function that generates the output
 	 */
@@ -34,18 +47,11 @@ struct Output__Deb2 : public OutputWrapper {
 		const char * fileName,
 		uint32_t appendOffset = 0,
 		uint32_t pointerOffset = 0,
-		const char * opts = "",
 		bool alignOnAppend = true
 	) {
 		assert(!symbols.empty());
 
 		auto output = OutputWrapper::setupOutput( fileName, appendOffset, pointerOffset, alignOnAppend );
-
-		/* Parse options from "-inopt" agrument's value */
-		bool optFavorLastLabels = false;
-		OptsParser::parse(std::string_view(opts), {
-			{ "favorLastLabels", OptsParser::Opt::Bool{ &optFavorLastLabels } }
-		});
 
 		/* Write format version token */
 		output->writeBEWord(0xDEB2);
@@ -132,9 +138,9 @@ struct Output__Deb2 : public OutputWrapper {
 					 * For records with the same offsets, fetch only the last or the first processed symbol,
 					 * depending "favor last labels" option ...
 					 */
-					if ((optFavorLastLabels && std::next(symbolPtr) != symbols.end()
+					if ((options.favorLastLabels && std::next(symbolPtr) != symbols.end()
 							&& std::next(symbolPtr)->first == symbolPtr->first) ||
-						 (!optFavorLastLabels && symbolPtr != symbols.begin()
+						 (!options.favorLastLabels && symbolPtr != symbols.begin()
 							&& std::prev(symbolPtr)->first == symbolPtr->first)
 					) {
 						continue;

@@ -25,7 +25,10 @@
 #include "input/Log.cpp"
 #include "input/TXT.cpp"
 
-#include "output/Wrappers.cpp"	// for getOutputWrapper[..]() and their linkage
+#include "output/DEB1.cpp"
+#include "output/DEB2.cpp"
+#include "output/Log.cpp"
+#include "output/ASM.cpp"
 #include "util/SymbolTable.hpp"
 
 
@@ -301,8 +304,17 @@ int main (int argc, const char ** argv) {
 	/* Pass generated symbols list to the output wrapper */
 	if (!symbolTable.symbols.empty()) {
 		try {
-			auto output = getOutputWrapper(outputWrapperName);	/* FIXME: Deprecate */
-			output->parse(symbolTable.symbols, outputFileName, appendOffset, pointerOffset, outputOpts.c_str(), !optNoAlignOnAppend);
+			std::unique_ptr<OutputWrapper> output;
+			switch (Utils::hash(outputWrapperName)) {
+				case Utils::hash("deb1"):	output = std::make_unique<Output__Deb1>(); break;
+				case Utils::hash("deb2"):	output = std::make_unique<Output__Deb2>(); break;
+				case Utils::hash("log"):	output = std::make_unique<Output__Log>(); break;
+				case Utils::hash("asm"):	output = std::make_unique<Output__Asm>(); break;
+				default:
+					throw std::runtime_error(std::format("Unknown output format specifier: {}", outputWrapperName));
+			}
+			output->parseOptions(outputOpts);
+			output->parse(symbolTable.symbols, outputFileName, appendOffset, pointerOffset, !optNoAlignOnAppend);
 		}
 		catch (const std::exception& err) {
 			Logger::error("Output generation failed: {}", err.what());
