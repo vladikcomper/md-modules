@@ -15,7 +15,7 @@
 #include <BitStream.hpp>
 #include <IO.hpp>
 #include <Logger.hpp>
-#include <utils.hpp>
+#include <Utils.hpp>
 
 #include "OutputWrapper.hpp"
 
@@ -142,7 +142,7 @@ struct Output__Deb1 : public OutputWrapper {
 					BitStream symbolHeap;
 
 					/* Add offset to the offsets block */
-					offsetsData.push_back(swap16((uint16_t)symbolPtr->first & 0xFFFF));
+					offsetsData.push_back(Utils::swap16((uint16_t)symbolPtr->first & 0xFFFF));
 
 					/* Encode each symbol character with the generated Huffman-codes and store it in the bitsteam */
 					for (auto& Character : symbolPtr->second) {
@@ -176,8 +176,8 @@ struct Output__Deb1 : public OutputWrapper {
 					}
 
 					/* Setup pointers to the blocks */
-					blockOffsets[block] = swap16((loc_Block - loc_BlockOffsets)>>1);
-					dataOffsets[block] = swap16((loc_Block+offsetsData.size()*2 - loc_BlockOffsets)>>1);
+					blockOffsets[block] = Utils::swap16((loc_Block - loc_BlockOffsets)>>1);
+					dataOffsets[block] = Utils::swap16((loc_Block+offsetsData.size()*2 - loc_BlockOffsets)>>1);
 
 					/* Write down block offsets and symbol data */
 					output->writeData(&offsetsData[0], offsetsData.size()*sizeof(uint16_t));

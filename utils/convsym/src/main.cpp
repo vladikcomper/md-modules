@@ -12,13 +12,19 @@
 #include <functional>
 #include <regex>
 #include <iostream>
-#include <tuple>
 #include <string_view>
 
 #include <Logger.hpp>
 #include <ArgvParser.hpp>
 
-#include "input/Wrappers.cpp"	// for getInputWrapper[..]() and their linkage
+/* Input wrappers */
+#include "input/ASM68K_Listing.cpp"
+#include "input/ASM68K_Sym.cpp"
+#include "input/AS_Listing.cpp"
+#include "input/AS_Listing_Experimental.cpp"
+#include "input/Log.cpp"
+#include "input/TXT.cpp"
+
 #include "output/Wrappers.cpp"	// for getOutputWrapper[..]() and their linkage
 #include "util/SymbolTable.hpp"
 
@@ -227,8 +233,19 @@ int main (int argc, const char ** argv) {
 	/* Retrieve symbols from the input file */
 	SymbolTable symbolTable(offsetConversionOptions, symbolToOffsetResolveTable);
 	try {
-		auto input = getInputWrapper(inputWrapperName);
-		input->parse(symbolTable, inputFileName, inputOpts.c_str());
+		std::unique_ptr<InputWrapper> input;
+		switch (Utils::hash(inputWrapperName)) {
+			case Utils::hash("asm68k_sym"):		input = std::make_unique<Input__ASM68K_Sym>(); break;
+			case Utils::hash("asm68k_lst"): 	input = std::make_unique<Input__ASM68K_Listing>(); break;
+			case Utils::hash("as_lst"):			input = std::make_unique<Input__AS_Listing>(); break;
+			case Utils::hash("as_lst_exp"): 	input = std::make_unique<Input__AS_Listing_Experimental>(); break;
+			case Utils::hash("log"): 			input = std::make_unique<Input__Log>(); break;
+			case Utils::hash("txt"): 			input = std::make_unique<Input__TXT>(); break;
+			default:
+				throw std::runtime_error(std::format("Unknown input format specifier: {}", inputWrapperName));
+		}
+		input->parseOptions(inputOpts);
+		input->parse(symbolTable, inputFileName);
 	}
 	catch (const std::exception& err) {
 		Logger::error("Input file parsing failed: {}", err.what());
@@ -284,7 +301,7 @@ int main (int argc, const char ** argv) {
 	/* Pass generated symbols list to the output wrapper */
 	if (!symbolTable.symbols.empty()) {
 		try {
-			auto output = getOutputWrapper(outputWrapperName);
+			auto output = getOutputWrapper(outputWrapperName);	/* FIXME: Deprecate */
 			output->parse(symbolTable.symbols, outputFileName, appendOffset, pointerOffset, outputOpts.c_str(), !optNoAlignOnAppend);
 		}
 		catch (const std::exception& err) {

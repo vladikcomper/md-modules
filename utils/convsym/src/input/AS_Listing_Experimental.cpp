@@ -10,8 +10,9 @@
 #include <fstream>
 
 #include <IO.hpp>
-#include <utils.hpp>
+#include <Utils.hpp>
 #include <Logger.hpp>
+#include <OptsParser.hpp>
 
 #include "InputWrapper.hpp"
 
@@ -21,9 +22,7 @@ struct Input__AS_Listing_Experimental : public InputWrapper {
 	Input__AS_Listing_Experimental() {}
 	~Input__AS_Listing_Experimental() {}
 
-	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts) {
-		if (*opts) Logger::warn("-inopt is not supported by this parser");
-
+	void parse(SymbolTable& symbolTable, const char *fileName) {
 		std::ifstream fileStream;
 		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
 		if (input.fail()) {
@@ -35,7 +34,7 @@ struct Input__AS_Listing_Experimental : public InputWrapper {
 		// For every string in a listing file ...
 		std::string line;
 		line.reserve(1024);
-		while (getline_safe(input, line)) {
+		while (Utils::getline_safe(input, line)) {
 
 			// Known issues for the Sonic 2 disassembly:
 			//	* Some macros somehow define labels that looks like global ones (notably, _MOVE and such)

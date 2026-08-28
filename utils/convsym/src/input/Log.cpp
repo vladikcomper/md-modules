@@ -9,13 +9,12 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
-#include <map>
+#include <string_view>
 #include <iostream>
 
 #include <Logger.hpp>
 #include <OptsParser.hpp>
-#include <string_view>
-#include <utils.hpp>
+#include <Utils.hpp>
 
 #include "InputWrapper.hpp"
 
@@ -25,19 +24,23 @@ struct Input__Log : public InputWrapper {
 	Input__Log() {}
 	~Input__Log() {}
 
-	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts = "") {
-		// Supported options:
-		//	/separator=x	- determines character that separates labes and offsets, default: ":"
-		//	/useDecimal?	- set if offsets should be treat as decimal numbers; default: -
+	/** Supported options:
+	  *	- `/separator=x`	- determines character that separates labes and offsets, default: ":"
+	  *	- `/useDecimal?`	- set if offsets should be treat as decimal numbers; default: -
+	  */
+	struct {
+		char separator;
+		bool useDecimal;
+	} options = { .separator = ':', .useDecimal = false };
 
-		// Variables and options
-		char labelSeparator = ':';
-		bool optUseDecimal = false;
-
-		OptsParser::parse(std::string_view(opts), {
-			{ "separator",	OptsParser::Opt::Char{ &labelSeparator } },
-			{ "useDecimal",	OptsParser::Opt::Bool{ &optUseDecimal } }
+	void parseOptions(const std::string_view opts) {
+		OptsParser::parse(opts, {
+			{ "separator",	OptsParser::Opt::Char{ &options.separator } },
+			{ "useDecimal",	OptsParser::Opt::Bool{ &options.useDecimal } }
 		});
+	}
+
+	void parse(SymbolTable& symbolTable, const char *fileName) {
 
 		// Define re-usable conditions
 		#define IS_HEX_CHAR(X) 			((unsigned)(X-'0')<10||(unsigned)(X-'A')<6||(unsigned)(X-'a')<6)  
@@ -53,16 +56,16 @@ struct Input__Log : public InputWrapper {
 		std::string line;
 		line.reserve(512);
 		std::size_t lineNum = 0;
-		while (getline_safe(input, line)) {
+		while (Utils::getline_safe(input, line)) {
 			lineNum++;
 
-			uint8_t* ptr = reinterpret_cast<uint8_t*>(line.data());						// WARNING: Unsigned type is required here for certain range-based optimizations
+			uint8_t* ptr = reinterpret_cast<uint8_t*>(line.data());	// WARNING: Unsigned type is required here for certain range-based optimizations
 
 			SKIP_SPACES(ptr);
 			
 			// Decode the offset ...
 			uint32_t offset = 0;
-			if ( optUseDecimal ) {
+			if ( options.useDecimal ) {
 				while ( IS_NUMERIC(*ptr) ) {
 					offset = offset *10 + *ptr-'0';    
 					ptr++;
@@ -76,7 +79,7 @@ struct Input__Log : public InputWrapper {
 			}
 		
 			// If line doesn't include proper separator, skip this line ...
-			if ( *ptr++ != labelSeparator ) {
+			if ( *ptr++ != options.separator ) {
 				Logger::debug("Failed to parse line {}, skipping", lineNum);
 				continue;
 			} 

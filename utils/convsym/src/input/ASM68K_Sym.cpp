@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <string_view>
 #include <map>
 
 #include <Logger.hpp>
@@ -22,31 +23,32 @@ struct Input__ASM68K_Sym : public InputWrapper {
 	Input__ASM68K_Sym() {}
 	~Input__ASM68K_Sym() {}
 
-	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts) {
+	/** Supported options:
+	  *	- `/localSign=x` 	- determines character used to specify local labels
+	  *	- `/localJoin=x` 	- character used to join local label and its global "parent"
+	  *	- `/processLocals?`	- specify whether local labels will processed
+	  */
+	struct {
+		char localSign;
+		char localJoin;
+		bool processLocals;
+	} options = { .localSign = '@', .localJoin = '.', .processLocals = true	};
+
+	void parseOptions(const std::string_view opts) {
+		OptsParser::parse(opts, {
+			{ "localSign",		OptsParser::Opt::Char{ &options.localSign } },
+			{ "localJoin",		OptsParser::Opt::Char{ &options.localJoin } },
+			{ "processLocals",	OptsParser::Opt::Bool{ &options.processLocals } }
+		});
+	}
+
+	void parse(SymbolTable& symbolTable, const char *fileName) {
 		std::ifstream fileStream;
 		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName, std::ios_base::binary), fileStream);
 		if (input.fail()) {
 			throw std::runtime_error("Failed to open input file");
 		}
 		input.exceptions(std::ios_base::failbit | std::ios_base::badbit);
-
-		// Supported options:
-		//	/localSign=x			- determines character used to specify local labels
-		//	/localJoin=x			- character used to join local label and its global "parent"
-		//	/processLocals?			- specify whether local labels will processed
-
-		// Default processing options
-		bool optProcessLocalLabels = true;
-
-		// Variables and options
-		char localLabelSymbol = '@';		// default symbol for local labels
-		char localLabelRef = '.';			// default symbol to reference local labels within global ones
-
-		OptsParser::parse(std::string_view(opts), {
-			{ "localSign",		OptsParser::Opt::Char{ &localLabelSymbol } },
-			{ "localJoin",		OptsParser::Opt::Char{ &localLabelRef } },
-			{ "processLocals",	OptsParser::Opt::Bool{ &optProcessLocalLabels } }
-		});
 
 		// NOTICE: Symbols are usually written OUT OF ORDER in the symbols file,
 		//	so we have to map them first before filtering
@@ -78,14 +80,14 @@ struct Input__ASM68K_Sym : public InputWrapper {
 		const std::string *lastGlobalLabelRef = &UnfilteredSymbolsMap.cbegin()->second;	// default global label name
 
 		for (const auto & [offset, label]: UnfilteredSymbolsMap) {
-			if (label[0] == localLabelSymbol) {
+			if (label[0] == options.localSign) {
 				// Ignore local labels if "processLocals" is disabled
-				if ( !optProcessLocalLabels ) {
+				if ( !options.processLocals ) {
 					Logger::debug("Local symbol ignored: {}", label);
 					continue;
 				}
 
-				std::string fullLabel = *lastGlobalLabelRef + localLabelRef + label.substr(1);
+				std::string fullLabel = *lastGlobalLabelRef + options.localJoin + label.substr(1);
 				symbolTable.add(offset, fullLabel);
 			}
 			else {

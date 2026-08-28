@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include <cstdint>
-#include <string>
-#include <map>
+#include <string_view>
+
+#include <OptsParser.hpp>
 
 #include "../util/SymbolTable.hpp"
 
@@ -12,10 +12,9 @@ struct InputWrapper {
 	InputWrapper() {}
 	virtual ~InputWrapper() {}
 
-	// Virtual function interface that handles input file parsing
-	virtual void parse(
-		SymbolTable& symbolTable,
-		const char *fileName,
-		const char *opts
-	) = 0;
+	virtual void parseOptions(const std::string_view opts)  {
+		OptsParser::parse(opts, {});
+	}
+
+	virtual void parse(SymbolTable& symbolTable, const char *fileName) = 0;
 };

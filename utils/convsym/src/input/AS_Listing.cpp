@@ -16,7 +16,7 @@
 #include <IO.hpp>
 #include <Logger.hpp>
 #include <OptsParser.hpp>
-#include <utils.hpp>
+#include <Utils.hpp>
 
 #include "InputWrapper.hpp"
 
@@ -26,22 +26,27 @@ struct Input__AS_Listing : public InputWrapper {
 	Input__AS_Listing() {}
 	~Input__AS_Listing() {}
 
-	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts) {
+	/** Supported options:
+	  *	- `/localJoin=x` - character used to join local label and its global "parent"
+	  *	- `/processLocals?` - specify whether local labels will processed
+	  * - `/ignoreInternalSymbols? - whether to ignore AS internal symbols (start with `__`)
+	  */
+	struct { 
+		char localJoin;
+		bool processLocals;
+		bool ignoreInternalSymbols;
+	} options = { .localJoin = '.', .processLocals = true, .ignoreInternalSymbols = true };
 
-		// Default processing options
-		bool optProcessLocalLabels = true;
-		bool optIgnoreInternalSymbols = true;
-
-		// Variables
-		char localLabelSymbol = '.';		// default symbol for local labels
-		bool foundSymbolTable = false;
-
-		// Fetch options from "-inopt" argument's value
+	void parseOptions(const std::string_view opts) {
 		OptsParser::parse(std::string_view(opts), {
-			{ "localJoin", 				OptsParser::Opt::Char{ &localLabelSymbol } },
-			{ "processLocals",			OptsParser::Opt::Bool{ &optProcessLocalLabels } },
-			{ "ignoreInternalSymbols",	OptsParser::Opt::Bool{ &optIgnoreInternalSymbols } },
+			{ "localJoin", 				OptsParser::Opt::Char{ &options.localJoin } },
+			{ "processLocals",			OptsParser::Opt::Bool{ &options.processLocals } },
+			{ "ignoreInternalSymbols",	OptsParser::Opt::Bool{ &options.ignoreInternalSymbols } },
 		});
+	}
+
+	void parse(SymbolTable& symbolTable, const char *fileName) {
+		bool foundSymbolTable = false;
 
 		// Setup buffer and file for input
 		std::ifstream fileStream;
@@ -54,7 +59,7 @@ struct Input__AS_Listing : public InputWrapper {
 		std::string line;
 		line.reserve(1024);
 		std::size_t lineCounter = 0;
-		while (getline_safe(input, line)) {
+		while (Utils::getline_safe(input, line)) {
 			lineCounter++;
 			if (line.size() < 8) continue;	// if line is too short, ignore it
 
@@ -83,12 +88,12 @@ struct Input__AS_Listing : public InputWrapper {
 					right != std::string_view::npos;
 					left = right + 1, right = strLine.find_first_of('|', left)
 				) {
-					const auto maybeSymbol = this->parseSymbolTableEntry(strLine.substr(left, right-left), optProcessLocalLabels, localLabelSymbol);
+					const auto maybeSymbol = this->parseSymbolTableEntry(strLine.substr(left, right-left));
 
 					if (maybeSymbol.has_value()) {
 						auto symbol = maybeSymbol.value();
 
-						if (optIgnoreInternalSymbols && symbol.second.starts_with("__")) continue;
+						if (options.ignoreInternalSymbols && symbol.second.starts_with("__")) continue;
 
 						symbolTable.add(symbol.first, symbol.second);
 					}
@@ -102,10 +107,10 @@ struct Input__AS_Listing : public InputWrapper {
 	}
 
 private:
-	inline std::optional<std::pair<uint32_t, std::string>> parseSymbolTableEntry(const std::string_view &strEntry, bool optProcessLocalLabels, char localLabelSymbol) {
+	inline std::optional<std::pair<uint32_t, std::string>> parseSymbolTableEntry(const std::string_view &strEntry) {
 		#define IS_HEX_CHAR(X) 			((unsigned)(X-'0')<10||(unsigned)(X-'A')<6)
 		#define IS_START_OF_LABEL(X)	((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||X=='_')
-		#define IS_LABEL_CHAR(X)		((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(optProcessLocalLabels&&X==localLabelSymbol)||(unsigned)(X-'0')<10||X=='_')
+		#define IS_LABEL_CHAR(X)		((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(options.processLocals&&X==options.localJoin)||(unsigned)(X-'0')<10||X=='_')
 		#define IS_WHITESPACE(X)		(X==' '||X=='\t')
 
 		const auto end = strEntry.cend();

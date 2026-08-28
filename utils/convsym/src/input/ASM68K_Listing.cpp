@@ -9,12 +9,11 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <map>
 #include <string_view>
 #include <unordered_set>
 
 #include <IO.hpp>
-#include <utils.hpp>
+#include <Utils.hpp>
 #include <Logger.hpp>
 #include <OptsParser.hpp>
 
@@ -26,39 +25,48 @@ struct Input__ASM68K_Listing : public InputWrapper {
 	Input__ASM68K_Listing() {}
 	~Input__ASM68K_Listing() {}
 
-	void parse(SymbolTable& symbolTable, const char *fileName, const char * opts = "") {
+	/** Supported options:
+	  *	- `/localSign=x`			- determines character used to specify local labels
+	  *	- `/localJoin=x`			- character used to join local label and its global "parent"
+	  *	- `/ignoreMacroDefs?`		- specify if macro definitions listings should be ignored (lines between "macro" and "endm"); default: +
+	  *	- `/ignoreMacroExp?`		- specify if lines representing macro expansions should be ignored; default: -
+	  *	- `/addMacrosAsOpcodes?`	- set if macros that process label as parameter (defined as "macro *") should be recognized when used; default: +
+	  *	- `/processLocals?`			- specify whether local labels will processed
+	  */
+	struct {
+		char localSign;
+		char localJoin;
+		bool ignoreMacroDefs;
+		bool ignoreMacroExp;
+		bool addMacrosAsOpcodes;
+		bool processLocals;
+	} options = {
+		.localSign = '@',
+		.localJoin = '.',
+		.ignoreMacroDefs = true,
+		.ignoreMacroExp = false,
+		.addMacrosAsOpcodes = true,
+		.processLocals = true
+	};
+
+	void parseOptions(const std::string_view opts) {
+		OptsParser::parse(opts, {
+			{ "localSign",			OptsParser::Opt::Char{ &options.localSign } },
+			{ "localJoin",			OptsParser::Opt::Char{ &options.localJoin } },
+			{ "ignoreMacroDefs",	OptsParser::Opt::Bool{ &options.ignoreMacroDefs } },
+			{ "ignoreMacroExp",		OptsParser::Opt::Bool{ &options.ignoreMacroExp } },
+			{ "addMacrosAsOpcodes",	OptsParser::Opt::Bool{ &options.addMacrosAsOpcodes } },
+			{ "processLocals",		OptsParser::Opt::Bool{ &options.processLocals } }
+		});
+	}
+
+	void parse(SymbolTable& symbolTable, const char *fileName) {
 		// Known issues:
 		//	* Doesn't recognize line break character "&", as line continuations aren't properly listed by ASM68K
 
-		// Supported options:
-		//	/localSign=x			- determines character used to specify local labels
-		//	/localJoin=x			- character used to join local label and its global "parent"
-		//	/ignoreMacroDefs?		- specify if macro definitions listings should be ignored (lines between "macro" and "endm"); default: +
-		//	/ignoreMacroExp?		- specify if lines representing macro expansions should be ignored; default: -
-		//	/addMacrosAsOpcodes?	- set if macros that process label as parameter (defined as "macro *") should be recognized when used; default: +
-		//	/processLocals?			- specify whether local labels will processed
-
-		// Default processing options
-		bool optIgnoreMacroExpansions = false;
-		bool optIgnoreMacroDefinitions = true;
-		bool optRegisterMacrosAsOpcodes = true;
-		bool optProcessLocalLabels = true;
-
 		// Variables
 		std::string strLastGlobalLabel("");	// default global label name
-		char localLabelSymbol = '@';		// default symbol for local labels
-		char localLabelRef = '.';			// default symbol to reference local labels within global ones
 		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
-
-		// Fetch options from "-inopt" agrument's value
-		OptsParser::parse(std::string_view(opts), {
-			{ "localSign",			OptsParser::Opt::Char{ &localLabelSymbol } },
-			{ "localJoin",			OptsParser::Opt::Char{ &localLabelRef } },
-			{ "ignoreMacroDefs",	OptsParser::Opt::Bool{ &optIgnoreMacroDefinitions } },
-			{ "ignoreMacroExp",		OptsParser::Opt::Bool{ &optIgnoreMacroExpansions } },
-			{ "addMacrosAsOpcodes",	OptsParser::Opt::Bool{ &optRegisterMacrosAsOpcodes } },
-			{ "processLocals",		OptsParser::Opt::Bool{ &optProcessLocalLabels } }
-		});
 
 		// Setup buffer, symbols list and file for input
 		std::ifstream fileStream;
@@ -75,9 +83,9 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 		// Define re-usable conditions
 		#define IS_HEX_CHAR(X) 			((unsigned)(X-'0')<10||(unsigned)(X-'A')<6)
-		#define IS_START_OF_NAME(X)		((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(optProcessLocalLabels&&X==localLabelSymbol)||X=='.'||X=='_')
+		#define IS_START_OF_NAME(X)		((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(options.processLocals&&X==options.localSign)||X=='.'||X=='_')
 		#define IS_NAME_CHAR(X)			((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(unsigned)(X-'0')<10||X=='?'||X=='.'||X=='_')
-		#define IS_START_OF_LABEL(X)	((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(optProcessLocalLabels&&X==localLabelSymbol)||X=='_')
+		#define IS_START_OF_LABEL(X)	((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(options.processLocals&&X==options.localSign)||X=='_')
 		#define IS_LABEL_CHAR(X)		((unsigned)(X-'A')<26||(unsigned)(X-'a')<26||(unsigned)(X-'0')<10||X=='?'||X=='_')
 		#define IS_WHITESPACE(X)		(X==' '||X=='\t')
 		#define IS_ENDOFLINE(X)			(X=='\n'||X=='\r'||X==0x00)
@@ -86,7 +94,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		std::string line;
 		line.reserve(1024);
 		std::size_t lineCounter = 0;
-		while (getline_safe(input, line)) {
+		while (Utils::getline_safe(input, line)) {
 			lineCounter++;
 			if (line.size() <= 36) continue;	// If line is too short, do not proceed
 
@@ -120,7 +128,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 			}
 			
 			// If this line is macro expansion and option is set to ignore expansions, ignore
-			if (optIgnoreMacroExpansions && *cMacroMark == 'M') {
+			if (options.ignoreMacroExp && *cMacroMark == 'M') {
 				continue;
 			}
 
@@ -179,9 +187,9 @@ struct Input__ASM68K_Listing : public InputWrapper {
 			if (sLabel != nullptr) {
 				// Construct full label's name as std::string object
 				std::string strLabel;
-				if (*sLabel == localLabelSymbol) {
+				if (*sLabel == options.localSign) {
 					strLabel  = strLastGlobalLabel;
-					strLabel += localLabelRef;
+					strLabel += options.localJoin;
 					strLabel += (char*)sLabel+1;	// +1 to skip local label symbol itself
 				}
 				else {
@@ -194,9 +202,9 @@ struct Input__ASM68K_Listing : public InputWrapper {
 				do { ptr++; } while (!IS_WHITESPACE(*ptr) && !IS_ENDOFLINE(*ptr));
 				*ptr++ = 0x00;
 				std::string strOpcode((char*)ptr_start, ptr-ptr_start-1);		// construct opcode string
-				if (strOpcode[0] == localLabelSymbol) {					// in case opcode is a local label reference
+				if (strOpcode[0] == options.localSign) {					// in case opcode is a local label reference
 					strOpcode = strLastGlobalLabel;
-					strOpcode += localLabelRef;
+					strOpcode += options.localJoin;
 					strOpcode += (char*)ptr_start+1;	// +1 to skip local label symbol itself
 				}
 
@@ -211,7 +219,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 						Logger::debug("{} recognized as macro declaration", strLabel);
 
 						// If macro processing option is on ...
-						if (optRegisterMacrosAsOpcodes) {
+						if (options.addMacrosAsOpcodes) {
 							while (IS_WHITESPACE(*ptr)) ptr++; 	// skip indention
 
 							// If macro uses labels as argument, add macro's name (the label) to the vocabulary
@@ -221,11 +229,11 @@ struct Input__ASM68K_Listing : public InputWrapper {
 						}
 
 						// If ignore macro definitions option is on ...
-						if (optIgnoreMacroDefinitions) {
+						if (options.ignoreMacroDefs) {
 							bool endmDirectiveReached = false;
 
 							std::size_t macroLineCounter = 0;
-							while (getline_safe(input, line)) {
+							while (Utils::getline_safe(input, line)) {
 								// Maintain line counter to warn if suspiciously many lines were processed as macro definition alone
 								macroLineCounter++;
 								if (macroLineCounter >= 1000) {

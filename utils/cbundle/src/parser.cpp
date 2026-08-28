@@ -17,7 +17,7 @@
 #include <set>
 
 #include <Logger.hpp>
-#include <utils.hpp>
+#include <Utils.hpp>
 
 namespace Parser {
 
@@ -79,7 +79,7 @@ namespace Parser {
 	lineData parseLine(parseData * in) {
 		// Attempt to read string from the input file
 		std::string line;
-		if ( in && in->file && getline_safe(in->file, line)) {
+		if ( in && in->file && Utils::getline_safe(in->file, line)) {
 			in->lineNumber++;
 			uint8_t* ptr = reinterpret_cast<uint8_t*>(line.data());
 

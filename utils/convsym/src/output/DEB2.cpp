@@ -16,7 +16,7 @@
 #include <BitStream.hpp>
 #include <IO.hpp>
 #include <Logger.hpp>
-#include <utils.hpp>
+#include <Utils.hpp>
 
 #include "OutputWrapper.hpp"
 
@@ -190,7 +190,7 @@ struct Output__Deb2 : public OutputWrapper {
 					}
 
 					output->writeData(SymbolsHeap.begin(), SymbolsHeap.size());
-					blockOffsets[block] = swap32((loc_Block-loc_BlockOffsets));
+					blockOffsets[block] = Utils::swap32((loc_Block-loc_BlockOffsets));
 				}
 			}
 		}
