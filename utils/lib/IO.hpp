@@ -5,12 +5,16 @@
  * (c) 2017-2018, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
+/**
+ * DEPRECATION NOTICE:
+ * This module is deprecated and is going to be removed. Use standard library APIs instead.
+ */
+
 #pragma once
 
 #include <cstdio>
 #include <cstring>
 #include <cstdint>
-
 
 namespace IO {
 

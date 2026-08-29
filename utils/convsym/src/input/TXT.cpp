@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <string_view>
 #include <algorithm>
@@ -22,7 +21,7 @@
 
 struct Input__TXT : public InputWrapper {
 
-	Input__TXT() {}
+	Input__TXT(): InputWrapper(std::ios::in) {}
 	~Input__TXT() {}
 
 	/** Supported options:
@@ -41,13 +40,7 @@ struct Input__TXT : public InputWrapper {
 		});
 	}
 
-	void parse(SymbolTable& symbolTable, const char *fileName) {
-		std::ifstream fileStream;
-		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
-		if (input.fail()) {
-			throw std::runtime_error("Failed to open input file");
-		}
-
+	void parse(SymbolTable& symbolTable, std::istream& input) {
 		auto numSpecifiers = std::ranges::count(options.fmt, '%');
 		if (numSpecifiers < 2) {
 			Logger::warn("Line format string likely has too few arguments (try '%%s %%X')");

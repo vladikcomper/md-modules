@@ -52,7 +52,7 @@ namespace ArgvParser {
 		};
 
 		struct string {
-			/* FIXME: Convert to `std::string_view` */
+			/* FIXME: Convert to `std::string_view` or leave as `const char *` */
 			std::string* target;
 			inline void operator()(const std::string_view, auto&& next) const { *target = next(); }
 		};

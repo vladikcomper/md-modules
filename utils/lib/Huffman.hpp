@@ -18,7 +18,6 @@
 #include <stdexcept>
 #include <utility>
 
-
 struct Huffman {
 
 	/* ----------------------- *

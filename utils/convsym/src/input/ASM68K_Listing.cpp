@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <string_view>
 #include <unordered_set>
@@ -22,7 +21,7 @@
 
 struct Input__ASM68K_Listing : public InputWrapper {
 
-	Input__ASM68K_Listing() {}
+	Input__ASM68K_Listing(): InputWrapper(std::ios::in) {}
 	~Input__ASM68K_Listing() {}
 
 	/** Supported options:
@@ -60,20 +59,13 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		});
 	}
 
-	void parse(SymbolTable& symbolTable, const char *fileName) {
+	void parse(SymbolTable& symbolTable, std::istream& input) {
 		// Known issues:
 		//	* Doesn't recognize line break character "&", as line continuations aren't properly listed by ASM68K
 
 		// Variables
 		std::string strLastGlobalLabel("");	// default global label name
 		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
-
-		// Setup buffer, symbols list and file for input
-		std::ifstream fileStream;
-		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
-		if (input.fail()) {
-			throw std::runtime_error("Failed to open input file");
-		}
 
 		// Vocabulary for assembly directives that support labels
 		// NOTICE: This will be also extended with macro names

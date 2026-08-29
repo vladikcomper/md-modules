@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <ios>
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <string_view>
 #include <map>
@@ -20,7 +19,7 @@
 
 struct Input__ASM68K_Sym : public InputWrapper {
 
-	Input__ASM68K_Sym() {}
+	Input__ASM68K_Sym(): InputWrapper(std::ios::in) {}
 	~Input__ASM68K_Sym() {}
 
 	/** Supported options:
@@ -42,12 +41,7 @@ struct Input__ASM68K_Sym : public InputWrapper {
 		});
 	}
 
-	void parse(SymbolTable& symbolTable, const char *fileName) {
-		std::ifstream fileStream;
-		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName, std::ios_base::binary), fileStream);
-		if (input.fail()) {
-			throw std::runtime_error("Failed to open input file");
-		}
+	void parse(SymbolTable& symbolTable, std::istream& input) {
 		input.exceptions(std::ios_base::failbit | std::ios_base::badbit);
 
 		// NOTICE: Symbols are usually written OUT OF ORDER in the symbols file,

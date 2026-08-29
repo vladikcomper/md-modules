@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <string>
 #include <iostream>
-#include <fstream>
 
 #include <IO.hpp>
 #include <Utils.hpp>
@@ -19,16 +18,10 @@
 
 struct Input__AS_Listing_Experimental : public InputWrapper {
 
-	Input__AS_Listing_Experimental() {}
+	Input__AS_Listing_Experimental(): InputWrapper(std::ios::in) {}
 	~Input__AS_Listing_Experimental() {}
 
-	void parse(SymbolTable& symbolTable, const char *fileName) {
-		std::ifstream fileStream;
-		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
-		if (input.fail()) {
-			throw std::runtime_error("Failed to open input file");
-		}
-
+	void parse(SymbolTable& symbolTable, std::istream& input) {
 		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
 
 		// For every string in a listing file ...

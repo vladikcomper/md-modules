@@ -6,12 +6,14 @@
  * ------------------------------------------------------------	*/
 
 #include <cstdint>
+#include <exception>
 #include <stdexcept>
 #include <string>
 #include <memory>
 #include <functional>
 #include <regex>
 #include <iostream>
+#include <fstream>
 #include <string_view>
 
 #include <Logger.hpp>
@@ -25,10 +27,13 @@
 #include "input/Log.cpp"
 #include "input/TXT.cpp"
 
+/* Output wrappers */
 #include "output/DEB1.cpp"
 #include "output/DEB2.cpp"
 #include "output/Log.cpp"
 #include "output/ASM.cpp"
+
+#include "output/OutputWrapper.hpp"
 #include "util/SymbolTable.hpp"
 
 
@@ -236,22 +241,31 @@ int main (int argc, const char ** argv) {
 	/* Retrieve symbols from the input file */
 	SymbolTable symbolTable(offsetConversionOptions, symbolToOffsetResolveTable);
 	try {
-		std::unique_ptr<InputWrapper> input;
+		std::unique_ptr<InputWrapper> inputWrapper;
 		switch (Utils::hash(inputWrapperName)) {
-			case Utils::hash("asm68k_sym"):		input = std::make_unique<Input__ASM68K_Sym>(); break;
-			case Utils::hash("asm68k_lst"): 	input = std::make_unique<Input__ASM68K_Listing>(); break;
-			case Utils::hash("as_lst"):			input = std::make_unique<Input__AS_Listing>(); break;
-			case Utils::hash("as_lst_exp"): 	input = std::make_unique<Input__AS_Listing_Experimental>(); break;
-			case Utils::hash("log"): 			input = std::make_unique<Input__Log>(); break;
-			case Utils::hash("txt"): 			input = std::make_unique<Input__TXT>(); break;
+			case Utils::hash("asm68k_sym"):		inputWrapper = std::make_unique<Input__ASM68K_Sym>(); break;
+			case Utils::hash("asm68k_lst"): 	inputWrapper = std::make_unique<Input__ASM68K_Listing>(); break;
+			case Utils::hash("as_lst"):			inputWrapper = std::make_unique<Input__AS_Listing>(); break;
+			case Utils::hash("as_lst_exp"): 	inputWrapper = std::make_unique<Input__AS_Listing_Experimental>(); break;
+			case Utils::hash("log"): 			inputWrapper = std::make_unique<Input__Log>(); break;
+			case Utils::hash("txt"): 			inputWrapper = std::make_unique<Input__TXT>(); break;
 			default:
 				throw std::runtime_error(std::format("Unknown input format specifier: {}", inputWrapperName));
 		}
-		input->parseOptions(inputOpts);
-		input->parse(symbolTable, inputFileName);
+
+		std::ifstream fileStream;
+		std::istream& inputStream = (std::string_view(inputFileName) == "-")
+			? std::cin // "-" instead of a file name fallbacks to `stdin`
+			: (fileStream.open(inputFileName, inputWrapper->preferredStreamMode), fileStream);
+		if (inputStream.fail()) {
+			throw std::runtime_error("Failed to open input file");
+		}
+
+		inputWrapper->parseOptions(inputOpts);
+		inputWrapper->parse(symbolTable, inputStream);
 	}
 	catch (const std::exception& err) {
-		Logger::error("Input file parsing failed: {}", err.what());
+		Logger::error("Input parsing failed: {}", err.what());
 		return -1;
 	}
 

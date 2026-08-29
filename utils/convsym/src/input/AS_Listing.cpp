@@ -8,7 +8,6 @@
 #include <cstdint>
 #include <optional>
 #include <iostream>
-#include <fstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -23,7 +22,7 @@
 
 struct Input__AS_Listing : public InputWrapper {
 
-	Input__AS_Listing() {}
+	explicit Input__AS_Listing(): InputWrapper(std::ios::in) {}
 	~Input__AS_Listing() {}
 
 	/** Supported options:
@@ -45,15 +44,8 @@ struct Input__AS_Listing : public InputWrapper {
 		});
 	}
 
-	void parse(SymbolTable& symbolTable, const char *fileName) {
+	void parse(SymbolTable& symbolTable, std::istream& input) {
 		bool foundSymbolTable = false;
-
-		// Setup buffer and file for input
-		std::ifstream fileStream;
-		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
-		if (input.fail()) {
-			throw std::runtime_error("Failed to open input file");
-		}
 
 		// For every string in a listing file ...
 		std::string line;

@@ -6,8 +6,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <fstream>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <iostream>
@@ -21,7 +19,7 @@
 
 struct Input__Log : public InputWrapper {
 
-	Input__Log() {}
+	Input__Log(): InputWrapper(std::ios::in) {}
 	~Input__Log() {}
 
 	/** Supported options:
@@ -40,18 +38,12 @@ struct Input__Log : public InputWrapper {
 		});
 	}
 
-	void parse(SymbolTable& symbolTable, const char *fileName) {
+	void parse(SymbolTable& symbolTable, std::istream& input) {
 
 		// Define re-usable conditions
 		#define IS_HEX_CHAR(X) 			((unsigned)(X-'0')<10||(unsigned)(X-'A')<6||(unsigned)(X-'a')<6)  
 		#define IS_NUMERIC(X) 			((unsigned)(X-'0')<10)
 		#define SKIP_SPACES(X)			while ( *X==' ' || *X=='\t' ) X++
-
-		std::ifstream fileStream;
-		std::istream& input = (std::string_view(fileName) == "-") ? std::cin : (fileStream.open(fileName), fileStream);
-		if (input.fail()) {
-			throw std::runtime_error("Failed to open input file");
-		}
 
 		std::string line;
 		line.reserve(512);
