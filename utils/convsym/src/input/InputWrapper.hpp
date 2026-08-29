@@ -10,7 +10,7 @@
 
 /* Base class for the input formats handlers */
 struct InputWrapper {
-	std::ios::openmode preferredStreamMode;
+	const std::ios::openmode preferredStreamMode;
 	InputWrapper(std::ios::openmode mode): preferredStreamMode(mode) {}
 	virtual ~InputWrapper() {}
 

@@ -19,7 +19,7 @@
 
 struct Output__Log : public OutputWrapper {
 
-	Output__Log() {};
+	Output__Log(): OutputWrapper(OutputWrapper::PreferredStreamMode::Text) {};
 	~Output__Log() {};
 
 	/** Supported options:
@@ -44,25 +44,10 @@ struct Output__Log : public OutputWrapper {
 	/**
 	 * Main function that generates the output
 	 */
-	void parse(
-		std::multimap<uint32_t, std::string>& SymbolList,
-		const char * fileName,
-		uint32_t appendOffset = 0,
-		uint32_t pointerOffset = 0,
-		bool alignOnAppend = true
-	) {
-		if (appendOffset || pointerOffset || !alignOnAppend) {
-			Logger::warn("Append options aren't supported by the \"log\" output parser.");
-		}
-
+	void parse(std::multimap<uint32_t, std::string>& SymbolList, FILE* output) {
 		auto numSpecifiers = std::ranges::count(options.fmt, '%');
 		if (numSpecifiers < 2) {
 			Logger::warn("Line format string likely has too few arguments (try '%%X: %%s')");
-		}
-
-		std::FILE * output = std::string_view(fileName) == "-" ? stdout : std::fopen(fileName, "w");
-		if (!output) {
-			throw std::runtime_error("Failed to open output file");
 		}
 
 		const auto sLineFormat = std::string(options.fmt);	/* FIXME: Avoid re-allocation because string_view is not null-terminated */
@@ -71,7 +56,5 @@ struct Output__Log : public OutputWrapper {
 			std::fprintf(output, sLineFormat.c_str(), symbol.first, symbol.second.c_str());
 			std::fputc('\n', output);
 		}
-
-		if (output != stdout) std::fclose(output);
 	}
 };

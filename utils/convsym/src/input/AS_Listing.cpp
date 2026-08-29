@@ -12,7 +12,6 @@
 #include <string>
 #include <string_view>
 
-#include <IO.hpp>
 #include <Logger.hpp>
 #include <OptsParser.hpp>
 #include <Utils.hpp>

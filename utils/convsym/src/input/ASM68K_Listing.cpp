@@ -6,12 +6,12 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <string>
 #include <string_view>
 #include <unordered_set>
 
-#include <IO.hpp>
 #include <Utils.hpp>
 #include <Logger.hpp>
 #include <OptsParser.hpp>

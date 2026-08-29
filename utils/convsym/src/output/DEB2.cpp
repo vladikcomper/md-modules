@@ -5,6 +5,7 @@
  * ------------------------------------------------------------	*/
 
 #include <cassert>
+#include <cstdio>
 #include <map>
 #include <cstdint>
 #include <stdexcept>
@@ -14,7 +15,6 @@
 #include <OptsParser.hpp>
 #include <Huffman.hpp>
 #include <BitStream.hpp>
-#include <IO.hpp>
 #include <Logger.hpp>
 #include <Utils.hpp>
 
@@ -23,7 +23,7 @@
 
 struct Output__Deb2 : public OutputWrapper {
 
-	Output__Deb2() {};
+	Output__Deb2(): OutputWrapper(OutputWrapper::PreferredStreamMode::Binary) {};
 	~Output__Deb2() {};
 
 	/** Supported options:
@@ -42,19 +42,12 @@ struct Output__Deb2 : public OutputWrapper {
 	/**
 	 * Main function that generates the output
 	 */
-	void parse(
-		std::multimap<uint32_t, std::string>& symbols,
-		const char * fileName,
-		uint32_t appendOffset = 0,
-		uint32_t pointerOffset = 0,
-		bool alignOnAppend = true
-	) {
+	void parse(std::multimap<uint32_t, std::string>& symbols, std::FILE* output) {
 		assert(!symbols.empty());
 
-		auto output = OutputWrapper::setupOutput( fileName, appendOffset, pointerOffset, alignOnAppend );
-
 		/* Write format version token */
-		output->writeBEWord(0xDEB2);
+		constexpr uint16_t magic = Utils::asBigEndian<uint16_t>(0xDEB2);
+		std::fwrite(&magic, 2, 1, output);
 
 		/* Allocate space for blocks offsets table */
 		auto lastSymbolPtr = symbols.rbegin();
@@ -66,11 +59,11 @@ struct Output__Deb2 : public OutputWrapper {
 		}
 
 		std::vector<uint32_t> blockOffsets(lastBlock+1);
-		const size_t blockOffsetsSize = blockOffsets.size() * sizeof(uint32_t);
-
-		output->writeBEWord( blockOffsetsSize + 2 );				// write relative pointer to the Huffman table
-		uint32_t loc_BlockOffsets = output->getCurrentOffset();	// remember the offset where blocks offset table should start
-		output->setOffset( blockOffsetsSize, IO::current );		// reserve space to write down offsets table later
+		const std::size_t blockOffsetsSize = blockOffsets.size() * sizeof(uint32_t);
+		const uint16_t huffmanTableOffset = Utils::asBigEndian<uint16_t>(blockOffsetsSize + 2);
+		std::fwrite(&huffmanTableOffset, 2, 1, output);			// write relative pointer to the Huffman table
+		const uint32_t loc_BlockOffsets = std::ftell(output);	// remember the offset where blocks offset table should start
+		std::fwrite(blockOffsets.data(), blockOffsetsSize, 1, output);	// dummy write to reserve space (will be overwritten later)
 
 		/* ------------------------------------------------ */
 		/* Generate Huffman-codes and create decoding table */
@@ -80,7 +73,7 @@ struct Output__Deb2 : public OutputWrapper {
 
 		/* Generate table of character frequencies based on symbol names */
 		uint32_t freqTable[0x100] = { 0 };
-		for (auto& symbol : symbols) {
+		for (const auto& symbol : symbols) {
 			for (auto& character : symbol.second) {
 				freqTable[(int)character]++;
 			}
@@ -89,22 +82,27 @@ struct Output__Deb2 : public OutputWrapper {
 		}
 
 		/* Generate table of Huffman codes (sorted by code) */
-		Huffman::RecordSet codesTable = Huffman::encode( freqTable );
+		Huffman::RecordSet codesTable = Huffman::encode(freqTable);
 
 		/* Write down the decoding table */
 		const Huffman::Record* characterToRecord[0x100] = { nullptr };	// LUT that links each character to its Huffman-coding record
-		for (auto& entry : codesTable) {
-			/* FIXME: This shouldn't happen as Huffman encoder auto-flattens tree */
-			if (entry.codeLength > 16) {
-				throw std::runtime_error("Some encoding table code lengths exceed 16 bits, try -tolower or -toupper option to reduce entropy");
-			}
+		{
+			std::vector<uint16_t> huffmanTableBuff(codesTable.size() * 2 + 1);
+			std::size_t tablePos = 0;
+			for (const auto& entry : codesTable) {
+				/* FIXME: This shouldn't happen as Huffman encoder auto-flattens tree */
+				if (entry.codeLength > 16) {
+					throw std::runtime_error("Some encoding table code lengths exceed 16 bits, try -tolower or -toupper option to reduce entropy");
+				}
 
-			characterToRecord[entry.data] = &entry;		// assign character this Huffman::Record entity
-			output->writeBEWord(entry.code);			// write Huffman-code
-			output->writeByte(entry.codeLength);		// write Huffman-code length (in bits)
-			output->writeByte(entry.data);				// write down original character
+				characterToRecord[entry.data] = &entry;		// assign character this Huffman::Record entity
+
+				huffmanTableBuff[tablePos++] = Utils::asBigEndian<uint16_t>(entry.code);
+				huffmanTableBuff[tablePos++] = Utils::asBigEndian<uint16_t>((entry.codeLength << 8) | (entry.data));
+			}
+			huffmanTableBuff[tablePos] = -1;		// write 0xFFFF at the end of Huffman-table to stop searching and cause error
+			std::fwrite(huffmanTableBuff.data(), huffmanTableBuff.size(), 2, output);
 		}
-		output->writeWord(-1);			// write 0xFFFF at the end of Huffman-table to stop searching and cause error
 
 		/* ------------------------------------- */
 		/* Generate per block symbol information */
@@ -115,15 +113,15 @@ struct Output__Deb2 : public OutputWrapper {
 
 			auto symbolPtr = symbols.begin();
 			struct SymbolRecord { uint16_t offset; uint16_t symbolDataPtr; };
+			static_assert(sizeof(SymbolRecord) == 4);
 
 			/* For 64kb block within symbols range */
-			for (uint16_t block = 0x00; block <= lastBlock; block++) { 
-				/* Align block on even address */
-				if (output->getCurrentOffset() & 1) {
-					output->writeByte(0x00);
+			for (uint16_t block = 0x00; block <= lastBlock; block++) {
+				uint32_t loc_Block = std::ftell(output);
+				if (loc_Block & 1) {
+					std::fputc(0x00, output);
+					loc_Block++;
 				}
-
-				uint32_t loc_Block = output->getCurrentOffset();	// remember offset, where this block starts ...
 
 				BitStream SymbolsHeap;
 				std::vector<SymbolRecord> offsetsData;
@@ -159,8 +157,8 @@ struct Output__Deb2 : public OutputWrapper {
 					else {
 						/* Generate symbol structure, that includes offset and encoded symbol text pointer */
 						offsetsData.push_back({
-							.offset = (uint16_t)(symbolPtr->first & 0xFFFF),
-							.symbolDataPtr = (uint16_t)SymbolsHeap.getCurrentPos()
+							.offset = Utils::asBigEndian<uint16_t>(symbolPtr->first & 0xFFFF),
+							.symbolDataPtr = Utils::asBigEndian<uint16_t>(SymbolsHeap.getCurrentPos())
 						});
 	
 						/* Encode each symbol character with the generated Huffman-codes and store it in the bitsteam */
@@ -171,39 +169,36 @@ struct Output__Deb2 : public OutputWrapper {
 						
 						/* Finally, add null-terminator */
 						{
-							auto *record = characterToRecord[ 0x00 ];
-							SymbolsHeap.pushCode( record->code, record->codeLength );
+							const auto* record = characterToRecord[0x00];
+							SymbolsHeap.pushCode(record->code, record->codeLength);
 							SymbolsHeap.flush();
 						}
 					}
-
 				}
 
 				/* Write offsets block and their corresponding encoded symbols heap */
-				if ( offsetsData.size() > 0 ) {
+				if (offsetsData.size() > 0) {
 					Logger::debug(
 						"Block {:02X}: {} bytes (offsets list: {} bytes, symbols heap: {} bytes)",
-						block, 2+offsetsData.size()*4+SymbolsHeap.size(), offsetsData.size()*4, SymbolsHeap.size()
+						block, 2 + offsetsData.size() * 4 + SymbolsHeap.size(), offsetsData.size() * 4, SymbolsHeap.size()
 					);
 
 					/* Insert pointer to the end of the list (where heap starts) */
-					output->writeBEWord(2 + offsetsData.size()*4);		// write down offset
+					const uint16_t symbolHeapPtr = Utils::asBigEndian<uint16_t>(2 + offsetsData.size() * 4);
+					std::fwrite(&symbolHeapPtr, 2, 1, output);
 
-					/* Write down records that store offset and symbol pointer */
-					for (auto& entry : offsetsData) {
-						output->writeBEWord(entry.offset);			// write down offset
-						output->writeBEWord(entry.symbolDataPtr);	// write down expected relative pointer to the heap
-					}
+					/* Write down records that store offset and symbol pointer, then the entire heap */
+					std::fwrite(offsetsData.data(), offsetsData.size(), sizeof(offsetsData[0]), output);
+					std::fwrite(SymbolsHeap.begin(), SymbolsHeap.size(), 1, output);
 
-					output->writeData(SymbolsHeap.begin(), SymbolsHeap.size());
-					blockOffsets[block] = Utils::swap32((loc_Block-loc_BlockOffsets));
+					blockOffsets[block] = Utils::asBigEndian<uint32_t>(loc_Block-loc_BlockOffsets);
 				}
 			}
 		}
 		
 		/* Finally, write down block offsets table in the header */
-		output->setOffset(loc_BlockOffsets, IO::start);
-		output->writeData(blockOffsets.data(), blockOffsetsSize);
+		std::fseek(output, loc_BlockOffsets, SEEK_SET);
+		std::fwrite(blockOffsets.data(), blockOffsetsSize, 1, output);
 	};
 
 };

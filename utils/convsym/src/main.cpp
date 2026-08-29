@@ -2,10 +2,11 @@
 /* ------------------------------------------------------------ *
  * ConvSym utility version 2.12									*
  * Main definitions file										*
- * (c) 2017-2018, 2020-2024, Vladikcomper						*
+ * (c) 2017-2026, Vladikcomper									*
  * ------------------------------------------------------------	*/
 
 #include <cstdint>
+#include <cstdio>
 #include <exception>
 #include <stdexcept>
 #include <string>
@@ -20,6 +21,7 @@
 #include <ArgvParser.hpp>
 
 /* Input wrappers */
+#include "Utils.hpp"
 #include "input/ASM68K_Listing.cpp"
 #include "input/ASM68K_Sym.cpp"
 #include "input/AS_Listing.cpp"
@@ -318,17 +320,61 @@ int main (int argc, const char ** argv) {
 	/* Pass generated symbols list to the output wrapper */
 	if (!symbolTable.symbols.empty()) {
 		try {
-			std::unique_ptr<OutputWrapper> output;
+			std::unique_ptr<OutputWrapper> outputWrapper;
 			switch (Utils::hash(outputWrapperName)) {
-				case Utils::hash("deb1"):	output = std::make_unique<Output__Deb1>(); break;
-				case Utils::hash("deb2"):	output = std::make_unique<Output__Deb2>(); break;
-				case Utils::hash("log"):	output = std::make_unique<Output__Log>(); break;
-				case Utils::hash("asm"):	output = std::make_unique<Output__Asm>(); break;
+				case Utils::hash("deb1"):	outputWrapper = std::make_unique<Output__Deb1>(); break;
+				case Utils::hash("deb2"):	outputWrapper = std::make_unique<Output__Deb2>(); break;
+				case Utils::hash("log"):	outputWrapper = std::make_unique<Output__Log>(); break;
+				case Utils::hash("asm"):	outputWrapper = std::make_unique<Output__Asm>(); break;
 				default:
 					throw std::runtime_error(std::format("Unknown output format specifier: {}", outputWrapperName));
 			}
-			output->parseOptions(outputOpts);
-			output->parse(symbolTable.symbols, outputFileName, appendOffset, pointerOffset, !optNoAlignOnAppend);
+
+			/* Setup output stream respecting various append flags */
+			std::FILE* outputFile;
+			if (std::string_view(outputFileName) == "-") {
+				outputFile = stdout;
+				/* FIXME: Fail in append mode */
+			}
+			else {
+				if (appendOffset == 0) {
+					outputFile = std::fopen(outputFileName, outputWrapper->preferredStreamMode == OutputWrapper::PreferredStreamMode::Text ? "w" : "wb");
+				}
+				else {
+					outputFile = std::fopen(outputFileName, outputWrapper->preferredStreamMode == OutputWrapper::PreferredStreamMode::Text ? "r+" : "r+b");
+					if (outputFile) {
+						if (appendOffset == static_cast<uint32_t>(-1)) {
+							std::fseek(outputFile, 0, SEEK_END);
+							appendOffset = std::ftell(outputFile);
+							if (!optNoAlignOnAppend && (appendOffset & 1) != 0) {
+								Logger::debug("Auto-aligning append offset.");
+								std::fputc(0x00, outputFile);
+								appendOffset++;
+							}
+						}
+						else {
+							if (!optNoAlignOnAppend && ((appendOffset & 1) != 0)) {
+								Logger::warn("An odd append offset is specified; the offset wasn't auto-aligned.");
+							}
+							std::fseek(outputFile, appendOffset, SEEK_SET);
+						}
+						if (pointerOffset != 0) {
+							std::fseek(outputFile, pointerOffset, SEEK_SET);
+							const uint32_t appendOffsetBE = Utils::asBigEndian<uint32_t>(appendOffset);
+							std::fwrite((const char*)&appendOffsetBE, 4, 1, outputFile);
+							std::fseek(outputFile, appendOffset, SEEK_SET);
+						}
+					}
+				}
+			}
+			if (!outputFile) {
+				throw std::runtime_error("Failed to open output file");
+			}
+
+			outputWrapper->parseOptions(outputOpts);
+			outputWrapper->parse(symbolTable.symbols, outputFile);
+
+			if (outputFile != stdout) std::fclose(outputFile);
 		}
 		catch (const std::exception& err) {
 			Logger::error("Output generation failed: {}", err.what());

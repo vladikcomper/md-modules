@@ -1,86 +1,23 @@
 #pragma once
 
 #include <map>
+#include <cstdio>
 #include <cstdint>
-#include <memory>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 
-#include <IO.hpp>
-#include <Logger.hpp>
 #include <OptsParser.hpp>
 
 
 /* Base class for the output formats handlers */
 struct OutputWrapper {
-
-	OutputWrapper() { }
+	const enum class PreferredStreamMode { Text, Binary } preferredStreamMode;
+	OutputWrapper(PreferredStreamMode mode): preferredStreamMode(mode) { }
 	virtual ~OutputWrapper() { }
-
-	// Function to setup output
-	static std::unique_ptr<IO::FileOutput> setupOutput( const char * fileName, int32_t appendOffset, int32_t pointerOffset, bool alignOnAppend ) {
-
-		// If append offset was specified, don't overwrite the contents of file
-		if ( appendOffset != 0 ) {
-			std::unique_ptr<IO::FileOutput> output = std::make_unique<IO::FileOutput>(fileName, IO::append);
-
-			// Make sure IO operation was successful
-			if (!output->good()) {
-				Logger::error("Couldn't open file \"{}\"", fileName);
-				throw std::runtime_error("IO error");
-			}
-
-			// If append mode is specified: append to the end of file
-			if ( appendOffset == -1 ) {
-				output->setOffset( 0, IO::end );			// move pointer to the end of file ...
-				appendOffset = output->getCurrentOffset();
-
-				// If align on append option is on (default), make sure to pad `appendOffset` if it's not even
-				if (alignOnAppend && ((appendOffset & 1) != 0)) {
-					Logger::debug("Auto-aligning append offset.");
-					output->writeByte(0);
-					appendOffset++;
-				}
-			}
-			else {
-				if (alignOnAppend && ((appendOffset & 1) != 0)) {
-					Logger::warn("An odd append offset is specified; the offset wasn't auto-aligned.");
-				}
-
-				output->setOffset( appendOffset );		// move pointer to the specified append offset
-			}
-
-			// If pointer offset is specified
-			if ( pointerOffset != 0 ) {
-				output->setOffset( pointerOffset );
-				output->writeBELong( appendOffset );
-			}
-
-			// Treat "appendOffset" as the base offset from now on ...
-			output->setBaseOffset( appendOffset );
-			output->setOffset( 0 );						// move to the start of appending section ...
-
-			return output;
-		}
-
-		// Otherwise, discard file contents if exists
-		else {
-			return std::make_unique<IO::FileOutput>(fileName);
-		}
-
-	}
 
 	virtual void parseOptions(const std::string_view opts) {
 		OptsParser::parse(opts, {});
 	}
 
-	virtual void parse( 
-		std::multimap<uint32_t, std::string>& SymbolMap, 
-		const char * fileName, 
-		uint32_t appendOffset = 0, 
-		uint32_t pointerOffset = 0,
-		bool alignOnAppend = true
-	) = 0;
-
+	virtual void parse(std::multimap<uint32_t, std::string>& SymbolMap, std::FILE* output) = 0;
 };

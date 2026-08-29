@@ -8,7 +8,6 @@
 #include <string>
 #include <iostream>
 
-#include <IO.hpp>
 #include <Utils.hpp>
 #include <Logger.hpp>
 #include <OptsParser.hpp>
