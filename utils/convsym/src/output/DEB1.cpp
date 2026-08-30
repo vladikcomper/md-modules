@@ -159,6 +159,7 @@ struct Output__Deb1 : public OutputWrapper {
 					}
 
 					/* Push this symbol to the data buffer */
+					/* FIXME: Avoid data transfer back and forth, push data to bitstream directly */
 					symbolsData.push_back(symbolHeap.size() + 1);	// write down symbols size
 					for (auto t = symbolHeap.begin(); t != symbolHeap.end(); t++) {
 						symbolsData.push_back(*t);

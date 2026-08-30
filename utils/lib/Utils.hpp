@@ -12,7 +12,7 @@ namespace Utils {
 	 * Ensures the result uses Big Endian byte order. This is a no-op on Big Endian systems.
 	 */
 	template<typename T>
-	constexpr T asBigEndian(T value) {
+	inline constexpr T asBigEndian(T value) {
 		return std::endian::native == std::endian::little ? std::byteswap<T>(value) : value;
 	}
 
@@ -31,7 +31,7 @@ namespace Utils {
 	/**
 	 * Simple compile-time hash functions for strings (djb2 algorithm)
 	 */
-	constexpr uint32_t hash(std::string_view str) {
+	inline constexpr uint32_t hash(std::string_view str) {
 	    uint32_t hash = 5381;
 	    for (char c : str) {
 	        hash = ((hash << 5) + hash) + static_cast<uint32_t>(c);

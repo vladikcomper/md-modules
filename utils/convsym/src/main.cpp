@@ -71,7 +71,7 @@ int main (int argc, const char ** argv) {
 			"  -inopt [options]\n"
 			"    Additional options specific for the input format. See README for more information.\n"
 			"    Default options (depending on -in [format]):\n"
-			"      -in asm68k_sym -inopt \"/localSign=@ /localJoin=. /processLocals+\"\n"
+			"      -in asm68k_sym -inopt \"/localSign=@ /localJoin=. /processLocals+ /ignoreConstants+\"\n"
 			"      -in asm68k_lst -inopt \"/localSign=@ /localJoin=. /ignoreMacroDefs+ /ignoreMacroExp- /addMacrosAsOpcodes+ /processLocals+\"\n"
 			"      -in as_lst -inopt \"/localJoin=. /processLocals+ /ignoreInternalSymbols+\"\n"
 			"      -in log -inopt \"/separator=: /useDecimal-\"\n"
