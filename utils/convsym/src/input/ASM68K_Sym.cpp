@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.12									*
+ * ConvSym utility version 2.13									*
  * Input wrapper for the ASM68K compiler's symbol format		*
  * ------------------------------------------------------------	*/
 
@@ -28,7 +28,7 @@ struct Input__ASM68K_Sym : public InputWrapper {
 	  *	- `/localSign=x` 		- determines character used to specify local labels
 	  *	- `/localJoin=x` 		- character used to join local label and its global "parent"
 	  *	- `/processLocals?`		- specify whether local labels will processed
-	  * - `/ignoreConstants?`	- whether linker constants (e.g. `_ROM_OBJ` will be ignored)
+	  * - `/ignoreConstants?`	- whether linker constants (e.g. `_ROM_OBJ`) should be ignored
 	  */
 	struct {
 		char localSign;

@@ -1,7 +1,34 @@
 
 # ConvSym version history
 
+### Version 2.13 (2026-08-30)
+
+* `asm68k_sym` input format:
+	- Parser now supports .sym files with Source Line Data (SLD) blocks produced by Psy-Q Linker (not by ASM68K itself);
+	- Parser now properly validates .sym file header and rejects any invalid files;
+	- `/ignoreConstants[+|-]` option (passed using `-inopt`) to ignore linker-defined constants (e.g. `_ROM_OBJ`; defaults to `+`).
+
+* `as_lst` input format:
+	- Fixed a bug where any format-specific options passed via `-inopt` argument had no effect;
+
+* `asm` and `log` output formats:
+	- These formats now fully work with append flag (`-a`), just like binary `deb1` and `deb2`, which allows to append their output to existing file instead of overwriting it;
+	- Symbol table dump options (`-org [offset]`, `-ref [offset]`) are now also supported, even though they have limited usability for text formats.
+
+* Officially deprecated the following formats as not recommended:
+	- `asm68k_lst` input format - use `asm68k_sym` (default) instead;
+	- `as_lst_exp` input format - use `as_lst` instead;
+	- `deb1` output format - use `deb2` (default) instead.
+
+* ConvSym's codebase was heavily refactored and improved (including underlying utility functions), which resulted in the following changes:
+	- Unknown command line arguments now throw an error instead of a warning;
+	- Parsing of `-inopt` and `-outopt` (additional format options) is now more robust with better error reporting; unknown options or unexpected characters are no longer tolerated (older versions just showed a warning);
+	- Improved and overhauled logging: FATAL-level logs are now errors and ERROR-level logs are warnings (because older versions treated errors as recoverable); log format and various messages are slightly different (generally, error reporting has been improved);
+	- Slight performance and stability improvements.
+
 ### Version 2.12.1 (2024-12-14)
+
+*This version was distributed with MD Debugger 2.6 and MD Shell 2.6.*
 
 * `deb2` output format:
 	- Fixed an edge-case bug where if one block is too large and symbol heap exceeds 64 kb, all further blocks are skipped.
@@ -49,6 +76,8 @@
   - Properly report I/O error if output file couldn't be opened.
 
 ### Version 2.9.1 (2023-03-22)
+
+*This version was distributed with MD Debugger 2.5.*
 
 * `asm68k_sym` parser:
   - Fixed incorrect behavior of `/processLocals-` option switch, if local labels were present in the symbol file. ConvSym would just add local labels in raw unprocessed form (e.g. `@local`, not `globalParent.local`) instead of ignoring them.
@@ -129,5 +158,7 @@
 * Added new `log` input parser to support plain-text **.log**/**.txt** files as input.
 
 ### Version 2.0 (2018-01-14)
+
+*This version was distributed with MD Debugger 2.0.*
 
 Initial version 2.x release.

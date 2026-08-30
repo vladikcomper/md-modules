@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.12									*
+ * ConvSym utility version 2.13									*
  * Main definitions file										*
  * (c) 2017-2026, Vladikcomper									*
  * ------------------------------------------------------------	*/
@@ -45,8 +45,8 @@ int main (int argc, const char ** argv) {
 	/* Provide help if no sufficient arguments were passed */
 	if (argc < 3) {
 		std::cout <<
-			"ConvSym utility version 2.12.1\n"
-			"(c) 2016-2024, vladikcomper\n"
+			"ConvSym utility version 2.13\n"
+			"(c) 2016-2026, vladikcomper\n"
 			"\n"
 			"Command line arguments:\n"
 			"  convsym [input_file|-] [output_file|-] <options>\n"
@@ -60,12 +60,13 @@ int main (int argc, const char ** argv) {
 			"OPTIONS:\n"
 			"  -in [format]\n"
 			"  -input [format]\n"
-			"    Selects input file format. Supported formats: asm68k_sym, asm68k_lst, as_lst, as_lst_exp, log, txt\n"
+			"    Selects input file format.\n"
+			"    Supported formats: asm68k_sym, as_lst, log, txt, asm68k_lst (deprecated), as_lst_exp (deprecated)\n"
 			"    Default: asm68k_sym\n"
 			"\n"
 			"  -out [format]\n"
 			"  -output [format]\n"
-			"    Selects output file format. Supported formats: asm, deb1, deb2, log\n"
+			"    Selects output file format. Supported formats: asm, deb2, deb1 (deprecated), log\n"
 			"    Default: deb2\n"
 			"\n"
 			"  -inopt [options]\n"
@@ -246,11 +247,14 @@ int main (int argc, const char ** argv) {
 		std::unique_ptr<InputWrapper> inputWrapper;
 		switch (Utils::hash(inputWrapperName)) {
 			case Utils::hash("asm68k_sym"):		inputWrapper = std::make_unique<Input__ASM68K_Sym>(); break;
-			case Utils::hash("asm68k_lst"): 	inputWrapper = std::make_unique<Input__ASM68K_Listing>(); break;
 			case Utils::hash("as_lst"):			inputWrapper = std::make_unique<Input__AS_Listing>(); break;
-			case Utils::hash("as_lst_exp"): 	inputWrapper = std::make_unique<Input__AS_Listing_Experimental>(); break;
 			case Utils::hash("log"): 			inputWrapper = std::make_unique<Input__Log>(); break;
 			case Utils::hash("txt"): 			inputWrapper = std::make_unique<Input__TXT>(); break;
+			/* DEPRECATED parsers: */
+			case Utils::hash("asm68k_lst"): 	inputWrapper = std::make_unique<Input__ASM68K_Listing>();
+												Logger::warn("\"asm68k_lst\" input format is deprecated, use \"asm68k_sym\" instead" );	break;
+			case Utils::hash("as_lst_exp"): 	inputWrapper = std::make_unique<Input__AS_Listing_Experimental>();
+												Logger::warn("\"as_lst_exp\" input format is deprecated, use \"as_lst\" instead" );	break;
 			default:
 				throw std::runtime_error(std::format("Unknown input format specifier: {}", inputWrapperName));
 		}
@@ -322,10 +326,11 @@ int main (int argc, const char ** argv) {
 		try {
 			std::unique_ptr<OutputWrapper> outputWrapper;
 			switch (Utils::hash(outputWrapperName)) {
-				case Utils::hash("deb1"):	outputWrapper = std::make_unique<Output__Deb1>(); break;
-				case Utils::hash("deb2"):	outputWrapper = std::make_unique<Output__Deb2>(); break;
 				case Utils::hash("log"):	outputWrapper = std::make_unique<Output__Log>(); break;
 				case Utils::hash("asm"):	outputWrapper = std::make_unique<Output__Asm>(); break;
+				case Utils::hash("deb2"):	outputWrapper = std::make_unique<Output__Deb2>(); break;
+				case Utils::hash("deb1"):	outputWrapper = std::make_unique<Output__Deb1>();
+											Logger::warn("\"deb1\" output format is deprecated, use \"deb2\" instead" ); break;
 				default:
 					throw std::runtime_error(std::format("Unknown output format specifier: {}", outputWrapperName));
 			}

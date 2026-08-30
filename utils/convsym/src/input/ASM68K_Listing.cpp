@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.12									*
+ * ConvSym utility version 2.13									*
  * Input wrapper for the ASM68K listing format					*
  * ------------------------------------------------------------	*/
 

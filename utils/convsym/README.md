@@ -54,7 +54,7 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
   -inopt [options]
     Additional options specific for the input format.
     Default options (depending on -in [format]):
-      -in asm68k_sym -inopt "/localSign=@ /localJoin=. /processLocals+"
+      -in asm68k_sym -inopt "/localSign=@ /localJoin=. /processLocals+ /ignoreConstants+"
       -in asm68k_lst -inopt "/localSign=@ /localJoin=. /ignoreMacroDefs+ /ignoreMacroExp- /addMacrosAsOpcodes+ /processLocals+"
       -in as_lst -inopt "/localJoin=. /processLocals+ /ignoreInternalSymbols+"
       -in log -inopt "/separator=: /useDecimal-"
@@ -222,11 +222,24 @@ Since **version 2.6**, the following options are supported:
     options have no effect)
 ```
 
+Since **version 2.13** .sym files with Source Line Data (SLD) information produced by Psy-Q Linker are also partially supported and the following linker-specific option was introduced:
+
+```
+  /ignoreConstants[+|-]
+    whether linker constants (e.g. `_ROM_OBJ`) should be ignored
+```
+
 Default options can be expressed as follows:
 
-	-inopt "/localSign=@ /localJoin=. /processLocals+"
+	-inopt "/localSign=@ /localJoin=. /processLocals+ /ignoreConstants+"
 
 ### `asm68k_lst` format
+
+*Deprecated since **version 2.13**.*
+
+> [!WARNING]
+>
+> This format is deprecated and is no longer recommended. Use `asm68k_sym` for better results.
 
 Expects a listing file produced by the **ASM68K** assembler for input. Local symbols are also supported by default. Since parsing of listing files is less reliable, symbol files and `asm68_sym` format is recommended instead (see above).
 
@@ -283,7 +296,7 @@ It also supports local symbols, if produced by the assembler.
 
 **Options:**
 
-Since **version 2.8**, the following options are supported:
+Since **version 2.13**, the following options are supported:
 
 ```
   /localJoin=[x]
@@ -305,9 +318,13 @@ Default options can be expressed as follows:
 
 ### `as_lst_exp` format
 
-*Available since **version 2.8**.*
+*Available since **version 2.8**, deprecated since **version 2.13**.*
 
-This is an experimental version of listing files parser for the AS assembler. Like `as_lst` format, it expects a listing file produced by the **AS** assembler for input. 
+> [!WARNING]
+>
+> This format is deprecated and is no longer recommended. Use `as_lst` for better results.
+
+This is an experimental version of listing files parser for the AS assembler. Like `as_lst` format, it expects a listing file produced by the **AS** assembler for input.
 
 Using this parser is currently not recommended and its implementation may drastically change in future versions of ConvSym.
 
@@ -393,6 +410,8 @@ Default options can be expressed as follows:
 	-outopt "/favorLastLabels-"
 
 ### `deb1` output format
+
+*Deprecated since **version 2.13**.*
 
 Outputs debug symbols database in old DEB1 format. This is an outdated and limited format which is not supported by the current version of MD Debugger and Error Handler. This format only aims to retain compatibility with the Error Handler 1.0.
 
