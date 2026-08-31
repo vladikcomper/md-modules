@@ -112,7 +112,7 @@
 * Added support for multiple labels sharing the same offset for all input and output wrappers;
 
 * `deb1` and `deb2` output formats:
-	- Add "/favorLastLabels" option, which toggles choosing last labels when there are multiple labels at the same offset (first labels are preferred otherwise).
+	- Add `/favorLastLabels` option, which toggles choosing last labels when there are multiple labels at the same offset (first labels are preferred otherwise).
 
 ### Version 2.6 (2021-02-01)
 
@@ -124,7 +124,7 @@
 * `asm68k_sym` input parser:
 	- Added local labels support (local labels are produced when assembled with v+ option);
 	- Fixed missing offset boundary and transformation logic (applied by `-range`, `-base` and `-mask` options);
-	- Added "/localSign", "/localJoin" and "/processLocals" options to configure local labels processing.
+	- Added `/localSign`, `/localJoin` and `/processLocals` options to configure local labels processing.
 * `asm68k_lst` and `as_lst` input parsers:
 	- Fixed a bug that prevented offsets >=$80000000 to be added due to incorrect signed boundary check;
 	- When several labels occur on the same offset, use the last label met, not the first;
