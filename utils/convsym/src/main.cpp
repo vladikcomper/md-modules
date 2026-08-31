@@ -12,10 +12,12 @@
 #include <string>
 #include <memory>
 #include <functional>
-#include <regex>
 #include <iostream>
 #include <fstream>
 #include <string_view>
+
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
 
 #include <Logger.hpp>
 #include <ArgvParser.hpp>
@@ -283,46 +285,62 @@ int main (int argc, const char ** argv) {
 		}
 	}
 
+	/* Sort symbol table by offset */
+	symbolTable.sortByOffset();
+
 	/* Apply transformation to symbols */
 	if (optToUpper) {
-		for (auto & symbolRef : symbolTable.symbols) {
-			std::transform(symbolRef.second.begin(), symbolRef.second.end(), symbolRef.second.begin(), ::toupper);
+		for (auto & [_, label] : symbolTable.data) {
+			std::transform(label.begin(), label.end(), const_cast<char*>(label.begin()), ::toupper);
 		}
+		/* FIXME: This is a mistake */
 		std::transform(filterRegexStr.begin(), filterRegexStr.end(), filterRegexStr.begin(), ::toupper);
-	}    
+	}
 	if (optToLower) {
-		for (auto & symbolRef : symbolTable.symbols) {
-			std::transform(symbolRef.second.begin(), symbolRef.second.end(), symbolRef.second.begin(), ::tolower);
+		for (auto & [_, label] : symbolTable.data) {
+			std::transform(label.begin(), label.end(), const_cast<char*>(label.begin()), ::tolower);
 		}
 		std::transform(filterRegexStr.begin(), filterRegexStr.end(), filterRegexStr.begin(), ::tolower);
 	}
 	if (!prefixStr.empty()) {
-		const auto prefixSize = prefixStr.size();
-		for (auto & symbolRef : symbolTable.symbols) {
-			if (symbolRef.second.size() + prefixSize > symbolRef.second.capacity()) {
-				symbolRef.second.reserve(symbolRef.second.size() + prefixSize);
-			}
-			symbolRef.second.insert(0, prefixStr);
+		for (auto& [offset, label] : symbolTable.data) {
+			label = symbolTable.arena.push_concat(prefixStr, label);
 		}
 	}
 	
 	/* Pre-filter symbols based on regular expression */
 	if (filterRegexStr.length() > 0) {
-		const auto regexExpression = std::regex(filterRegexStr);
-		/* FIXME: `std::erase_if`? */
-		for (auto it = symbolTable.symbols.cbegin(); it != symbolTable.symbols.cend(); /*it++*/) {	// NOTICE: Do not increment iterator here (but see below)
-			bool matched = std::regex_match(it->second, regexExpression);
-			if (matched == optFilterExclude) {	// will erase element: if mode=exclude and matched, if mode=include and !matched
-				it = symbolTable.symbols.erase(it);
-			}
-			else {
-				it++;
-			}
+		int pcre2ErrorCode = 0;
+		std::size_t pcre2ErrorOffset = 0;
+		pcre2_code* pcre2RegexCode = pcre2_compile(reinterpret_cast<PCRE2_SPTR8>(filterRegexStr.data()), filterRegexStr.size(), 0, &pcre2ErrorCode, &pcre2ErrorOffset, nullptr);
+		if (!pcre2RegexCode) {
+			PCRE2_UCHAR8 pcre2ErrorMessage[128];
+			pcre2_get_error_message(pcre2ErrorCode, pcre2ErrorMessage, sizeof(pcre2ErrorMessage));
+			throw std::runtime_error(std::format("Failed to compile filter regex at offset {}: {}", pcre2ErrorOffset, pcre2ErrorMessage));
 		}
+
+		pcre2_jit_compile(pcre2RegexCode, PCRE2_JIT_COMPLETE);
+
+		pcre2_match_data* matchData = pcre2_match_data_create_from_pattern(pcre2RegexCode, nullptr);
+
+		std::erase_if(symbolTable.data, [&](const SymbolTable::Record& symbol) {
+			const int rc = pcre2_match(
+				pcre2RegexCode,
+				reinterpret_cast<PCRE2_SPTR8>(symbol.label.data()),
+				symbol.label.length(),
+				0,
+				PCRE2_ANCHORED | PCRE2_ENDANCHORED,
+				matchData, nullptr
+			);
+			return (rc >= 0) == optFilterExclude;
+		});
+
+		pcre2_match_data_free(matchData);
+		pcre2_code_free(pcre2RegexCode);
 	}
 
 	/* Pass generated symbols list to the output wrapper */
-	if (!symbolTable.symbols.empty()) {
+	if (!symbolTable.data.empty()) {
 		try {
 			std::unique_ptr<OutputWrapper> outputWrapper;
 			switch (Utils::hash(outputWrapperName)) {
@@ -377,7 +395,7 @@ int main (int argc, const char ** argv) {
 			}
 
 			outputWrapper->parseOptions(outputOpts);
-			outputWrapper->parse(symbolTable.symbols, outputFile);
+			outputWrapper->parse(symbolTable.data, outputFile);
 
 			if (outputFile != stdout) std::fclose(outputFile);
 		}

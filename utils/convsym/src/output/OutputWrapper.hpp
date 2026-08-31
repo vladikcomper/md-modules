@@ -1,13 +1,11 @@
 #pragma once
 
-#include <map>
 #include <cstdio>
-#include <cstdint>
-#include <string>
 #include <string_view>
 
 #include <OptsParser.hpp>
 
+#include "../util/SymbolTable.hpp"
 
 /* Base class for the output formats handlers */
 struct OutputWrapper {
@@ -19,5 +17,5 @@ struct OutputWrapper {
 		OptsParser::parse(opts, {});
 	}
 
-	virtual void parse(std::multimap<uint32_t, std::string>& SymbolMap, std::FILE* output) = 0;
+	virtual void parse(std::vector<SymbolTable::Record>& symbols, std::FILE* output) = 0;
 };

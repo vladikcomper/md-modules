@@ -6,10 +6,8 @@
 
 #include <cassert>
 #include <cstddef>
-#include <map>
 #include <cstdint>
 #include <stdexcept>
-#include <string>
 
 #include <OptsParser.hpp>
 #include <Huffman.hpp>
@@ -41,7 +39,7 @@ struct Output__Deb1 : public OutputWrapper {
 	/**
 	 * Main function that generates the output
 	 */
-	void parse(std::multimap<uint32_t, std::string>& symbols, std::FILE* output) {
+	void parse(std::vector<SymbolTable::Record>& symbols, FILE* output) {
 		assert(!symbols.empty());
 
 		/* Write format version token */
@@ -50,7 +48,7 @@ struct Output__Deb1 : public OutputWrapper {
 
 		/* Allocate space for blocks offsets table */
 		auto lastSymbolPtr = symbols.rbegin();
-		uint16_t lastBlock = (lastSymbolPtr->first) >> 16;
+		uint16_t lastBlock = (lastSymbolPtr->offset) >> 16;
 
 		if (lastBlock > 63) {		// blocks index table is limited to $40 entries (which is only enough to ROM section)
 			Logger::warn("Too many memory blocks to allocate (${:X}), truncating to $40 blocks. Some symbols will be lost.", lastBlock+1);
@@ -72,8 +70,8 @@ struct Output__Deb1 : public OutputWrapper {
 
 		/* Generate table of character frequencies based on symbol names */
 		uint32_t freqTable[0x100] = { 0 };
-		for (const auto& symbol : symbols) {
-			for (auto& character : symbol.second) {
+		for (const auto& [_, label] : symbols) {
+			for (auto& character : label) {
 				freqTable[(int)character]++;
 			}
 			freqTable[0x00]++;
@@ -123,31 +121,31 @@ struct Output__Deb1 : public OutputWrapper {
 				std::vector<uint8_t> symbolsData;
 
 				/* For every symbol within the block ... */
-				for (; (symbolPtr->first>>16) <= block && (symbolPtr != symbols.cend()); ++symbolPtr) {
-					if ((symbolPtr->first>>16) < block) {
+				for (; (symbolPtr->offset>>16) <= block && (symbolPtr != symbols.cend()); ++symbolPtr) {
+					if ((symbolPtr->offset>>16) < block) {
 						continue;
 					}
 
-					Logger::debug("\t{:08X}\t{}", symbolPtr->first, symbolPtr->second);
+					Logger::debug("\t{:08X}\t{}", symbolPtr->offset, symbolPtr->label);
 
 					/* 
 					 * For records with the same offsets, fetch only the last or the first processed symbol,
 					 * depending "favor last labels" option ...
 					 */
 					if ( (options.favorLastLabels && std::next(symbolPtr) != symbols.end()
-								&& std::next(symbolPtr)->first == symbolPtr->first) ||
+								&& std::next(symbolPtr)->offset == symbolPtr->offset) ||
 						 (!options.favorLastLabels && symbolPtr != symbols.begin()
-								&& std::prev(symbolPtr)->first == symbolPtr->first) ) {
+								&& std::prev(symbolPtr)->offset == symbolPtr->offset) ) {
 						continue;
 					}
 
 					BitStream symbolHeap;
 
 					/* Add offset to the offsets block */
-					offsetsData.push_back(Utils::asBigEndian<uint16_t>(symbolPtr->first & 0xFFFF));
+					offsetsData.push_back(Utils::asBigEndian<uint16_t>(symbolPtr->offset & 0xFFFF));
 
 					/* Encode each symbol character with the generated Huffman-codes and store it in the bitsteam */
-					for (auto& Character : symbolPtr->second) {
+					for (auto& Character : symbolPtr->label) {
 						auto *record = characterToRecord[(int)Character];
 						symbolHeap.pushCode(record->code, record->codeLength);
 					}

@@ -42,7 +42,7 @@ struct Output__Deb2 : public OutputWrapper {
 	/**
 	 * Main function that generates the output
 	 */
-	void parse(std::multimap<uint32_t, std::string>& symbols, std::FILE* output) {
+	void parse(std::vector<SymbolTable::Record>& symbols, FILE* output) {
 		assert(!symbols.empty());
 
 		/* Write format version token */
@@ -51,7 +51,7 @@ struct Output__Deb2 : public OutputWrapper {
 
 		/* Allocate space for blocks offsets table */
 		auto lastSymbolPtr = symbols.rbegin();
-		uint16_t lastBlock = (lastSymbolPtr->first) >> 16;
+		uint16_t lastBlock = (lastSymbolPtr->offset) >> 16;
 
 		if (lastBlock > 0xFF) {		// blocks index table is limited to $100 entries (which is enough to cover all the 24-bit addressable space)
 			Logger::warn("Too many memory blocks to allocate (${:X}), truncating to $100 blocks. Some symbols will be lost.", lastBlock+1);
@@ -73,8 +73,8 @@ struct Output__Deb2 : public OutputWrapper {
 
 		/* Generate table of character frequencies based on symbol names */
 		uint32_t freqTable[0x100] = { 0 };
-		for (const auto& symbol : symbols) {
-			for (auto& character : symbol.second) {
+		for (const auto& [_, label] : symbols) {
+			for (auto& character : label) {
 				freqTable[(int)character]++;
 			}
 			freqTable[0x00]++;	// include null-terminator
@@ -127,8 +127,8 @@ struct Output__Deb2 : public OutputWrapper {
 				std::vector<SymbolRecord> offsetsData;
 
 				/* For every symbol within the block ... */
-				for (; (symbolPtr->first>>16) <= block && (symbolPtr != symbols.cend()); ++symbolPtr) {
-					if ((symbolPtr->first>>16) < block) {
+				for (; (symbolPtr->offset>>16) <= block && (symbolPtr != symbols.cend()); ++symbolPtr) {
+					if ((symbolPtr->offset>>16) < block) {
 						continue;
 					}
 
@@ -137,9 +137,9 @@ struct Output__Deb2 : public OutputWrapper {
 					 * depending "favor last labels" option ...
 					 */
 					if ((options.favorLastLabels && std::next(symbolPtr) != symbols.end()
-							&& std::next(symbolPtr)->first == symbolPtr->first) ||
+							&& std::next(symbolPtr)->offset == symbolPtr->offset) ||
 						 (!options.favorLastLabels && symbolPtr != symbols.begin()
-							&& std::prev(symbolPtr)->first == symbolPtr->first)
+							&& std::prev(symbolPtr)->offset == symbolPtr->offset)
 					) {
 						continue;
 					}
@@ -157,12 +157,12 @@ struct Output__Deb2 : public OutputWrapper {
 					else {
 						/* Generate symbol structure, that includes offset and encoded symbol text pointer */
 						offsetsData.push_back({
-							.offset = Utils::asBigEndian<uint16_t>(symbolPtr->first & 0xFFFF),
+							.offset = Utils::asBigEndian<uint16_t>(symbolPtr->offset & 0xFFFF),
 							.symbolDataPtr = Utils::asBigEndian<uint16_t>(SymbolsHeap.getCurrentPos())
 						});
 	
 						/* Encode each symbol character with the generated Huffman-codes and store it in the bitsteam */
-						for (auto& character : symbolPtr->second) {
+						for (auto& character : symbolPtr->label) {
 							auto *record = characterToRecord[ (int)character ];
 							SymbolsHeap.pushCode( record->code, record->codeLength );
 						}

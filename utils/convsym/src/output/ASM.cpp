@@ -4,9 +4,7 @@
  * Output wrapper for assembly file with equates				*
  * ------------------------------------------------------------	*/
 
-#include <map>
 #include <cstdio>
-#include <cstdint>
 #include <string>
 #include <algorithm>
 #include <string_view>
@@ -44,7 +42,7 @@ struct Output__Asm : public OutputWrapper {
 	/**
 	 * Main function that generates the output
 	 */
-	void parse(std::multimap<uint32_t, std::string>& SymbolList, FILE* output) {
+	void parse(std::vector<SymbolTable::Record>& symbols, FILE* output) {
 		auto numSpecifiers = std::ranges::count(options.fmt, '%');
 		if (numSpecifiers < 2) {
 			Logger::warn("Line format string likely has too few arguments (try '%%s:\tequ\t$%%X')");
@@ -52,8 +50,8 @@ struct Output__Asm : public OutputWrapper {
 
 		const auto sLineFormat = std::string(options.fmt);	/* FIXME: Avoid re-allocation because string_view is not null-terminated */
 
-		for (const auto & symbol : SymbolList) {
-			std::fprintf(output, sLineFormat.c_str(), symbol.second.c_str(), symbol.first);
+		for (const auto & [offset, label] : symbols) {
+			std::fprintf(output, sLineFormat.c_str(), label.data(), offset);
 			std::fputc('\n', output);
 		}
 	}
