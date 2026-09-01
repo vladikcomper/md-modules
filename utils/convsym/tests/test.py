@@ -269,6 +269,17 @@ tests: 'tuple[Test, ...]' = (
 		),
 	),
 	Test(
+		description = 'asm68k_sym->deb2 symbol generation (Sonic 1-squared 2024-09 Corrected Disassembly)',
+		pipeline=(
+			ConvSym(
+				input = File('input/sonic-1-squared-2024-09-corrected.sym'),
+				output = File('output/sonic-1-squared-2024-09-corrected.sym.deb2'),
+				options = ('-range', '0', 'FFFFFF', '-inopt', '/localSign=.')
+			),
+			CheckMatch(output=File('output-expected/sonic-1-squared-2024-09-corrected.sym.deb2'), text=True),
+		),
+	),
+	Test(
 		description = 'as_lst->log symbol generation (Sonic 1 Git 2022 Disassembly - AS)',
 		pipeline=(
 			ConvSym(
@@ -310,6 +321,17 @@ tests: 'tuple[Test, ...]' = (
 				options = ('-in', 'as_lst', '-out', 'log', '-exclude', '-filter', '(z.+)|(mus_.+)|(sfx_.+)|(cf[A-Z].+)')
 			),
 			CheckMatch(output=File('output-expected/sonic-3k-git-2022.log'), text=True),
+		),
+	),
+	Test(
+		description = 'as_lst->deb2 symbol generation (Sonic Clean Engine 2025 Disassembly)',
+		pipeline=(
+			ConvSym(
+				input = File('input/sonic-clean-engine-2025-tbl-only.lst'),
+				output = File('output/sonic-clean-engine-2025-tbl-only.lst.deb2'),
+				options = ('-in', 'as_lst', '-range', '0', 'FFFFFF', '-exclude', '-filter', 'z[A-Z].+')
+			),
+			CheckMatch(output=File('output-expected/sonic-clean-engine-2025-tbl-only.lst.deb2'), text=True),
 		),
 	),
 	Test(
