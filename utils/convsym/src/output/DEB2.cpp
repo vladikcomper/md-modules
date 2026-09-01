@@ -6,10 +6,9 @@
 
 #include <cassert>
 #include <cstdio>
-#include <map>
+#include <iterator>
 #include <cstdint>
 #include <stdexcept>
-#include <string>
 #include <vector>
 
 #include <OptsParser.hpp>
@@ -74,8 +73,8 @@ struct Output__Deb2 : public OutputWrapper {
 		/* Generate table of character frequencies based on symbol names */
 		uint32_t freqTable[0x100] = { 0 };
 		for (const auto& [_, label] : symbols) {
-			for (auto& character : label) {
-				freqTable[(int)character]++;
+			for (auto& c : label) {
+				freqTable[(std::size_t)static_cast<uint8_t>(c)]++;
 			}
 			freqTable[0x00]++;	// include null-terminator
 			// TODOh: Guess whether NULL will be appended to the string of specified length
@@ -127,7 +126,7 @@ struct Output__Deb2 : public OutputWrapper {
 				std::vector<SymbolRecord> offsetsData;
 
 				/* For every symbol within the block ... */
-				for (; (symbolPtr->offset>>16) <= block && (symbolPtr != symbols.cend()); ++symbolPtr) {
+				for (; (symbolPtr != symbols.cend()) && (symbolPtr->offset>>16) <= block; ++symbolPtr) {
 					if ((symbolPtr->offset>>16) < block) {
 						continue;
 					}

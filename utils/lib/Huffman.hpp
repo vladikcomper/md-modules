@@ -151,6 +151,7 @@ struct Huffman {
 			maxCodeLen = std::max(maxCodeLen, nodeCodeLen);
 		}
 
+		assert(!huffmanTree.empty());
 		const auto & treeRoot = huffmanTree.begin()->second;
 		if (maxCodeLen > maxTreeDepth) {
 			Huffman::flattenTree(treeRoot, maxTreeDepth);

@@ -71,8 +71,8 @@ struct Output__Deb1 : public OutputWrapper {
 		/* Generate table of character frequencies based on symbol names */
 		uint32_t freqTable[0x100] = { 0 };
 		for (const auto& [_, label] : symbols) {
-			for (auto& character : label) {
-				freqTable[(int)character]++;
+			for (auto& c : label) {
+				freqTable[(std::size_t)static_cast<uint8_t>(c)]++;
 			}
 			freqTable[0x00]++;
 		}
@@ -121,7 +121,7 @@ struct Output__Deb1 : public OutputWrapper {
 				std::vector<uint8_t> symbolsData;
 
 				/* For every symbol within the block ... */
-				for (; (symbolPtr->offset>>16) <= block && (symbolPtr != symbols.cend()); ++symbolPtr) {
+				for (; (symbolPtr != symbols.cend()) && (symbolPtr->offset>>16) <= block; ++symbolPtr) {
 					if ((symbolPtr->offset>>16) < block) {
 						continue;
 					}
