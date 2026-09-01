@@ -10,6 +10,7 @@
 #include "Logger.hpp"
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <iterator>
@@ -17,6 +18,7 @@
 #include <map>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 struct Huffman {
 

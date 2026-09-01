@@ -5,6 +5,7 @@
 #include <string_view>
 #include <print>
 #include <format>
+#include <utility>
 
 namespace Logger {
 	enum class Level { DEBUG, INFO, WARN, ERROR, QUIET };
