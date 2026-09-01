@@ -6,8 +6,8 @@ LIB_DIR ?= ../lib
 EXEC_NAME = convsym
 EXECUTABLE = $(BUILD_DIR)/$(EXEC_NAME)
 
-CXXFLAGS ?= -std=c++23 -O2 -pedantic-errors -Wall -I$(LIB_DIR) $(shell pcre2-config --cflags)
-LDFLAGS ?= -static -s $(shell pcre2-config --libs8)
+CXXFLAGS ?= -std=c++23 -fno-plt -O2 -pedantic-errors -Wall -I$(LIB_DIR) $(shell pcre2-config --cflags)
+LDFLAGS ?= $(shell pcre2-config --libs8)
 
 .PHONY:	all convsym test clean
 
