@@ -43,7 +43,7 @@ struct Huffman {
 
 		// Constructor: Merge two specified nodes into a branch (a root for the passed nodes is constructed)
 		Node(Node* A, Node* B) noexcept
-		: data(0) {
+		: data(0), parent(nullptr) {
 			id = uid++;
 			leaf[0] = A;	// link node A to the left leaf
 			leaf[1] = B;	// link node B to the right leaf
