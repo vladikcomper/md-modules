@@ -14,8 +14,8 @@
 struct OffsetConversionOptions {
 	uint32_t baseOffset;
 	uint32_t offsetMask;
-	uint32_t offsetLeftBoundary;
-	uint32_t offsetRightBoundary;
+	uint32_t offsetLowBoundary;
+	uint32_t offsetHighBoundary;
 };
 
 typedef std::variant<uint32_t, std::string_view> offset_or_symbol;
@@ -46,7 +46,6 @@ struct SymbolTable {
 
 	inline bool add(uint32_t offset, std::string_view label) {
 		/* FIXME: Move to a dedicated symbol filter pipeline? */
-		/* Verify if symbol should be inserted */
 		const uint32_t correctedOffset = (offset - offsetConversionOpts.baseOffset) & offsetConversionOpts.offsetMask;
 
 		/* FIXME: Check if hot path requrires optimization (e.g. manual loop) */
@@ -56,8 +55,8 @@ struct SymbolTable {
 			Logger::debug("Resolved offset for symbol \"{}\": {:X}", label, correctedOffset);
 		}
 		if (!(
-			correctedOffset >= offsetConversionOpts.offsetLeftBoundary && 
-			correctedOffset <= offsetConversionOpts.offsetRightBoundary
+			correctedOffset >= offsetConversionOpts.offsetLowBoundary && 
+			correctedOffset <= offsetConversionOpts.offsetHighBoundary
 		)) {
 			return false;	// symbol is not inserted when offset is out of range
 		}
