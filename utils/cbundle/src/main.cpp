@@ -92,10 +92,10 @@ int main (int argc, const char ** argv) {
 		/* Decode parameters acording to list defined by "ParametersList" variable */
 		try {
 			ArgvParser::parse(argv+2, argc-2, {
-				{ "-debug",	ArgvParser::Arg::flag { &optDebug } },
-				{ "-cwd",	ArgvParser::Arg::string { &currentPathOverride 	} },
-				{ "-out",	ArgvParser::Arg::string { &outputFileName } },
-				{ "-def",	ArgvParser::Arg::stringList { &predefinedSymbols } },
+				{ "-debug",	ArgvParser::FlagArg	{ &optDebug }				},
+				{ "-cwd",	ArgvParser::Arg		{ &currentPathOverride }	},
+				{ "-out",	ArgvParser::Arg		{ &outputFileName }			},
+				{ "-def",	ArgvParser::MultiArg{ &predefinedSymbols }		}
 			});
 		}
 		catch (const std::exception& err) {

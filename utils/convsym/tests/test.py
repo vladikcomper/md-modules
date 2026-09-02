@@ -440,7 +440,27 @@ tests: 'tuple[Test, ...]' = (
 		),
 	),
 	Test(
-		description = 'log->deb2 symbol resolution sanity check',
+		description = 'log->log with symbol-based -range, -base, -toupper and -rmprefix/-addprefix (sanity check)',
+		pipeline=(
+			ConvSym(
+				input = Buffer(b'10: StartLabel\n1: Excluded\n100: LabelAfterEnd\n20: EndLabel\n'),
+				options = ('-in', 'log', '-out', 'log', '-range', '@StartLabel', '@EndLabel', '-base', '10', '-toupper', '-addprefix', 'Prefixed__', '-rmprefix', 'START'),
+			),
+			CheckMatch(output=Buffer(b'0: Prefixed__LABEL\n10: Prefixed__ENDLABEL\n'), text=True)
+		),
+	),
+	Test(
+		description = 'log->log with filter options (sanity check)',
+		pipeline=(
+			ConvSym(
+				input = Buffer(b'0: MyLabel\n1: Labelita\n2: ABC\n3: LABELOCHEK\n4: LelAbel\n5: DEF\n'),
+				options = ('-in', 'log', '-out', 'log', '-ifilter', '.*LAbeL.*'),
+			),
+			CheckMatch(output=Buffer(b'0: MyLabel\n1: Labelita\n3: LABELOCHEK\n4: LelAbel\n'), text=True)
+		),
+	),
+	Test(
+		description = 'log->deb2 with -ref @[symbol] option (sanity check)',
 		pipeline=(
 			ConvSym(
 				input = Buffer(b'0: Start\n1: MyOffset\n4: RelativelyLongSymbolName\n\n12: End\n'),

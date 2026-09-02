@@ -3,7 +3,8 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <unordered_map>
+#include <optional>
+#include <variant>
 #include <string_view>
 #include <vector>
 
@@ -12,12 +13,17 @@
 
 struct OffsetConversionOptions {
 	uint32_t baseOffset;
+	uint32_t offsetMask;
 	uint32_t offsetLeftBoundary;
 	uint32_t offsetRightBoundary;
-	uint32_t offsetMask;
 };
 
-typedef std::unordered_map<std::string_view, std::reference_wrapper<uint32_t>> SymbolToOffsetResolveTable;
+typedef std::variant<uint32_t, std::string_view> offset_or_symbol;
+
+struct SymbolRef {
+	std::string_view label;
+	offset_or_symbol* target;
+};
 
 /* FIXME: Split Filter? */
 struct SymbolTable {
@@ -27,12 +33,12 @@ struct SymbolTable {
 	};
 
 	const OffsetConversionOptions& offsetConversionOpts;
-	const SymbolToOffsetResolveTable& symbolToOffsetResolveTable;
+	const std::vector<SymbolRef>& symbolRefTable;
 
 	SymbolTable(
 		const OffsetConversionOptions& _offsetConversionOpts,
-		const SymbolToOffsetResolveTable& _symbolToOffsetResolveTable
-	): offsetConversionOpts(_offsetConversionOpts), symbolToOffsetResolveTable(_symbolToOffsetResolveTable) {
+		const std::vector<SymbolRef>& _symbolRefTable
+	): offsetConversionOpts(_offsetConversionOpts), symbolRefTable(_symbolRefTable) {
 		data.reserve(4096);
 	}
 	SymbolTable(const SymbolTable&) = delete;
@@ -42,12 +48,12 @@ struct SymbolTable {
 		/* FIXME: Move to a dedicated symbol filter pipeline? */
 		/* Verify if symbol should be inserted */
 		const uint32_t correctedOffset = (offset - offsetConversionOpts.baseOffset) & offsetConversionOpts.offsetMask;
-		if (!symbolToOffsetResolveTable.empty()) {
-			const auto symbolToOffsetEntry = symbolToOffsetResolveTable.find(label);
-			if (symbolToOffsetEntry != symbolToOffsetResolveTable.end()) {
-				symbolToOffsetEntry->second.get() = correctedOffset;
-				Logger::debug("Resolved requested symbol offset: {:X}", correctedOffset);
-			}
+
+		/* FIXME: Check if hot path requrires optimization (e.g. manual loop) */
+		const auto ref = std::ranges::find(symbolRefTable, label, &SymbolRef::label);
+		if (ref != symbolRefTable.end()) {
+			*ref->target = correctedOffset;
+			Logger::debug("Resolved offset for symbol \"{}\": {:X}", label, correctedOffset);
 		}
 		if (!(
 			correctedOffset >= offsetConversionOpts.offsetLeftBoundary && 

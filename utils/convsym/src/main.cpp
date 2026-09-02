@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.13									*
+ * ConvSym utility version 2.14									*
  * Main definitions file										*
  * (c) 2017-2026, Vladikcomper									*
  * ------------------------------------------------------------	*/
@@ -8,13 +8,13 @@
 #include <cstdint>
 #include <cstdio>
 #include <exception>
+#include <optional>
 #include <stdexcept>
-#include <string>
 #include <memory>
-#include <functional>
 #include <iostream>
 #include <fstream>
 #include <string_view>
+#include <variant>
 
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
@@ -40,15 +40,17 @@
 #include "output/OutputWrapper.hpp"
 #include "util/SymbolTable.hpp"
 
+#define CONVSYM_VERSION_LINE "ConvSym utility version 2.14\n"
+#define CONVSYM_COPYRIGHT_LINE "(c) 2016-2026, Vladikcomper\n"
 
 /* Main function */
 int main (int argc, const char ** argv) {
 
 	/* Provide help if no sufficient arguments were passed */
 	if (argc < 3) {
-		std::cout <<
-			"ConvSym utility version 2.13\n"
-			"(c) 2016-2026, vladikcomper\n"
+		std::fputs(
+			CONVSYM_VERSION_LINE
+			CONVSYM_COPYRIGHT_LINE
 			"\n"
 			"Command line arguments:\n"
 			"  convsym [input_file|-] [output_file|-] <options>\n"
@@ -60,6 +62,10 @@ int main (int argc, const char ** argv) {
 			"  convsym listing.lst rom.bin -input as_lst -output deb2 -a\n"
 			"\n"
 			"OPTIONS:\n"
+			"\n"
+			"  -verbose\n"
+			"    Enables more verbose output (useful for troubleshooting).\n"
+			"\n"
 			"  -in [format]\n"
 			"  -input [format]\n"
 			"    Selects input file format.\n"
@@ -97,8 +103,10 @@ int main (int argc, const char ** argv) {
 			"    Sets the mask for the offsets in the input data: it's applied to every offset found in [input_file] after the base offset subtraction (if occurs).\n"
 			"    Default: FFFFFF\n"
 			"\n"
-			"  -range [bottom] [upper]\n"
+			"  -range [start] [end]\n"
+			"  -range @[startSymbol] @[endSymbol]\n"
 			"    Determines the range for offsets allowed in a final symbol file (after subtraction of the base offset).\n"
+			"    You can specify something like \"-range @MyStartSymbol @MyEndSymbol\" instead of raw offsets, so ConvSym will limit output to anything between their offsets automatically.\n"
 			"    Default: 0 3FFFFF\n"
 			"\n"
 			"  -a\n"
@@ -125,129 +133,162 @@ int main (int argc, const char ** argv) {
 			"  -tolower\n"
 			"    Converts all symbol names to lowercase.\n"
 			"\n"
+			"  -rmprefix [string]\n"
+			"    Removes a specified prefix if symbol starts with it. Done after all other transformations, but before -addprefix.\n"
+			"\n"
 			"  -addprefix [string]\n"
 			"    Prepends a specified prefix string to every symbol in the resulting table. Done after all other transformations.\n"
 			"\n"
 			"  -filter [regex]\n"
+			"  -ifilter [regex]\n"
 			"    Enables filtering of the symbol list fetched from the [input_file] based on a regular expression.\n"
+			"    For case-insensitive regex, use -ifilter\n"
 			"\n"
 			"  -exclude\n"
-			"    If set, filter works in \"exclude mode\": all labels that DO match the -filter regex are removed from the list, everything else stays.\n"
-		;
+			"    If set, filter works in \"exclude mode\": all labels that DO match the -filter regex are removed from the list, everything else stays.\n",
+			stderr
+		);
 		return -1;
 	}
 
-	/* Default configuration */
-	bool optAppend = false;								// enable or disable append mode
-	bool optDebug = false;								// enable or disable debug output
-	bool optFilterExclude = false;						// regex-based filter mode: include or exclude matched symbols
-	bool optNoAlignOnAppend = false;					// when appending, don't align symbol table on even offsets
-	bool optToUpper = false;
-	bool optToLower = false;
-
-	OffsetConversionOptions offsetConversionOptions{
-		.baseOffset = 0,
-		.offsetLeftBoundary = 0,
-		.offsetRightBoundary = 0x3FFFFF,
-		.offsetMask = 0xFFFFFF,
-	};
-	uint32_t appendOffset = 0;
-	uint32_t pointerOffset = 0;
-
-	std::string inputWrapperName = "asm68k_sym";		// default input format
-	std::string outputWrapperName = "deb2";				// default output format
-	std::string inputOpts = "";							// default options for input format
-	std::string outputOpts = "";						// default options for output format
-	std::string appendOffsetRaw = "";					// default append offset
-	std::string pointerOffsetRaw = "";					// default pointer offset
-	std::string filterRegexStr = "";					// default filter expression
-	std::string prefixStr = "";							// default added prefix (empty)
-
 	/* Parse command line arguments */
-	const char *inputFileName = argv[1];
-	const char *outputFileName = argv[2];
+	Logger::logLevel = Logger::Level::WARN;
+	enum class CharacterTransformMode { None, ToUpper, ToLower };
+	struct FilterRegex { std::string_view expression; bool caseInsensitive; };
+	struct Args {
+		const char* 					input_file;
+		const char* 					output_file;
+		std::string_view 				input_format;
+		std::string_view 				output_format;
+		std::string_view 				input_options;
+		std::string_view 				output_options;
+		bool 							output_append_mode;
+		bool 							output_append_no_align;
+		std::optional<offset_or_symbol> output_append_offset;
+		std::optional<offset_or_symbol> output_append_ref_offset;
+		FilterRegex 					filter_regex;
+		bool 							filter_exclude_matching;
+		std::string_view				add_prefix;
+		std::string_view				remove_prefix;
+		CharacterTransformMode 			character_transform;
+		uint32_t 						offset_base;
+		offset_or_symbol				offset_low_boundary;
+		offset_or_symbol				offset_high_boundary;
+		uint32_t						offset_mask;
+	} args {
+		/* Input/output options */
+		.input_file = argv[1],
+		.output_file = argv[2],
+		.input_format = "asm68k_sym",
+		.output_format = "deb2",
+		.input_options = "",
+		.output_options = "",
+		.output_append_mode = false,
+		.output_append_no_align = false,
+		.output_append_offset = std::nullopt,
+		.output_append_ref_offset = std::nullopt,
+
+		/* Filter and offset transform options */
+		.filter_regex = { .expression = "", .caseInsensitive = false },
+		.filter_exclude_matching = false,
+		.add_prefix = "",
+		.remove_prefix = "",
+		.character_transform = CharacterTransformMode::None,
+		.offset_base = (uint32_t)0,
+		.offset_low_boundary = (uint32_t)0,
+		.offset_high_boundary = (uint32_t)0x3FFFFF,
+		.offset_mask = (uint32_t)0xFFFFFF
+	};
 	{
 		/* Decode parameters acording to list defined by "ParametersList" variable */
 		try {
-			ArgvParser::parse(argv+3, argc-3, {
-				{ "-base", 		ArgvParser::Arg::hexNumber{ &offsetConversionOptions.baseOffset } },
-				{ "-mask",		ArgvParser::Arg::hexNumber{ &offsetConversionOptions.offsetMask } },
-				{ "-range",		ArgvParser::Arg::hexRange{ &offsetConversionOptions.offsetLeftBoundary,	&offsetConversionOptions.offsetRightBoundary } },
-				{ "-a",			ArgvParser::Arg::flag{ &optAppend } },
-				{ "-noalign",	ArgvParser::Arg::flag{ &optNoAlignOnAppend } },
-				{ "-debug",		ArgvParser::Arg::flag{ &optDebug } },
-				/* FIXME: "-quiet" option */
-				{ "-in",		ArgvParser::Arg::string{ &inputWrapperName } },
-				{ "-input",		ArgvParser::Arg::string{ &inputWrapperName } },
-				{ "-inopt",		ArgvParser::Arg::string{ &inputOpts } },
-				{ "-out",		ArgvParser::Arg::string{ &outputWrapperName } },
-				{ "-output",	ArgvParser::Arg::string{ &outputWrapperName } },
-				{ "-outopt",	ArgvParser::Arg::string{ &outputOpts } },
-				{ "-org",		ArgvParser::Arg::string{ &appendOffsetRaw } },
-				{ "-ref",		ArgvParser::Arg::string{ &pointerOffsetRaw } },
-				{ "-filter",	ArgvParser::Arg::string{ &filterRegexStr } },
-				{ "-exclude",	ArgvParser::Arg::flag{ &optFilterExclude } },
-				{ "-addprefix",	ArgvParser::Arg::string{ &prefixStr } },
-				{ "-toupper",	ArgvParser::Arg::flag{ &optToUpper } },
-				{ "-tolower",	ArgvParser::Arg::flag{ &optToLower } }
+			using namespace ArgvParser;
+			constexpr auto offsetOrSymbolGetter = [](std::string_view value) -> std::variant<uint32_t, std::string_view> {
+				assert(!value.empty());
+				if (value[0] == '@') return value.substr(1);	// @[symbol] format
+				return static_cast<uint32_t>(Getter::hexNumber(value));	// otherwise, assume a number
+			};
+			constexpr auto filterRegexGetter = [](std::string_view value) -> FilterRegex {
+				return { .expression = value, .caseInsensitive = false };
+			};
+			constexpr auto ifilterRegexGetter = [](std::string_view value) -> FilterRegex {
+				return { .expression = value, .caseInsensitive = true };
+			};
+
+			parse(argv+3, argc-3, {
+				{ "-base", 		Arg<uint32_t, Getter::hexNumber>{ &args.offset_base } },
+				{ "-mask",		Arg<uint32_t, Getter::hexNumber>{ &args.offset_mask } },
+				{ "-range",		RangeArg<offset_or_symbol, offsetOrSymbolGetter>{ &args.offset_low_boundary, &args.offset_high_boundary } },
+				{ "-a",			Switch{ &args.output_append_mode } },
+				{ "-noalign",	Switch{ &args.output_append_no_align } },
+				{ "-debug",		Switch<Logger::Level, Logger::Level::DEBUG>{ &Logger::logLevel } },
+				{ "-verbose",	Switch<Logger::Level, Logger::Level::INFO>{ &Logger::logLevel } },
+				{ "-in",		Arg{ &args.input_format } },
+				{ "-input",		Arg{ &args.input_format } },
+				{ "-inopt",		Arg{ &args.input_options } },
+				{ "-out",		Arg{ &args.output_format } },
+				{ "-output",	Arg{ &args.output_format } },
+				{ "-outopt",	Arg{ &args.output_options } },
+				{ "-org",		Arg<std::optional<offset_or_symbol>, offsetOrSymbolGetter>{ &args.output_append_offset } },
+				{ "-ref",		Arg<std::optional<offset_or_symbol>, offsetOrSymbolGetter>{ &args.output_append_ref_offset } },
+				{ "-filter",	Arg<FilterRegex, filterRegexGetter>{ &args.filter_regex } },
+				{ "-ifilter",	Arg<FilterRegex, ifilterRegexGetter>{ &args.filter_regex } },
+				{ "-exclude",	Switch{ &args.filter_exclude_matching } },
+				{ "-addprefix",	Arg{ &args.add_prefix } },
+				{ "-rmprefix",	Arg{ &args.remove_prefix } },
+				{ "-toupper",	Switch<CharacterTransformMode, CharacterTransformMode::ToUpper>{ &args.character_transform } },
+				{ "-tolower",	Switch<CharacterTransformMode, CharacterTransformMode::ToLower>{ &args.character_transform } },
 			});
+
+			/* Additional arguments sanity check */
+			if (args.output_append_mode && args.output_append_offset.has_value()) {
+				throw std::runtime_error("Conflicting options: \"-a\" (append end) and \"-org [offset]\" (append at [offset])");
+			}
+			if (args.filter_exclude_matching && args.filter_regex.expression.empty()) {
+				throw std::runtime_error("Conflicting options: \"-exclude\" option can only be used with \"-filter [regex]\"");
+			}
 		}
 		catch (const std::exception& err) {
-			Logger::error(err.what());
+			Logger::error("Invalid arguments: {}", err.what());
 			return -1;
 		}
 	}
 
 	/* Apply configuration based off the parameters parsed ... */
-	Logger::logLevel = optDebug ? Logger::Level::DEBUG : Logger::Level::WARN;
-	if (optAppend == true) {
-		if (!appendOffsetRaw.empty()) {
-			Logger::warn("Using conflicting parameters: -a and -org. The -org parameter has no effect");
-			appendOffsetRaw = "";
-		}
-		appendOffset = -1;
-	}
-	if (optFilterExclude && !filterRegexStr.length()) {
-		Logger::warn("Using -exclude parameter without -filter [regex]. The -exclude parameter has no effect");
-		optFilterExclude = false;
-	}
-	if (optToUpper && optToLower) {
-		Logger::warn("Using conflicting parameters: -toupper and -tolower. The -toupper parameter has no effect");
-		optToUpper = false;
-	}
+	Logger::info(CONVSYM_VERSION_LINE CONVSYM_COPYRIGHT_LINE);
+
+	OffsetConversionOptions offsetConversionOpts {
+		.baseOffset = args.offset_base,
+		.offsetMask = args.offset_mask,
+		/* If offset boundaries are passed as symbols and require resolution, default to 0-$FFFFFFFF range */
+		.offsetLeftBoundary = std::holds_alternative<uint32_t>(args.offset_low_boundary) ? std::get<uint32_t>(args.offset_low_boundary) : 0,
+		.offsetRightBoundary = std::holds_alternative<uint32_t>(args.offset_high_boundary) ? std::get<uint32_t>(args.offset_high_boundary) : 0xFFFFFFFF
+	};
 
 	/* Parse offsets specified by "-ref" and "-org" options, or request to resolve them from symbols later */
-	SymbolToOffsetResolveTable symbolToOffsetResolveTable{};
+	std::vector<SymbolRef> symbolRefTable;
+	symbolRefTable.reserve(4);
 	{
-		const std::array<std::pair<std::string&, uint32_t&>, 2> offsetParameterBindings {
-			std::make_pair(std::ref(pointerOffsetRaw), std::ref(pointerOffset)),	// "-ref" bindings
-			std::make_pair(std::ref(appendOffsetRaw), std::ref((appendOffset)))		// "-org" bindings
-		};
-		for (const auto & [offsetStrRaw, offset] : offsetParameterBindings) {
-			if (offsetStrRaw.empty()) {	// skip if parameter isn't defined
-				continue;
-			}
-			if (offsetStrRaw[0] == '@') {	// e.g. "-ref @SymbolName"
-				offset = -2;
-				symbolToOffsetResolveTable.emplace(std::string_view(offsetStrRaw).substr(1), std::ref(offset));
-			}
-			else {	// e.g. "-ref 1234"
-				try {
-					offset = std::stoul(offsetStrRaw, 0, 16);
-				}
-				catch (std::invalid_argument const &) {
-					Logger::error("Couldn't parse hex number in parameters: {}", offsetStrRaw);
-					return -2;
-				}
-			}
+		if (std::holds_alternative<std::string_view>(args.offset_low_boundary)) {
+			symbolRefTable.emplace_back(std::get<std::string_view>(args.offset_low_boundary), &args.offset_low_boundary);
+		}
+		if (std::holds_alternative<std::string_view>(args.offset_high_boundary)) {
+			symbolRefTable.emplace_back(std::get<std::string_view>(args.offset_high_boundary), &args.offset_high_boundary);
+		}
+		if (args.output_append_offset.has_value() && std::holds_alternative<std::string_view>(args.output_append_offset.value())) {
+			// FIXME: &args.output_append_offset.value() -- does this even work?
+			symbolRefTable.emplace_back(std::get<std::string_view>(args.output_append_offset.value()), &args.output_append_offset.value());
+		}
+		if (args.output_append_ref_offset.has_value() && std::holds_alternative<std::string_view>(args.output_append_ref_offset.value())) {
+			symbolRefTable.emplace_back(std::get<std::string_view>(args.output_append_ref_offset.value()), &args.output_append_ref_offset.value());
 		}
 	}
 
 	/* Retrieve symbols from the input file */
-	SymbolTable symbolTable(offsetConversionOptions, symbolToOffsetResolveTable);
+	SymbolTable symbolTable(offsetConversionOpts, symbolRefTable);
 	try {
 		std::unique_ptr<InputWrapper> inputWrapper;
-		switch (Utils::hash(inputWrapperName)) {
+		switch (Utils::hash(args.input_format)) {
 			case Utils::hash("asm68k_sym"):		inputWrapper = std::make_unique<Input__ASM68K_Sym>(); break;
 			case Utils::hash("as_lst"):			inputWrapper = std::make_unique<Input__AS_Listing>(); break;
 			case Utils::hash("log"): 			inputWrapper = std::make_unique<Input__Log>(); break;
@@ -258,18 +299,18 @@ int main (int argc, const char ** argv) {
 			case Utils::hash("as_lst_exp"): 	inputWrapper = std::make_unique<Input__AS_Listing_Experimental>();
 												Logger::warn("\"as_lst_exp\" input format is deprecated, use \"as_lst\" instead" );	break;
 			default:
-				throw std::runtime_error(std::format("Unknown input format specifier: {}", inputWrapperName));
+				throw std::runtime_error(std::format("Unknown input format specifier: {}", args.input_format));
 		}
 
 		std::ifstream fileStream;
-		std::istream& inputStream = (std::string_view(inputFileName) == "-")
+		std::istream& inputStream = (std::string_view(args.input_file) == "-")
 			? std::cin // "-" instead of a file name fallbacks to `stdin`
-			: (fileStream.open(inputFileName, inputWrapper->preferredStreamMode), fileStream);
+			: (fileStream.open(args.input_file, inputWrapper->preferredStreamMode), fileStream);
 		if (inputStream.fail()) {
 			throw std::runtime_error("Failed to open input file");
 		}
 
-		inputWrapper->parseOptions(inputOpts);
+		inputWrapper->parseOptions(args.input_options);
 		inputWrapper->parse(symbolTable, inputStream);
 	}
 	catch (const std::exception& err) {
@@ -278,8 +319,8 @@ int main (int argc, const char ** argv) {
 	}
 
 	/* Make sure all symbols referenced in options (e.g. "-ref", "-org"), if any, were resolved */
-	for (const auto & [label, ptr] : symbolToOffsetResolveTable) {
-		if (ptr.get() == (uint32_t)-2) {
+	for (const auto & [label, target] : symbolRefTable) {
+		if (std::holds_alternative<std::string_view>(*target)) {
 			Logger::error("Couldn't resolve symbol \"{}\"", label);
 			return -2;
 		}
@@ -289,34 +330,62 @@ int main (int argc, const char ** argv) {
 	symbolTable.sortByOffset();
 
 	/* Apply transformation to symbols */
-	if (optToUpper) {
+	if (args.character_transform == CharacterTransformMode::ToUpper) {
 		for (auto & [_, label] : symbolTable.data) {
 			std::transform(label.begin(), label.end(), const_cast<char*>(label.begin()), ::toupper);
 		}
-		/* FIXME: This is a mistake */
-		std::transform(filterRegexStr.begin(), filterRegexStr.end(), filterRegexStr.begin(), ::toupper);
 	}
-	if (optToLower) {
+	else if (args.character_transform == CharacterTransformMode::ToLower) {
 		for (auto & [_, label] : symbolTable.data) {
 			std::transform(label.begin(), label.end(), const_cast<char*>(label.begin()), ::tolower);
 		}
-		std::transform(filterRegexStr.begin(), filterRegexStr.end(), filterRegexStr.begin(), ::tolower);
 	}
-	if (!prefixStr.empty()) {
+	if (!args.remove_prefix.empty()) {
+		const auto prefixLenth = args.remove_prefix.length();
 		for (auto& [offset, label] : symbolTable.data) {
-			label = symbolTable.arena.push_concat(prefixStr, label);
+			if (label.starts_with(args.remove_prefix)) {
+				label = label.substr(prefixLenth);
+			}
 		}
 	}
-	
+	if (!args.add_prefix.empty()) {
+		for (auto& [offset, label] : symbolTable.data) {
+			label = symbolTable.arena.push_concat(args.add_prefix, label);
+		}
+	}
+	if (
+		offsetConversionOpts.offsetLeftBoundary != std::get<uint32_t>(args.offset_low_boundary) ||
+		offsetConversionOpts.offsetRightBoundary != std::get<uint32_t>(args.offset_high_boundary)
+	) {
+		offsetConversionOpts.offsetLeftBoundary = std::get<uint32_t>(args.offset_low_boundary);
+		offsetConversionOpts.offsetRightBoundary = std::get<uint32_t>(args.offset_high_boundary);
+		std::erase_if(symbolTable.data, [&](const SymbolTable::Record& symbol) {
+			return !(symbol.offset >= offsetConversionOpts.offsetLeftBoundary && symbol.offset <= offsetConversionOpts.offsetRightBoundary);
+		});
+	}
+	if (offsetConversionOpts.offsetLeftBoundary > offsetConversionOpts.offsetRightBoundary) {
+		Logger::error("Invalid \"-range\" (low > high): {:X} {:X}", offsetConversionOpts.offsetLeftBoundary, offsetConversionOpts.offsetRightBoundary);
+		return -4;
+	}
+
 	/* Pre-filter symbols based on regular expression */
-	if (filterRegexStr.length() > 0) {
+	// FIXME: Do it before -addprefix/-rmprefix?
+	if (!args.filter_regex.expression.empty()) {
 		int pcre2ErrorCode = 0;
 		std::size_t pcre2ErrorOffset = 0;
-		pcre2_code* pcre2RegexCode = pcre2_compile(reinterpret_cast<PCRE2_SPTR8>(filterRegexStr.data()), filterRegexStr.size(), 0, &pcre2ErrorCode, &pcre2ErrorOffset, nullptr);
+		/* FIXME: Case insensitive support */
+		pcre2_code* pcre2RegexCode = pcre2_compile(
+			reinterpret_cast<PCRE2_SPTR8>(args.filter_regex.expression.data()),
+			args.filter_regex.expression.size(),
+			args.filter_regex.caseInsensitive ? PCRE2_CASELESS : 0,
+			&pcre2ErrorCode, &pcre2ErrorOffset, nullptr
+		);
 		if (!pcre2RegexCode) {
 			PCRE2_UCHAR8 pcre2ErrorMessage[128];
 			pcre2_get_error_message(pcre2ErrorCode, pcre2ErrorMessage, sizeof(pcre2ErrorMessage));
-			throw std::runtime_error(std::format("Failed to compile filter regex at offset {}: {}", pcre2ErrorOffset, pcre2ErrorMessage));
+			// FIXME: Try-catch?
+			Logger::error("Failed to compile filter regex at offset {}: {}", pcre2ErrorOffset, pcre2ErrorMessage);
+			return -5;
 		}
 
 		pcre2_jit_compile(pcre2RegexCode, PCRE2_JIT_COMPLETE);
@@ -332,7 +401,7 @@ int main (int argc, const char ** argv) {
 				PCRE2_ANCHORED | PCRE2_ENDANCHORED,
 				matchData, nullptr
 			);
-			return (rc >= 0) == optFilterExclude;
+			return (rc >= 0) == args.filter_exclude_matching;
 		});
 
 		pcre2_match_data_free(matchData);
@@ -343,46 +412,48 @@ int main (int argc, const char ** argv) {
 	if (!symbolTable.data.empty()) {
 		try {
 			std::unique_ptr<OutputWrapper> outputWrapper;
-			switch (Utils::hash(outputWrapperName)) {
+			switch (Utils::hash(args.output_format)) {
 				case Utils::hash("log"):	outputWrapper = std::make_unique<Output__Log>(); break;
 				case Utils::hash("asm"):	outputWrapper = std::make_unique<Output__Asm>(); break;
 				case Utils::hash("deb2"):	outputWrapper = std::make_unique<Output__Deb2>(); break;
 				case Utils::hash("deb1"):	outputWrapper = std::make_unique<Output__Deb1>();
 											Logger::warn("\"deb1\" output format is deprecated, use \"deb2\" instead" ); break;
 				default:
-					throw std::runtime_error(std::format("Unknown output format specifier: {}", outputWrapperName));
+					throw std::runtime_error(std::format("Unknown output format specifier: {}", args.output_format));
 			}
 
 			/* Setup output stream respecting various append flags */
 			std::FILE* outputFile;
-			if (std::string_view(outputFileName) == "-") {
+			if (std::string_view(args.output_file) == "-") {
 				outputFile = stdout;
 				/* FIXME: Fail in append mode */
 			}
 			else {
-				if (appendOffset == 0) {
-					outputFile = std::fopen(outputFileName, outputWrapper->preferredStreamMode == OutputWrapper::PreferredStreamMode::Text ? "w" : "wb");
+				if (!args.output_append_mode && !args.output_append_offset.has_value()) {
+					outputFile = std::fopen(args.output_file, outputWrapper->preferredStreamMode == OutputWrapper::PreferredStreamMode::Text ? "w" : "wb");
 				}
 				else {
-					outputFile = std::fopen(outputFileName, outputWrapper->preferredStreamMode == OutputWrapper::PreferredStreamMode::Text ? "r+" : "r+b");
+					outputFile = std::fopen(args.output_file, outputWrapper->preferredStreamMode == OutputWrapper::PreferredStreamMode::Text ? "r+" : "r+b");
 					if (outputFile) {
-						if (appendOffset == static_cast<uint32_t>(-1)) {
+						std::size_t appendOffset = 0;
+						if (!args.output_append_offset.has_value()) {
 							std::fseek(outputFile, 0, SEEK_END);
 							appendOffset = std::ftell(outputFile);
-							if (!optNoAlignOnAppend && (appendOffset & 1) != 0) {
+							if (!args.output_append_no_align && (appendOffset & 1) != 0) {
 								Logger::debug("Auto-aligning append offset.");
 								std::fputc(0x00, outputFile);
 								appendOffset++;
 							}
 						}
 						else {
-							if (!optNoAlignOnAppend && ((appendOffset & 1) != 0)) {
+							appendOffset = std::get<uint32_t>(args.output_append_offset.value());
+							if (!args.output_append_no_align && ((appendOffset & 1) != 0)) {
 								Logger::warn("An odd append offset is specified; the offset wasn't auto-aligned.");
 							}
 							std::fseek(outputFile, appendOffset, SEEK_SET);
 						}
-						if (pointerOffset != 0) {
-							std::fseek(outputFile, pointerOffset, SEEK_SET);
+						if (args.output_append_ref_offset.has_value()) {
+							std::fseek(outputFile, std::get<uint32_t>(args.output_append_ref_offset.value()), SEEK_SET);
 							const uint32_t appendOffsetBE = Utils::asBigEndian<uint32_t>(appendOffset);
 							std::fwrite((const char*)&appendOffsetBE, 4, 1, outputFile);
 							std::fseek(outputFile, appendOffset, SEEK_SET);
@@ -394,7 +465,7 @@ int main (int argc, const char ** argv) {
 				throw std::runtime_error("Failed to open output file");
 			}
 
-			outputWrapper->parseOptions(outputOpts);
+			outputWrapper->parseOptions(args.output_options);
 			outputWrapper->parse(symbolTable.data, outputFile);
 
 			if (outputFile != stdout) std::fclose(outputFile);
