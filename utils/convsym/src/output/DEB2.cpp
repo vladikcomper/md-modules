@@ -161,8 +161,8 @@ struct Output__Deb2 : public OutputWrapper {
 						});
 	
 						/* Encode each symbol character with the generated Huffman-codes and store it in the bitsteam */
-						for (auto& character : symbolPtr->label) {
-							auto *record = characterToRecord[ (int)character ];
+						for (auto& c : symbolPtr->label) {
+							const auto *record = characterToRecord[(std::size_t)static_cast<uint8_t>(c)];
 							SymbolsHeap.pushCode( record->code, record->codeLength );
 						}
 						

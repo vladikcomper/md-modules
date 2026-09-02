@@ -27,14 +27,14 @@ public:
 	/**
 	 * Returns current offset within the stream
 	 */
-	uint32_t getCurrentPos() {
+	inline uint32_t getCurrentPos() {
 		return currentBytePos;
 	};
 
 	/**
 	 * Subroutine to flush the buffer
 	 */
-	void flush() {
+	inline void flush() {
 		// WARNING! This leaves trailing zero byte even if no bits will be written since!
 		buffer.push_back(0x00);
 		currentBitPos = 8;
@@ -44,7 +44,7 @@ public:
 	/**
 	 * Subroutine to push a bit
 	 */
-	void pushBit( unsigned int bit ) {
+	inline void pushBit( unsigned int bit ) {
 		if (currentBitPos == 0) { // if the current byte is fully packed, flush it
 			flush();
 		}
@@ -54,7 +54,7 @@ public:
 	/**
 	 * Pushes a code containing a given number of bits
 	 */
-	void pushCode(uint32_t code, uint8_t codeLength) {
+	inline void pushCode(uint32_t code, uint8_t codeLength) {
 		if (currentBitPos == 0) { // if the current byte is fully packed, flush it
 			flush();
 		}
@@ -70,21 +70,21 @@ public:
 	/**
 	 * Subroutine returns pointer to start of the buffer
 	 */
-	uint8_t* begin() {
+	inline uint8_t* begin() {
 		return &(*buffer.begin());
 	}
 
 	/**
 	 * Subroutine returns pointer to the end of the buffer
 	 */
-	uint8_t* end() {
+	inline uint8_t* end() {
 		return &(*buffer.end());
 	}
 
 	/**
 	 * Subroutine returns buffer size in bytes
 	 */
-	uint32_t size() {
+	inline uint32_t size() {
 		return buffer.size();
 	}
 };

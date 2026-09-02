@@ -145,8 +145,8 @@ struct Output__Deb1 : public OutputWrapper {
 					offsetsData.push_back(Utils::asBigEndian<uint16_t>(symbolPtr->offset & 0xFFFF));
 
 					/* Encode each symbol character with the generated Huffman-codes and store it in the bitsteam */
-					for (auto& Character : symbolPtr->label) {
-						auto *record = characterToRecord[(int)Character];
+					for (auto& c : symbolPtr->label) {
+						const auto *record = characterToRecord[(std::size_t)static_cast<uint8_t>(c)];
 						symbolHeap.pushCode(record->code, record->codeLength);
 					}
 
