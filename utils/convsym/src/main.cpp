@@ -107,13 +107,13 @@ int main (int argc, const char ** argv) {
 			"  -range @[startSymbol] @[endSymbol]\n"
 			"    Determines the range for offsets allowed in a final symbol file (after subtraction of the base offset).\n"
 			"    You can specify something like \"-range @MyStartSymbol @MyEndSymbol\" instead of raw offsets, so ConvSym will limit output to anything between their offsets automatically.\n"
-			"    Default: 0 3FFFFF\n"
+			"    Default: 0 FFFFFFFF (all addressable space)\n"
 			"\n"
 			"  -a\n"
 			"    Enables \"Append mode\": symbol data is appended to the end of the [output_file]. Data overwrites file contents by default. This is usually used to append symbols to ROMs.\n"
 			"\n"
 			"  -noalign\n"
-			"    Don't align symbol data in \"Append mode\", which is aligned to nearest even offset by default. Using this option is not recommended, it's only there to retain compatilibity with older ConvSym versions.\n"
+			"    Don't align symbol data in \"Append mode\", which is aligned to nearest even offset by default. Using this option is not recommended, it's only there to retain compatibility with older ConvSym versions.\n"
 			"\n"
 			"Symbol table dump options:\n"
 			"  -org [offset]\n"
@@ -166,7 +166,7 @@ int main (int argc, const char ** argv) {
 		std::string_view 				output_format;
 		std::string_view 				input_options;
 		std::string_view 				output_options;
-		bool 							output_append_mode;
+		bool 							output_append_end;
 		bool 							output_append_no_align;
 		std::optional<offset_or_symbol> output_append_offset;
 		std::optional<offset_or_symbol> output_append_ref_offset;
@@ -187,7 +187,7 @@ int main (int argc, const char ** argv) {
 		.output_format = "deb2",
 		.input_options = "",
 		.output_options = "",
-		.output_append_mode = false,
+		.output_append_end = false,
 		.output_append_no_align = false,
 		.output_append_offset = std::nullopt,
 		.output_append_ref_offset = std::nullopt,
@@ -200,7 +200,7 @@ int main (int argc, const char ** argv) {
 		.character_transform = CharacterTransformMode::None,
 		.offset_base = (uint32_t)0,
 		.offset_low_boundary = (uint32_t)0,
-		.offset_high_boundary = (uint32_t)0x3FFFFF,
+		.offset_high_boundary = (uint32_t)0xFFFFFFFF,
 		.offset_mask = (uint32_t)0xFFFFFF
 	};
 	{
@@ -222,7 +222,7 @@ int main (int argc, const char ** argv) {
 				{ "-base", 		Arg<uint32_t, Getter::hexNumber>{ &args.offset_base } },
 				{ "-mask",		Arg<uint32_t, Getter::hexNumber>{ &args.offset_mask } },
 				{ "-range",		RangeArg<offset_or_symbol, offsetOrSymbolGetter>{ &args.offset_low_boundary, &args.offset_high_boundary } },
-				{ "-a",			Switch{ &args.output_append_mode } },
+				{ "-a",			Switch{ &args.output_append_end } },
 				{ "-noalign",	Switch{ &args.output_append_no_align } },
 				{ "-debug",		Switch<Logger::Level, Logger::Level::DEBUG>{ &Logger::logLevel } },
 				{ "-verbose",	Switch<Logger::Level, Logger::Level::INFO>{ &Logger::logLevel } },
@@ -244,11 +244,14 @@ int main (int argc, const char ** argv) {
 			});
 
 			/* Additional arguments sanity checks */
-			if (args.output_append_mode && args.output_append_offset.has_value()) {
+			if (args.output_append_end && args.output_append_offset.has_value()) {
 				throw std::runtime_error("Conflicting options: \"-a\" (append end) and \"-org [offset]\" (append at [offset])");
 			}
 			if (args.filter_exclude_matching && args.filter_regex.expression.empty()) {
 				throw std::runtime_error("Conflicting options: \"-exclude\" option can only be used with \"-filter [regex]\"");
+			}
+			if (args.output_append_ref_offset.has_value() && !(args.output_append_end || args.output_append_offset.has_value())) {
+				throw std::runtime_error("\"-ref\" option only works in \"append mode\": must be used with \"-a\" or \"-org\"");
 			}
 		}
 		catch (const std::exception& err) {
@@ -257,6 +260,7 @@ int main (int argc, const char ** argv) {
 		}
 	}
 
+	/* For verbose output, display version and performed operations */
 	Logger::info(CONVSYM_VERSION_LINE CONVSYM_COPYRIGHT_LINE);
 
 	OffsetConversionOptions offsetConversionOpts {
@@ -287,7 +291,6 @@ int main (int argc, const char ** argv) {
 		}
 	}
 
-
 	/* -------------------------------------- */
 	/* PHASE 2: Parse symbols from input file */
 	/* -------------------------------------- */
@@ -311,8 +314,15 @@ int main (int argc, const char ** argv) {
 
 		std::ifstream fileStream;
 		std::istream& inputStream = (std::string_view(args.input_file) == "-")
-			? std::cin // "-" instead of a file name fallbacks to `stdin`
-			: (fileStream.open(args.input_file, inputWrapper->preferredStreamMode), fileStream);
+			? (
+				Logger::info("Reading symbols from: <STDIN> ({} format)...", args.input_format),
+				std::cin
+			  ) // "-" instead of a file name fallbacks to `stdin`
+			: (
+				Logger::info("Reading symbols from file: \"{}\" ({} format)...", args.input_file, args.input_format),
+				fileStream.open(args.input_file, inputWrapper->preferredStreamMode),
+				fileStream
+			  );
 		if (inputStream.fail()) {
 			throw std::runtime_error("Failed to open input file");
 		}
@@ -328,7 +338,7 @@ int main (int argc, const char ** argv) {
 	/* Make sure all symbols referenced in options (e.g. `-ref`, `-org`, `-range`), if any, were resolved */
 	for (const auto & [label, target] : symbolRefTable) {
 		if (std::holds_alternative<std::string_view>(*target)) {	// if still a label (string), that's a failure
-			Logger::error("Couldn't resolve symbol \"{}\"", label);
+			Logger::error("Referenced symbol not found: \"{}\"", label);
 			return -2;
 		}
 	}
@@ -351,12 +361,16 @@ int main (int argc, const char ** argv) {
 
 	/* Sanity check: Make sure offset range is correct */
 	if (offsetConversionOpts.offsetLowBoundary > offsetConversionOpts.offsetHighBoundary) {
-		Logger::error("Invalid \"-range\" (low > high): {:X} {:X}", offsetConversionOpts.offsetLowBoundary, offsetConversionOpts.offsetHighBoundary);
+		Logger::error("Invalid \"-range\" (low > high): ${:X} ${:X}", offsetConversionOpts.offsetLowBoundary, offsetConversionOpts.offsetHighBoundary);
 		return -4;
 	}
 
+	Logger::info("Read {:d} symbols.\n", symbolTable.data.size());
+
 	/* Pre-filter symbols based on regular expression */
 	if (!args.filter_regex.expression.empty()) {
+		Logger::info("Filtering symbols based on regex: \"{}\"...", args.filter_regex.expression);
+
 		int pcre2ErrorCode = 0;
 		std::size_t pcre2ErrorOffset = 0;
 		pcre2_code* pcre2RegexCode = pcre2_compile(
@@ -402,12 +416,12 @@ int main (int argc, const char ** argv) {
 	/* Basic character transforms, if any (`-tolower` or `-toupper`) */
 	if (args.character_transform == CharacterTransformMode::ToUpper) {
 		for (auto & [_, label] : symbolTable.data) {
-			std::transform(label.begin(), label.end(), const_cast<char*>(label.begin()), ::toupper);
+			std::transform(label.begin(), label.end(), const_cast<char*>(label.begin()), [](unsigned char c) { return std::toupper(c); });
 		}
 	}
 	else if (args.character_transform == CharacterTransformMode::ToLower) {
 		for (auto & [_, label] : symbolTable.data) {
-			std::transform(label.begin(), label.end(), const_cast<char*>(label.begin()), ::tolower);
+			std::transform(label.begin(), label.end(), const_cast<char*>(label.begin()), [](unsigned char c) { return std::tolower(c); });
 		}
 	}
 
@@ -454,11 +468,13 @@ int main (int argc, const char ** argv) {
 		std::FILE* outputFile;
 		if (std::string_view(args.output_file) == "-") {
 			outputFile = stdout;
+			Logger::info("Writing symbols to: <STDOUT> ({} format)...", args.output_format);
 			/* FIXME: Fail in append mode */
 		}
 		else {
-			if (!args.output_append_mode && !args.output_append_offset.has_value()) {
+			if (!args.output_append_end && !args.output_append_offset.has_value()) {
 				outputFile = std::fopen(args.output_file, outputWrapper->preferredStreamMode == OutputWrapper::PreferredStreamMode::Text ? "w" : "wb");
+				Logger::info("Writing symbols to file: \"{}\" ({} format)...", args.output_file, args.output_format);
 			}
 			else {
 				outputFile = std::fopen(args.output_file, outputWrapper->preferredStreamMode == OutputWrapper::PreferredStreamMode::Text ? "r+" : "r+b");
@@ -480,11 +496,16 @@ int main (int argc, const char ** argv) {
 						}
 						std::fseek(outputFile, appendOffset, SEEK_SET);
 					}
+
+					Logger::info("Appending symbols to file: \"{}\" ({} format) at offset ${:X}...", args.output_file, args.output_format, appendOffset);
+
 					if (args.output_append_ref_offset.has_value()) {
-						std::fseek(outputFile, std::get<uint32_t>(args.output_append_ref_offset.value()), SEEK_SET);
+						const auto refOffset = std::get<uint32_t>(args.output_append_ref_offset.value());
+						std::fseek(outputFile, refOffset, SEEK_SET);
 						const uint32_t appendOffsetBE = Utils::asBigEndian<uint32_t>(appendOffset);
 						std::fwrite((const char*)&appendOffsetBE, 4, 1, outputFile);
 						std::fseek(outputFile, appendOffset, SEEK_SET);
+						Logger::info("Wrote append offset reference as 32-bit absolute pointer at offset ${:X}.", refOffset);
 					}
 				}
 			}
@@ -503,5 +524,6 @@ int main (int argc, const char ** argv) {
 		return -2;
 	}
 
+	Logger::info("Wrote {:d} symbols.", symbolTable.data.size());
 	return 0;
 }
