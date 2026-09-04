@@ -49,8 +49,7 @@ struct Output__Deb1 : public OutputWrapper {
 		/* Allocate space for blocks offsets table */
 		auto lastSymbolPtr = symbols.rbegin();
 		uint16_t lastBlock = (lastSymbolPtr->offset) >> 16;
-
-		if (lastBlock > 63) {		// blocks index table is limited to $40 entries (which is only enough to ROM section)
+		if (lastBlock > 0x3F) {		// blocks index table is limited to $40 entries (which is only enough to ROM section)
 			Logger::warn("Too many memory blocks to allocate (${:X}), truncating to $40 blocks. Some symbols will be lost.", lastBlock+1);
 			lastBlock = 0x3F;
 		}
@@ -70,7 +69,8 @@ struct Output__Deb1 : public OutputWrapper {
 
 		/* Generate table of character frequencies based on symbol names */
 		uint32_t freqTable[0x100] = { 0 };
-		for (const auto& [_, label] : symbols) {
+		for (const auto& [offset, label] : symbols) {
+			if ((offset >> 16) > lastBlock) break;	// out of range symbols shouldn't participate in frequency table
 			for (auto& c : label) {
 				freqTable[(std::size_t)static_cast<uint8_t>(c)]++;
 			}
