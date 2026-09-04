@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <cstdio>
+#include <format>
 #include <iterator>
 #include <cstdint>
 #include <stdexcept>
@@ -52,9 +53,9 @@ struct Output__Deb2 : public OutputWrapper {
 		auto lastSymbolPtr = symbols.rbegin();
 		uint16_t lastBlock = (lastSymbolPtr->offset) >> 16;
 
-		if (lastBlock > 0xFF) {		// blocks index table is limited to $100 entries (which is enough to cover all the 24-bit addressable space)
-			Logger::warn("Too many memory blocks to allocate (${:X}), truncating to $100 blocks. Some symbols will be lost.", lastBlock+1);
-			lastBlock = 0xFF;
+		/* Block index table is limited to $100 entries (enough to cover all 24-bit address space). Larger addressing spaces are not supported */
+		if (lastBlock > 0xFF) {
+			throw std::runtime_error(std::format("DEB2 only supports 24-bit offsets. Largest offset found is ${:X} (>24 bits). Use appropriate \"-mask\"", lastSymbolPtr->offset));
 		}
 
 		std::vector<uint32_t> blockOffsets(lastBlock+1);
