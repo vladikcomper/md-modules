@@ -105,7 +105,7 @@ struct Input__ASM68K_Sym : public InputWrapper {
 					input.get();					// skip 1 byte
 					break;
 				case 0x84:		// Inc SLD by word
-					input.seekg(4, std::ios::cur);	// skip 2 bytes
+					input.seekg(2, std::ios::cur);	// skip 2 bytes
 					break;
 				case 0x86:		// Set SLD (longword)
 					input.seekg(4, std::ios::cur);	// skip 4 bytes
