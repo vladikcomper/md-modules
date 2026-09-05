@@ -13,8 +13,8 @@ This repository includes modules for Mega-Drive projects (`modules/` directory) 
 
 ### Utilities
 
-* [ConvSym](utils/convsym) _(C++20)_ - a symbol extraction and conversion utility;
-* [CBundle](utils/cbundle) _(C++20)_ - a custom pre-processor used to build debugger's bundles from the shared "cross-assembler" source files;
+* [ConvSym](utils/convsym) _(C++23)_ - a symbol extraction and conversion utility;
+* [CBundle](utils/cbundle) _(C++23)_ - a custom pre-processor used to build debugger's bundles from the shared "cross-assembler" source files;
 * [BlobToAsm](utils/blobtoasm) _(Python 3.8+)_ - a utility to render binary files in M68K assembly with additional tricks (e.g. offset-based expression injection);
 
 ## Building from source code
@@ -25,7 +25,7 @@ This repository aims to be cross-platform, designed with Linux, Windows, MacOS (
 
 - *GNU Make* is required to build pretty much everything.
 
-- **Utilities** require a *GCC* or *Clang* compiler with C++20 support and *Python 3.8* or newer.
+- **Utilities** require a *GCC* or *Clang* compiler with C++23 support and *Python 3.8* or newer.
 
 - **Modules** fully depend on *utilities*, so they require all the dependencies listed above. Non-Windows systems also require *Wine* to run assemblers (they're 32-bit Windows executables).
 

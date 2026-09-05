@@ -1,6 +1,52 @@
 
 # ConvSym version history
 
+### Version 2.14 (2026-09-05)
+
+* Added `-rmprefix` option to remove a given prefix if symbols start with it.
+
+* Added `-verbose` option which makes ConvSym report quite a bit of additional info, useful for troubleshooting. Overall logging has been slightly improved as well.
+
+* `-range` option now can accept symbol references instead of raw offsets: e.g. `-range @MyStartLabel @MyEndLabel` will make ConvSym limit output to everything between `MyStartLabel` and `MyEndLabel`, inclusive (similarly to `-org` and `-ref` options, `@` denotes a symbol instead of an offset).
+
+* `-range` option now defaults to `0 FFFFFFFF` to cover all addressable space (offsets are still appropriately truncated to 24 bits unless `-mask` option is changed).
+
+* Added `-ifilter [regex]` option as a case insensitive alternative to `-filter`.
+
+* Filtering (via `-ifilter`/`-filter` options) now happens before all transformations: options like `-toupper`, `-addprefix` etc. will no longer disrupt filtering in some circumstances and filtering behavior becomes overall more predictable.
+
+* `asm68k_sym` input format:
+	- Psy-Q linker support: Fixed an oversight in parsing "Inc SLD by word" records, which resulted in skipping wrong number of bytes;
+	- Optimized parser: it now requires a single pass to process final symbol table when `/processLocals` option is disabled, and an optional second pass when it's enabled (required to concat local labels to their closet "global" parent) is also faster;
+	- Since optimization slightly changes *when* offsets are truncated from 32 to 24 bits (when using the default `-mask` option), in rare circumstances it may change which symbols make it to the final table if their 32-bit offsets were different, but *collide* after truncation to 24 bits (e.g. `FF0000` <-> `FFFF0000`).
+
+* `asm68k_lst` input format (deprecated):
+	- Breaking change: Parser no longer ignores out of order symbols (e.g. if RAM symbols are encountered before ROM symbols, latter could become "out of order"). This greatly improves parsing quality and allows to parse RAM symbols safely (bringing `asm68k_lst` on par with `asm68k_sym` parser). You may still force old behavior with new `/strictSymbolOrder+` option;
+	- Fixed a rare edge-case bug when trying to parse opcode or macro following the label;
+	- Slightly improved error reporting when parsing macro definitions;
+
+* `as_lst_exp` input format (deprecated):
+	- Similarly to a breaking change in `asm68k_lst` parser, this parser no longer ignores out of order symbols by default and may parse RAM symbols correctly. Due to AS quirk of dumping Z80 and M68K symbols in the same table, this now allows Z80 symbols to slip in, but that's the expected behavior matching `as_lst` parser, which avoids in in most disassemblies by filtering out symbols starting with `z` (per disassembly conventions). You may still force old behavior with new `/strictSymbolOrder+` option.
+
+* `txt` input format:
+	- Changed default format string (see `/fmt` option) from `%s %X` to `%1023s %X` to avoid buffer overflows if symbol string happens to be extremely long.
+
+* `deb2` output format:
+	- Reject symbol tables with offsets larger than 24 bits instead of silently truncating them, because it's a sign of misconfiguration and may result in broken outputs.
+
+* `deb1` output format:
+	- Fixed a minor oversight where symbols outside of supported offset range (0..3FFFFF) still participated in character frequency statistics, making compression less efficient.
+
+* ConvSym now refuses to run if `-ref` option is passed without `-a` or `-org`, because it doesn't work outside of "append mode" forced by these flags.
+
+* Further performance and stability improvements:
+	- Massively improved `-filter` performance by switching from `std::regex` to PCRE2 library;
+	- Massively improved overall symbol table performance internally by optimizing underlying data structures, insert operations and memory allocations;
+	- Fixed potential crashes and invalid output in `deb1` and `deb2` output formats if symbols include non-ASCII characters (which shouldn't happen normally);
+	- Slightly optimized Huffman encoding used by `deb1` and `deb2` formats;
+	- Fixed potential issues when applying `-toupper`/`-tolower` transformation to non-ASCII characters;
+	- Added assertions to eliminate undefined behavior in extremely rare circumstances (which may not even happen in practice).
+
 ### Version 2.13 (2026-08-30)
 
 * `asm68k_sym` input format:
@@ -138,7 +184,7 @@
 
 ### Version 2.5.2 (2020-08-09)
 
-* Fix SEGFAULT when attempting to write inaccesible output file.
+* Fix SEGFAULT when attempting to write inaccessible output file.
 * Minor error handling improvements.
 
 ### Version 2.5.1 (2020-01-25)
@@ -147,14 +193,14 @@
 
 ### Version 2.5 (2018-10-30)
 
-* Optimized and imporved `asm68k_lst` parser.
+* Optimized and improved `asm68k_lst` parser.
 * Improved handling of conflicting command-line options.
 * Fixed memory leaks on program termination (in both successful and failure states).
 * Overall stability and error handling improvements.
 
 ### Version 2.1 (2018-07-08)
 
-* Added `-toupper` and `-tolower` options to convert all the processed symbols to uppercase or lowecase accordingly. This helps to reduce size of symbol data in DEB1/DEB2 formats, as the compression takes advantage of it.
+* Added `-toupper` and `-tolower` options to convert all the processed symbols to uppercase or lowercase accordingly. This helps to reduce size of symbol data in DEB1/DEB2 formats, as the compression takes advantage of it.
 * Added new `log` input parser to support plain-text **.log**/**.txt** files as input.
 
 ### Version 2.0 (2018-01-14)

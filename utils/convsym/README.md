@@ -42,20 +42,24 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
 ```
   -in [format]
   -input [format]
-    Selects input file format. Supported formats: asm68k_sym, asm68k_lst,
-    as_lst, as_lst_exp, log, txt
+    Selects input file format.
+    Supported formats: asm68k_sym, as_lst, log, txt, asm68k_lst (deprecated),
+      as_lst_exp (deprecated)
     Default: asm68k_sym
 
   -out [format]
   -output [format]
-    Selects output file format. Supported formats: asm, deb1, deb2, log
+    Selects output file format.
+    Supported formats: asm, deb2, deb1 (deprecated), log
     Default: deb2
 
   -inopt [options]
     Additional options specific for the input format.
     Default options (depending on -in [format]):
-      -in asm68k_sym -inopt "/localSign=@ /localJoin=. /processLocals+ /ignoreConstants+"
-      -in asm68k_lst -inopt "/localSign=@ /localJoin=. /ignoreMacroDefs+ /ignoreMacroExp- /addMacrosAsOpcodes+ /processLocals+"
+      -in asm68k_sym -inopt "/localSign=@ /localJoin=. /processLocals+
+        /ignoreConstants+"
+      -in asm68k_lst -inopt "/localSign=@ /localJoin=. /ignoreMacroDefs+
+        /ignoreMacroExp- /addMacrosAsOpcodes+ /processLocals+"
       -in as_lst -inopt "/localJoin=. /processLocals+ /ignoreInternalSymbols+"
       -in log -inopt "/separator=: /useDecimal-"
       -in txt -inopt "/fmt='%s %X' /offsetFirst-"
@@ -68,8 +72,11 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
       -out asm -outopt "/fmt='%s:       equ     $%X'"
       -out log -outopt "/fmt='%X: %s'"
 
+  -verbose
+    Enables more verbose logging (useful for troubleshooting).
+
   -debug
-    Enables verbose debug-level logging. Can be useful for troubleshooting.
+    Extremely verbose output, only use if -verbose isn't enough.
 
 Offsets conversion options:
   -base [offset]
@@ -82,10 +89,14 @@ Offsets conversion options:
     offset found in [input_file] after the base offset subtraction (if occurs).
     Default: FFFFFF
 
-  -range [bottom] [upper]
-    Determines the range for offsets allowed in a final symbol file (after 
+  -range [startOffset] [endOffset]
+  -range @[startSymbol] @[endSymbol]
+    Determines the range for offsets allowed in a final symbol file (after
     subtraction of the base offset).
-    Default: 0 3FFFFF
+    You can specify something like "-range @MyStartSymbol @MyEndSymbol" instead
+    of raw offsets to limit to symbols between MyStartSymbol and MyEndSymbol
+    (inclusive) respectively.
+    Default: 0 FFFFFFFF (covers the entire address space)
 
   -a
     Enables "Append mode": symbol data is appended to the end of the 
@@ -95,7 +106,7 @@ Offsets conversion options:
   -noalign
     Don't align symbol data in "Append mode", which is aligned to nearest
     even offset by default. Using this option is not recommended, it's only 
-    there to retain compatilibity with older ConvSym versions.
+    there to retain compatibility with older ConvSym versions.
 
 Symbol table dump options:
   -org [offset]
@@ -114,23 +125,32 @@ Symbol table dump options:
     will resolve that symbol's offset.
 
 Symbols conversion and filtering options:
+  -filter [regex]
+  -ifilter [regex]
+    Enables filtering of the symbol list fetched from the [input_file]
+    based on a regular expression.
+    ConvSym uses PCRE2 library for regex parsing.
+    Filtering is done before any other transformations (see below).
+    For case-insensitive regex, use "-ifilter" instead.
+
+  -exclude
+    Make filter work in "exclude mode": all labels that DO match the filter
+    regex are removed from the list, everything else stays.
+
   -toupper
     Converts all symbol names to uppercase.
 
   -tolower
     Converts all symbol names to lowercase.
 
+  -rmprefix [string]
+    Removes a specified prefix if symbol starts with it.
+    Done after all other transformations, but before -addprefix.
+
   -addprefix [string]
     Prepends a specified prefix string to every symbol in the resulting table.
     Done after all other transformations.
 
-  -filter [regex]
-    Enables filtering of the symbol list fetched from the [input_file]
-    based on a regular expression.
-
-  -exclude
-    If set, filter works in "exclude mode": all labels that DO match
-    the -filter regex are removed from the list, everything else stays.
 ```
 
 ### Examples
@@ -241,7 +261,7 @@ Default options can be expressed as follows:
 >
 > This format is deprecated and is no longer recommended. Use `asm68k_sym` for better results.
 
-Expects a listing file produced by the **ASM68K** assembler for input. Local symbols are also supported by default. Since parsing of listing files is less reliable, symbol files and `asm68_sym` format is recommended instead (see above).
+Expects a listing file produced by the **ASM68K** assembler for input. Local symbols are also supported by default. Since parsing of listing files is less reliable, symbol files and `asm68_sym` format is recommended instead (see above). Since **version 2.14**, this format allows processing symbols out of order, which brings its behavior closer to `asm68k_sym` format (for old behavior, see `/strictSymbolOrder?` option).
 
 > [!NOTE]
 >
@@ -277,6 +297,13 @@ Expects a listing file produced by the **ASM68K** assembler for input. Local sym
     specify whether local labels will processed; default: +
 ```
 
+Since **version 2.14**, this format also supports the following option:
+```
+  /strictSymbolOrder?`
+    only add symbols in order and skip outliers; not recommended, only exists
+    for backwards compatibility; default -
+```
+
 Default options can be expressed as follows:
 
 	-inopt "/localSign=@ /localJoin=. /ignoreMacroDefs+ /ignoreMacroExp- /addMacrosAsOpcodes+ /processLocals+"
@@ -286,13 +313,13 @@ Default options can be expressed as follows:
 
 Expects a listing file produced by the **AS** assembler for input. It's the recommended format for projects using **AS**.
 
-Since version **version 2.8**, it works by processing a symbol table at the end of the file. This parser superseded the old experimental one, which is now available as `as_lst_exp` (so if you're looking for pre-v2.8 behaviour for some reason, use that instead).
+Since version **version 2.8**, it works by processing a symbol table at the end of the file. This parser superseded the old experimental one, which is now available as `as_lst_exp` (so if you're looking for pre-v2.8 behavior for some reason, use that instead).
 
 It also supports local symbols, if produced by the assembler.
 
 **Known issues**:
 
-* Sonic 2 and Sonic 3K disassemly also compile the Z80 driver in the same project using `org`/`phase` to locate Z80-related labels starting from offset $000000. This causes Z80 and M68K symbols to be interleaved, thus messing up the symbol table for up to the first 8 kb of ROM data. There's no clean way to get rid of conflicting labels, but thankfully the disassemblies have most of Z80-labels start with the letter `z`, so you can add the following command-line options to filter them out: `-exclude -filter "z.+"'`
+* Sonic 2 and Sonic 3K disassembly also compile the Z80 driver in the same project using `org`/`phase` to locate Z80-related labels starting from offset $000000. This causes Z80 and M68K symbols to be interleaved, thus messing up the symbol table for up to the first 8 kb of ROM data. There's no clean way to get rid of conflicting labels, but thankfully the disassemblies have most of Z80-labels start with the letter `z`, so you can add the following command-line options to filter them out: `-exclude -filter "z.+"'`
 
 **Options:**
 
@@ -326,9 +353,20 @@ Default options can be expressed as follows:
 
 This is an experimental version of listing files parser for the AS assembler. Like `as_lst` format, it expects a listing file produced by the **AS** assembler for input.
 
-Using this parser is currently not recommended and its implementation may drastically change in future versions of ConvSym.
+Before **version 2.8** it was actually in place of the `as_lst` format, but the latter has since been replaced with a more stable and refined implementation. Since **version 2.14**, this format allows processing symbols out of order, which brings its behavior closer to `as_lst` format (for old behavior, see `/strictSymbolOrder?` option below).
 
-Before **version 2.8** it was actually in place of the `as_lst` format, but the latter has since been replaced with a more stable and refined implementation.
+**Options:**
+
+Since **version 2.14**, the following options are supported:
+```
+  /strictSymbolOrder?`
+    only add symbols in order and skip outliers; not recommended, only exists
+    for backwards compatibility; default -
+```
+
+Default options can be expressed as follows:
+
+	-inopt "/strictSymbolOrder-"
 
 
 ### `log` format
@@ -349,7 +387,7 @@ Whitespaces and tabulation are ignored and don't affect parsing.
 
 ```
   /separator=[x]
-    determines character that separates labes and offsets, default: ":"
+    determines character that separates labels and offsets, default: ":"
 
   /useDecimal[+|-]
     sets whether offsets should be parsed as decimal numbers; default: -
@@ -363,7 +401,7 @@ Default options can be expressed as follows:
 
 *Available since **version 2.11**.*
 
-Used for generic text files and can be flexibly configured for arbitrary line formats using `printf`-like syntax (`scanf` format from the C standard library to be exact). It defaults to `%s %X` (e.g. `MyLabel 1C2`).
+Used for generic text files and can be flexibly configured for arbitrary line formats using `printf`-like syntax (`scanf` format from the C standard library to be exact). It defaults to `%1023s %X` (e.g. `MyLabel 1C2`, label length is limited to 1023 characters).
 
 With additional configuration it can be used to parse SGDK's `symbols.txt` file (see [Converting SGDK symbols](#converting-sgdk-symbols) section).
 
@@ -371,15 +409,20 @@ With additional configuration it can be used to parse SGDK's `symbols.txt` file 
 
 ```
   /fmt='format-string'
-    specifies format string to parse input file lines, default: "%s %X"
+    specifies format string to parse input file lines, default: "%1023s %X"
 
   /offsetFirst[+|-]
     specifies whether offset comes first in the input string; default: -
 ```
 
+> ![NOTE]
+>
+> Since **version 2.14** default for `/fmt` was changed from `%s %X` to `%1023s %X` to avoid buffer overflows if symbol string is unusually long.
+
 Default options can be expressed as follows:
 
-	-inopt "/fmt='%s %X' /offsetFirst-"
+	-inopt "/fmt='%1023s %X' /offsetFirst-"
+
 
 ## Output formats
 

@@ -23,7 +23,7 @@ struct Input__Log : public InputWrapper {
 	~Input__Log() {}
 
 	/** Supported options:
-	  *	- `/separator=x`	- determines character that separates labes and offsets, default: ":"
+	  *	- `/separator=x`	- determines character that separates labels and offsets, default: ":"
 	  *	- `/useDecimal?`	- set if offsets should be treat as decimal numbers; default: -
 	  */
 	struct {
@@ -76,7 +76,7 @@ struct Input__Log : public InputWrapper {
 				continue;
 			} 
 			SKIP_SPACES(ptr);
-			
+
 			// Fetch label ... 
 			char* sLabel = (char*)ptr;
 			while ( !(*ptr == '\t' || *ptr == ' ') && *ptr ) {
