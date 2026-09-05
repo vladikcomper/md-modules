@@ -113,7 +113,7 @@ tests: 'tuple[Test, ...]' = (
 			ConvSym(
 				input = File('input/sonic-2.lst'),
 				output = File('output/sonic-2.deb2'),
-				options = ('-input', 'as_lst_exp'),
+				options = ('-input', 'as_lst_exp', '-exclude', '-filter', '(z.+)|(cf[A-Z].+)'),
 			),
 			CheckMatch(output=File('output-expected/sonic-2.deb2')),
 		),
@@ -124,7 +124,7 @@ tests: 'tuple[Test, ...]' = (
 			ConvSym(
 				input = File('input/sonic-3k.lst'),
 				output = File('output/sonic-3k.deb2'),
-				options = ('-input', 'as_lst_exp'),
+				options = ('-input', 'as_lst_exp', '-exclude', '-filter', '(z.+)|(mus_.+)|(sfx_.+)|(cf[A-Z].+)'),
 			),
 			CheckMatch(output=File('output-expected/sonic-3k.deb2')),
 		),
@@ -157,7 +157,7 @@ tests: 'tuple[Test, ...]' = (
 			ConvSym(
 				input = File('input/sonic-3k.lst'),
 				output = File('output/sonic-3k.deb1'),
-				options = ('-input', 'as_lst_exp', '-output', 'deb1'),
+				options = ('-input', 'as_lst_exp', '-output', 'deb1', '-exclude', '-filter', '(z.+)|(mus_.+)|(sfx_.+)|(cf[A-Z].+)'),
 			),
 			CheckMatch(output=File('output-expected/sonic-3k.deb1')),
 		),
@@ -340,7 +340,7 @@ tests: 'tuple[Test, ...]' = (
 			ConvSym(
 				input = File('input/sonic-2-git-2022.lst'),
 				output = File('output/sonic-2-git-2022.as_lst_exp.log'),
-				options = ('-in', 'as_lst_exp', '-out', 'log')
+				options = ('-in', 'as_lst_exp', '-out', 'log', '-exclude', '-filter', '(z.+)|(cf[A-Z].+)')
 			),
 			CheckMatch(output=File('output-expected/sonic-2-git-2022.as_lst_exp.log'), text=True),
 		),
@@ -351,7 +351,7 @@ tests: 'tuple[Test, ...]' = (
 			ConvSym(
 				input = File('input/sonic-3k-git-2022.lst'),
 				output = File('output/sonic-3k-git-2022.as_lst_exp.log'),
-				options = ('-in', 'as_lst_exp', '-out', 'log')
+				options = ('-in', 'as_lst_exp', '-out', 'log', '-exclude', '-filter', '(z.+)|(mus_.+)|(sfx_.+)|(cf[A-Z].+)')
 			),
 			CheckMatch(output=File('output-expected/sonic-3k-git-2022.as_lst_exp.log'), text=True),
 		),

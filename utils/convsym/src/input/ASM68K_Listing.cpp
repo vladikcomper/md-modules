@@ -31,6 +31,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 	  *	- `/ignoreMacroExp?`		- specify if lines representing macro expansions should be ignored; default: -
 	  *	- `/addMacrosAsOpcodes?`	- set if macros that process label as parameter (defined as "macro *") should be recognized when used; default: +
 	  *	- `/processLocals?`			- specify whether local labels will processed
+	  * - `/strictSymbolOrder?`		- only add symbols in order and skip outliers; not recommended, only exists for backwards compatibility; default -
 	  */
 	struct {
 		char localSign;
@@ -39,13 +40,15 @@ struct Input__ASM68K_Listing : public InputWrapper {
 		bool ignoreMacroExp;
 		bool addMacrosAsOpcodes;
 		bool processLocals;
+		bool strictSymbolOrder;
 	} options = {
 		.localSign = '@',
 		.localJoin = '.',
 		.ignoreMacroDefs = true,
 		.ignoreMacroExp = false,
 		.addMacrosAsOpcodes = true,
-		.processLocals = true
+		.processLocals = true,
+		.strictSymbolOrder = false
 	};
 
 	void parseOptions(const std::string_view opts) {
@@ -55,7 +58,8 @@ struct Input__ASM68K_Listing : public InputWrapper {
 			{ "ignoreMacroDefs",	OptsParser::Opt::Bool{ &options.ignoreMacroDefs } },
 			{ "ignoreMacroExp",		OptsParser::Opt::Bool{ &options.ignoreMacroExp } },
 			{ "addMacrosAsOpcodes",	OptsParser::Opt::Bool{ &options.addMacrosAsOpcodes } },
-			{ "processLocals",		OptsParser::Opt::Bool{ &options.processLocals } }
+			{ "processLocals",		OptsParser::Opt::Bool{ &options.processLocals } },
+			{ "strictSymbolOrder",	OptsParser::Opt::Bool{ &options.strictSymbolOrder } }
 		});
 	}
 
@@ -65,7 +69,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 
 		// Variables
 		std::string strLastGlobalLabel("");	// default global label name
-		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
+		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (only has effect when "/strictSymbolOrder" option is set)
 
 		// Vocabulary for assembly directives that support labels
 		// NOTICE: This will be also extended with macro names
@@ -191,10 +195,10 @@ struct Input__ASM68K_Listing : public InputWrapper {
 				// Fetch label's opcode into std::string object
 				while (IS_WHITESPACE(*ptr)) ptr++; 		// skip indention
 				uint8_t* const ptr_start = ptr;
-				do { ptr++; } while (!IS_WHITESPACE(*ptr) && !IS_ENDOFLINE(*ptr));
+				while (!IS_WHITESPACE(*ptr) && !IS_ENDOFLINE(*ptr)) ptr++;
 				*ptr++ = 0x00;
 				std::string strOpcode((char*)ptr_start, ptr-ptr_start-1);		// construct opcode string
-				if (strOpcode[0] == options.localSign) {					// in case opcode is a local label reference
+				if (!strOpcode.empty() && strOpcode[0] == options.localSign) {	// in case opcode is a local label reference
 					strOpcode = strLastGlobalLabel;
 					strOpcode += options.localJoin;
 					strOpcode += (char*)ptr_start+1;	// +1 to skip local label symbol itself
@@ -229,11 +233,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 								// Maintain line counter to warn if suspiciously many lines were processed as macro definition alone
 								macroLineCounter++;
 								if (macroLineCounter >= 1000) {
-									Logger::warn(
-										// TODOh: Advise to enable ignore macro definitions option?
-										"Too many lines (>=1000) found in definition of \"{}\" macro. This could be missing \"endm\" statement or a parsing error.",
-										strLabel
-									);
+									Logger::warn("Too many lines (>=1000) found in definition of \"{}\" macro. This could be missing \"endm\" statement or a parsing error. Try \"/ignoreMacroDefs-\".", strLabel);
 									break;
 								}
 
@@ -266,11 +266,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 							
 							// If end of file was reached before "endm"
 							if (!endmDirectiveReached) {
-								Logger::error(
-									// TODOh: Advise to enable ignore macro definitions option?
-									"Couldn't reach end of \"{}\" macro. This is possibly due to a parsing error.",
-									strLabel
-								);
+								Logger::warn("Couldn't reach end of \"{}\" macro. This could be a parsing error. Try \"/ignoreMacroDefs-\".", strLabel);
 								break;
 							}
 
@@ -281,7 +277,7 @@ struct Input__ASM68K_Listing : public InputWrapper {
 						}
 					}
 
-					Logger::debug("{} recognized as macro symbol", strLabel);
+					Logger::debug("{} recognized as a macro symbol", strLabel);
 					continue;				// cancel further processing
 				}
 
@@ -291,17 +287,22 @@ struct Input__ASM68K_Listing : public InputWrapper {
 					offset = offset*0x10 + (((unsigned)(*c-'0')<10) ? (*c-'0') : (*c-('A'-10)));
 				}
 
-				// Add label to the symbols table, if:
-				//	1) Its absolute offset is higher than the previous offset successfully added
-				//	2) When base offset is subtracted and the mask is applied, the resulting offset is within allowed boundaries
-				if ((lastSymbolOffset == (uint32_t)-1) || (offset >= lastSymbolOffset)) {
-					const bool inserted = symbolTable.add(offset, strLabel);
-					if (inserted) {
-						lastSymbolOffset = offset;
+				// If legacy "/strictSymbolOrder" option is forced, we only add next symbol if its offset is larger than a previous one
+				// NOTE: Due to side effects when including RAM symbols in the beginning, this mode is now highly discouraged and disabled by default
+				if (options.strictSymbolOrder) [[unlikely]] {
+					if ((lastSymbolOffset == (uint32_t)-1) || (offset >= lastSymbolOffset)) {
+						const bool inserted = symbolTable.add(offset, strLabel);
+						if (inserted) {
+							lastSymbolOffset = offset;
+						}
+					}
+					else {
+						Logger::debug("Symbol {} at offset ${:X} ignored: its offset is less than the previous symbol successfully fetched", strLabel, offset);
 					}
 				}
-				else {
-					Logger::debug("Symbol {} at offset {:X} ignored: its offset is less than the previous symbol successfully fetched", strLabel, offset);
+				// By default, we add symbols unconditionally
+				else [[likely]] {
+					symbolTable.add(offset, strLabel);
 				}
 			}
 		}

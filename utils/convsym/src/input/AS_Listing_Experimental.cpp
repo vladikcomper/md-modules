@@ -20,8 +20,23 @@ struct Input__AS_Listing_Experimental : public InputWrapper {
 	Input__AS_Listing_Experimental(): InputWrapper(std::ios::in) {}
 	~Input__AS_Listing_Experimental() {}
 
+	/** Supported options:
+	  * - `/strictSymbolOrder?`		- only add symbols in order and skip outliers; not recommended, only exists for backwards compatibility; default -
+	  */
+	struct {
+		bool strictSymbolOrder;
+	} options = {
+		.strictSymbolOrder = false
+	};
+
+	void parseOptions(const std::string_view opts) {
+		OptsParser::parse(opts, {
+			{ "strictSymbolOrder",	OptsParser::Opt::Bool{ &options.strictSymbolOrder } }
+		});
+	}
+
 	void parse(SymbolTable& symbolTable, std::istream& input) {
-		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (mainly Z80 stuff)
+		uint32_t lastSymbolOffset = -1;		// tracks symbols offsets to ignore sections where PC is reset (only has effect when "/strictSymbolOrder" option is set)
 
 		// For every string in a listing file ...
 		std::string line;
@@ -102,22 +117,27 @@ struct Input__AS_Listing_Experimental : public InputWrapper {
 						offset = offset*0x10 + (((unsigned)(*c-'0')<10) ? (*c-'0') : (*c-('A'-10)));
 					}
 
-					// Add label to the symbols table, if:
-					//	1) Its absolute offset is higher than the previous offset successfully added
-					//	2) When base offset is subtracted and the mask is applied, the resulting offset is within allowed boundaries
-					if ( (lastSymbolOffset == (uint32_t)-1) || (offset >= lastSymbolOffset) ) {
-						// Check if this is a label after ds or rs macro ...
-						while ( *ptr==' ' || *ptr=='\t' ) { ptr++; }			// skip spaces or tabs, if present      
-						if ( *ptr == 'd' && *(ptr+1) == 's' && *(ptr+2)=='.' ) continue;
-						if ( *ptr == 'r' && *(ptr+1) == 's' && *(ptr+2)=='.' ) continue;
+					// If legacy "/strictSymbolOrder" option is forced, we only add next symbol if its offset is larger than a previous one
+					// NOTE: Due to side effects when including RAM symbols in the beginning, this mode is now highly discouraged and disabled by default
+					if (options.strictSymbolOrder) [[unlikely]] {
+						if ((lastSymbolOffset == (uint32_t)-1) || (offset >= lastSymbolOffset)) {
+							// Check if this is a label after ds or rs macro ...
+							while ( *ptr==' ' || *ptr=='\t' ) { ptr++; }			// skip spaces or tabs, if present      
+							if ( *ptr == 'd' && *(ptr+1) == 's' && *(ptr+2)=='.' ) continue;
+							if ( *ptr == 'r' && *(ptr+1) == 's' && *(ptr+2)=='.' ) continue;
 
-						const bool inserted = symbolTable.add(offset, (const char*)label);
-						if (inserted) {
-							lastSymbolOffset = offset;
+							const bool inserted = symbolTable.add(offset, (const char*)label);
+							if (inserted) {
+								lastSymbolOffset = offset;
+							}
+						}
+						else {
+							Logger::debug("Symbol {} at offset ${:X} ignored: its offset is less than the previous symbol successfully fetched", (const char*)label, offset);
 						}
 					}
+					// By default, we add symbols unconditionally
 					else {
-						Logger::debug("Symbol {} at offset {:X} ignored: its offset is less than the previous symbol successfully fetched", (const char*)label, offset);
+						symbolTable.add(offset, (const char*)label);
 					}
 				}
 			}
