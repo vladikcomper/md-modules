@@ -211,7 +211,7 @@ struct Huffman {
 		for (const auto & [depth, nodes] : endNodesMap) {
 			for (const auto & nodeRef : nodes) {
 				const auto & [ node, parent ] = nodeRef.get();
-				Logger::debug("depth = {}, (Node) data = {:X}, leafs: [{}, {}]", depth, node->data, (const void*)node->leaf[0], (const void*)node->leaf[1]);
+				Logger::debug("depth = {}, (Node) data = ${:X}, leafs: [{}, {}]", depth, node->data, (const void*)node->leaf[0], (const void*)node->leaf[1]);
 			}
 		}
 
@@ -223,7 +223,7 @@ struct Huffman {
 				traverseTreeRef(node->leaf[1], (code<<1)|1, depth + 1, traverseTreeRef);
 			}
 			if (!node->leaf[0] && !node->leaf[1]) {
-				Logger::debug("(Node) data = {:X}, code = {:X} ({} bits)", node->data, code, depth);
+				Logger::debug("(Node) data = ${:X}, code = ${:X} ({} bits)", node->data, code, depth);
 			}
 		};
 
@@ -240,9 +240,9 @@ struct Huffman {
 			auto lowestTreeNodeA = std::prev(lowestTreeNodeB);
 			auto & lowestTreeNodeARef = lowestTreeNodeA->get();
 			auto & lowestTreeNodeBRef = lowestTreeNodeB->get();
-			Logger::debug("lowestTreeNodeA: {} (NODE) data={:X}, depth={}, parent={} (NODE) leafs=[{}, {}]",
+			Logger::debug("lowestTreeNodeA: {} (NODE) data=${:X}, depth={}, parent={} (NODE) leafs=[{}, {}]",
 				(const void*)lowestTreeNodeARef.node, lowestTreeNodeARef.node->data, lowestLevelRef->first, (const void*)lowestTreeNodeARef.parent, (const void*)lowestTreeNodeARef.parent->leaf[0], (const void*)lowestTreeNodeARef.parent->leaf[1]);
-			Logger::debug("lowestTreeNodeB: {} (NODE) data={:X}, depth={}, parent={} (NODE) leafs=[{}, {}]",
+			Logger::debug("lowestTreeNodeB: {} (NODE) data=${:X}, depth={}, parent={} (NODE) leafs=[{}, {}]",
 				(const void*)lowestTreeNodeBRef.node, lowestTreeNodeBRef.node->data, lowestLevelRef->first, (const void*)lowestTreeNodeBRef.parent, (const void*)lowestTreeNodeBRef.parent->leaf[0], (const void*)lowestTreeNodeBRef.parent->leaf[1]);
 
 			/* Sanity check: Last 2 nodes from the "end nodes map" should have the same parent */
@@ -250,7 +250,7 @@ struct Huffman {
 				{
 					Logger::debug("Pre-exception dump: All end nodes with on the same depth:");
 					for (const auto & node : lowestLevelRef->second) {
-						Logger::debug("{} (NODE) data={:X}, parent={} (NODE) leafs=[{}, {}]",
+						Logger::debug("{} (NODE) data=${:X}, parent={} (NODE) leafs=[{}, {}]",
 							(const void*)node.get().node, node.get().node->data, (const void*)node.get().parent, (const void*)node.get().parent->leaf[0], (const void*)node.get().parent->leaf[1]);
 					}
 				}
@@ -264,7 +264,7 @@ struct Huffman {
 			auto targetEndNode = std::prev(targetLevelRef->second.end());
 			auto & targetEndNodeRef = targetEndNode->get();
 
-			Logger::debug("targetEndNodeRef: (NODE) data={:X}, depth={}, parent={}", targetEndNodeRef.node->data, targetLevelRef->first, (const void*)lowestTreeNodeBRef.parent);
+			Logger::debug("targetEndNodeRef: (NODE) data=${:X}, depth={}, parent={}", targetEndNodeRef.node->data, targetLevelRef->first, (const void*)lowestTreeNodeBRef.parent);
 
 			/* Detach `lowestTreeNodeA`, `lowestTreeNodeB` from its original parent, attach to `--targetEndNode` */
 			Node * lowestTreeParentNode = lowestTreeNodeARef.parent;

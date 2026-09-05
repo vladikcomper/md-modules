@@ -52,7 +52,7 @@ struct SymbolTable {
 		const auto ref = std::ranges::find(symbolRefTable, label, &SymbolRef::label);
 		if (ref != symbolRefTable.end()) {
 			*ref->target = correctedOffset;
-			Logger::debug("Resolved offset for symbol \"{}\": {:X}", label, correctedOffset);
+			Logger::info("Resolved offset for symbol \"{}\": ${:X}", label, correctedOffset);
 		}
 		if (!(
 			correctedOffset >= offsetConversionOpts.offsetLowBoundary && 

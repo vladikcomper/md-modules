@@ -74,7 +74,7 @@ struct Input__ASM68K_Sym : public InputWrapper {
 			}
 			uint8_t type = input.get();
 
-			Logger::debug("Got offset {}, type {:X}", offset, type);
+			Logger::debug("Got offset ${}, type {:X}", offset, type);
 
 			/* Parse symbol payload, depending on type */
 			switch (type) {
