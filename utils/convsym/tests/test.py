@@ -460,6 +460,16 @@ tests: 'tuple[Test, ...]' = (
 		),
 	),
 	Test(
+		description = 'log->log with masking options (sanity check)',
+		pipeline=(
+			ConvSym(
+				input = Buffer(b'FFFFFFFF: MaxOffset'),
+				options = ('-in', 'log', '-out', 'log', '-range', '0', 'FFFFFFFF', '-mask', 'FFFFFFFF'),
+			),
+			CheckMatch(output=Buffer(b'FFFFFFFF: MaxOffset\n'), text=True)
+		),
+	),
+	Test(
 		description = 'log->deb2 with -ref @[symbol] option (sanity check)',
 		pipeline=(
 			ConvSym(
