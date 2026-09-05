@@ -24,13 +24,13 @@ struct Input__TXT : public InputWrapper {
 	~Input__TXT() {}
 
 	/** Supported options:
-	  *	- `/fmt='format-string'`	- C-style format string (default: '%s %X')
+	  *	- `/fmt='format-string'`	- C-style format string (default: '%1023s %X')
 	  *	- `/offsetFirst?`			- specifies whether offset comes first in the input string (default is label followed by offset)
 	  */
 	struct {
 		std::string_view fmt;
 		bool offsetFirst;
-	} options = { .fmt = "%s %X", .offsetFirst = false };
+	} options = { .fmt = "%1023s %X", .offsetFirst = false };
 
 	void parseOptions(const std::string_view opts) {
 		OptsParser::parse(opts, {
