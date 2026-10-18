@@ -37,7 +37,6 @@
 #include "output/Log.cpp"
 #include "output/ASM.cpp"
 
-#include "output/OutputWrapper.hpp"
 #include "util/SymbolTable.hpp"
 
 #define CONVSYM_VERSION_LINE "ConvSym utility version 2.14\n"
@@ -90,8 +89,8 @@ int main (int argc, const char ** argv) {
 			"  -outopt [options]\n"
 			"    Additional options specific for the output format. See README for more information.\n"
 			"    Default options (depending on -out [format]):\n"
-			"      -out deb2 -outopt \"/favorLastLabels-\"\n"
-			"      -out deb1 -outopt \"/favorLastLabels-\"\n"
+			"      -out deb2 -outopt \"/favorLastLabels- /padToEvenSize+\"\n"
+			"      -out deb1 -outopt \"/favorLastLabels- /padToEvenSize+\"\n"
 			"      -out asm -outopt \"/fmt='%%s:	equ	$%%X'\"\n"
 			"      -out log -outopt \"/fmt='%%X: %%s'\"\n"
 			"\n"

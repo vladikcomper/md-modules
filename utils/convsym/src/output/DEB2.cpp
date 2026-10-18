@@ -28,14 +28,17 @@ struct Output__Deb2 : public OutputWrapper {
 
 	/** Supported options:
 	  *	- `/favorLastLabels?`	- load only the last label for duplicated offsets (default: first)
+	  * - `/padToEvenSize?`		- pad symbol table data to even size (default: true)
 	  */
 	struct {
 		bool favorLastLabels;
-	} options = { .favorLastLabels = false };
+		bool padToEvenSize;
+	} options = { .favorLastLabels = false, .padToEvenSize = true };
 
 	void parseOptions(const std::string_view opts) {
 		OptsParser::parse(opts, {
-			{ "favorLastLabels", OptsParser::Opt::Bool{ &options.favorLastLabels } }
+			{ "favorLastLabels", OptsParser::Opt::Bool{ &options.favorLastLabels } },
+			{ "padToEvenSize", OptsParser::Opt::Bool{ &options.padToEvenSize } }
 		});
 	}
 
@@ -123,7 +126,7 @@ struct Output__Deb2 : public OutputWrapper {
 					loc_Block++;
 				}
 
-				BitStream SymbolsHeap;
+				BitStream symbolHeap;
 				std::vector<SymbolRecord> offsetsData;
 
 				/* For every symbol within the block ... */
@@ -144,7 +147,7 @@ struct Output__Deb2 : public OutputWrapper {
 						continue;
 					}
 
-					if (SymbolsHeap.getCurrentPos() > 0xFFFF) {
+					if (symbolHeap.buffer.size() > 0xFFFF) {
 						Logger::warn("Symbols heap for block {:02X} exceeded 64kb limit, no more symbols can be stored in this block.", block);
 						break;
 					}
@@ -158,20 +161,20 @@ struct Output__Deb2 : public OutputWrapper {
 						/* Generate symbol structure, that includes offset and encoded symbol text pointer */
 						offsetsData.push_back({
 							.offset = Utils::asBigEndian<uint16_t>(symbolPtr->offset & 0xFFFF),
-							.symbolDataPtr = Utils::asBigEndian<uint16_t>(SymbolsHeap.getCurrentPos())
+							.symbolDataPtr = Utils::asBigEndian<uint16_t>(symbolHeap.buffer.size())
 						});
 	
 						/* Encode each symbol character with the generated Huffman-codes and store it in the bitsteam */
 						for (auto& c : symbolPtr->label) {
 							const auto *record = characterToRecord[(std::size_t)static_cast<uint8_t>(c)];
-							SymbolsHeap.pushCode( record->code, record->codeLength );
+							symbolHeap.pushBits( record->code, record->codeLength );
 						}
 						
 						/* Finally, add null-terminator */
 						{
 							const auto* record = characterToRecord[0x00];
-							SymbolsHeap.pushCode(record->code, record->codeLength);
-							SymbolsHeap.flush();
+							symbolHeap.pushBits(record->code, record->codeLength);
+							symbolHeap.flushByte();
 						}
 					}
 				}
@@ -180,7 +183,7 @@ struct Output__Deb2 : public OutputWrapper {
 				if (offsetsData.size() > 0) {
 					Logger::debug(
 						"Block {:02X}: {} bytes (offsets list: {} bytes, symbols heap: {} bytes)",
-						block, 2 + offsetsData.size() * 4 + SymbolsHeap.size(), offsetsData.size() * 4, SymbolsHeap.size()
+						block, 2 + offsetsData.size() * 4 + symbolHeap.buffer.size(), offsetsData.size() * 4, symbolHeap.buffer.size()
 					);
 
 					/* Insert pointer to the end of the list (where heap starts) */
@@ -189,13 +192,18 @@ struct Output__Deb2 : public OutputWrapper {
 
 					/* Write down records that store offset and symbol pointer, then the entire heap */
 					std::fwrite(offsetsData.data(), offsetsData.size(), sizeof(offsetsData[0]), output);
-					std::fwrite(SymbolsHeap.begin(), SymbolsHeap.size(), 1, output);
+					std::fwrite(symbolHeap.buffer.data(), symbolHeap.buffer.size(), 1, output);
 
 					blockOffsets[block] = Utils::asBigEndian<uint32_t>(loc_Block-loc_BlockOffsets);
 				}
 			}
 		}
-		
+
+		/* Pad to even size if respective option is enabled (that's the default) */
+		if (options.padToEvenSize && (std::ftell(output) & 1)) {
+			std::fputc(0, output);
+		}
+
 		/* Finally, write down block offsets table in the header */
 		std::fseek(output, loc_BlockOffsets, SEEK_SET);
 		std::fwrite(blockOffsets.data(), blockOffsetsSize, 1, output);

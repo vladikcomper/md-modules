@@ -1,6 +1,13 @@
 
 # ConvSym version history
 
+### Version 2.15 (Draft)
+
+* `deb1` and `deb2` output formats:
+	- ConvSym now pads symbol table to even number of bytes by default and the `/padToEvenSize` option was added, which you can disable if you want legacy behavior.
+  - Improved internal bitstream implementation which results in very minor size optimization in `deb1` and `deb2` files
+
+
 ### Version 2.14 (2026-09-05)
 
 * Added `-rmprefix` option to remove a given prefix if symbols start with it.

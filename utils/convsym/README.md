@@ -67,8 +67,8 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
   -outopt [options]
     Additional options specific for the output format.
     Default options (depending on -out [format]):
-      -out deb2 -outopt "/favorLastLabels-"
-      -out deb1 -outopt "/favorLastLabels-"
+      -out deb2 -outopt "/favorLastLabels- /padToEvenSize+"
+      -out deb1 -outopt "/favorLastLabels- /padToEvenSize+"
       -out asm -outopt "/fmt='%s:       equ     $%X'"
       -out log -outopt "/fmt='%X: %s'"
 
@@ -448,9 +448,16 @@ Since **version 2.7**, the following options are supported:
     the same offset (the first processed label is chosen otherwise); default: -
 ```
 
+Since **version 2.15**, ConvSym now pads symbol table to even number of bytes by default and the corresponding option was added, which you can disable if you want legacy behavior:
+
+```
+  /padToEvenSize[+|-]
+    whether to pad symbol table to even number of bytes; default: +
+```
+
 Default options can be expressed as follows:
 
-	-outopt "/favorLastLabels-"
+	-outopt "/favorLastLabels- /padToEvenSize+"
 
 ### `deb1` output format
 
@@ -468,9 +475,16 @@ Since **version 2.7**, the following options are supported:
     the same offset (the first processed label is chosen otherwise); default: -
 ```
 
+Since **version 2.15**, ConvSym now pads symbol table to even number of bytes by default and the corresponding option was added, which you can disable if you want legacy behavior:
+
+```
+  /padToEvenSize[+|-]
+    whether to pad symbol table to even number of bytes; default: +
+```
+
 Default options can be expressed as follows:
 
-	-outopt "/favorLastLabels-"
+	-outopt "/favorLastLabels- /padToEvenSize+"
 
 
 ### `asm` output format

@@ -28,11 +28,13 @@ struct Output__Deb1 : public OutputWrapper {
 	  */
 	struct {
 		bool favorLastLabels;
-	} options = { .favorLastLabels = false };
+		bool padToEvenSize;
+	} options = { .favorLastLabels = false, .padToEvenSize = true };
 
 	void parseOptions(const std::string_view opts) {
 		OptsParser::parse(opts, {
-			{ "favorLastLabels", OptsParser::Opt::Bool{ &options.favorLastLabels } }
+			{ "favorLastLabels", OptsParser::Opt::Bool{ &options.favorLastLabels } },
+			{ "padToEvenSize", OptsParser::Opt::Bool{ &options.padToEvenSize } }
 		});
 	}
 
@@ -118,7 +120,7 @@ struct Output__Deb1 : public OutputWrapper {
 				}
 
 				std::vector<uint16_t> offsetsData;
-				std::vector<uint8_t> symbolsData;
+				BitStream symbolHeap;
 
 				/* For every symbol within the block ... */
 				for (; (symbolPtr != symbols.cend()) && (symbolPtr->offset>>16) <= block; ++symbolPtr) {
@@ -139,29 +141,26 @@ struct Output__Deb1 : public OutputWrapper {
 						continue;
 					}
 
-					BitStream symbolHeap;
-
 					/* Add offset to the offsets block */
 					offsetsData.push_back(Utils::asBigEndian<uint16_t>(symbolPtr->offset & 0xFFFF));
 
 					/* Encode each symbol character with the generated Huffman-codes and store it in the bitsteam */
+					const std::size_t symbolSizeBytePos = symbolHeap.buffer.size();
+					symbolHeap.buffer.push_back(0x00);	// reserve a byte to place symbol size later
 					for (auto& c : symbolPtr->label) {
 						const auto *record = characterToRecord[(std::size_t)static_cast<uint8_t>(c)];
-						symbolHeap.pushCode(record->code, record->codeLength);
+						symbolHeap.pushBits(record->code, record->codeLength);
 					}
 
 					/* Finally, add null-terminator */
 					{
-						auto *record = characterToRecord[0x00];
-						symbolHeap.pushCode(record->code, record->codeLength);
+						const auto *record = characterToRecord[0x00];
+						symbolHeap.pushBits(record->code, record->codeLength);
+						symbolHeap.flushByte();
 					}
 
-					/* Push this symbol to the data buffer */
-					/* FIXME: Avoid data transfer back and forth, push data to bitstream directly */
-					symbolsData.push_back(symbolHeap.size() + 1);	// write down symbols size
-					for (auto t = symbolHeap.begin(); t != symbolHeap.end(); t++) {
-						symbolsData.push_back(*t);
-					}
+					/* Write down actual symbol size now */
+					symbolHeap.buffer[symbolSizeBytePos] = symbolHeap.buffer.size() - symbolSizeBytePos;
 				}
 
 				/* Write offsets block and their corresponding encoded symbols heap */
@@ -182,11 +181,16 @@ struct Output__Deb1 : public OutputWrapper {
 
 					/* Write down block offsets and symbol data */
 					std::fwrite(offsetsData.data(), offsetsData.size(), sizeof(offsetsData[0]), output);
-					std::fwrite(symbolsData.data(), symbolsData.size(), sizeof(symbolsData[0]), output);
+					std::fwrite(symbolHeap.buffer.data(), symbolHeap.buffer.size(), 1, output);
 				}
 			}
 		}
-		
+
+		/* Pad to even size if respective option is enabled (that's the default) */
+		if (options.padToEvenSize && (std::ftell(output) & 1)) {
+			std::fputc(0, output);
+		}
+
 		/* Finally, write down block offsets table in the header */
 		std::fseek(output, loc_BlockOffsets, SEEK_SET);
 		std::fwrite(blockOffsets, 0x40, 2, output);
