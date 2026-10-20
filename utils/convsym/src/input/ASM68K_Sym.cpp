@@ -48,7 +48,7 @@ struct Input__ASM68K_Sym : public InputWrapper {
 
 	void parse(SymbolTable& symbolTable, std::istream& input) {
 		input.exceptions(std::ios_base::failbit | std::ios_base::badbit);
-		
+
 		/* Validate header */
 		struct SymHeader {
 			char magic[3];		// "MND"
@@ -90,9 +90,9 @@ struct Input__ASM68K_Sym : public InputWrapper {
 						input.read(buff, labelLen);
 						return labelLen;
 					});
-					Logger::debug("Insert symbol: {}", label);
-					if (options.ignoreConstants && type == 0x01) break;
-					if (!options.processLocals && label[0] == options.localSign) break;
+					Logger::debug("Found symbol: {}", label);
+					if (type == 0x01 && options.ignoreConstants) [[unlikely]] break;
+					if (type == 0x06 && !options.processLocals) [[unlikely]] break;
 					symbolTable.add(offset, label);
 					break;
 				}
