@@ -1,12 +1,15 @@
 
 # ConvSym version history
 
-### Version 2.15 (Draft)
+### Version 2.15 (2026-10-22)
 
 * `deb1` and `deb2` output formats:
-	- ConvSym now pads symbol table to even number of bytes by default and the `/padToEvenSize` option was added, which you can disable if you want legacy behavior.
-  - Improved internal bitstream implementation which results in very minor size optimization in `deb1` and `deb2` files
+	- ConvSym now pads symbol table to even number of bytes by default;
+	- Added `/padToEvenSize` option, which you can disable if you want legacy behavior (no padding);
+  - Improved internal bitstream implementation which now removes trailing bytes in some cases and results in subtle size reduction in formats output.
 
+* `asm68k_sym` output format:
+	- Properly ignore local symbols with unexpected starting characters when `/processLocals` is disabled. If assembler switched local symbol character on the fly (e.g. some macros may swap between `@` and `.`), any local labels added during the swap wouldn't be recognized as such.
 
 ### Version 2.14 (2026-09-05)
 

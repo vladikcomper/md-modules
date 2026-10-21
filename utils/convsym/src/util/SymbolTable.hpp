@@ -3,13 +3,12 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <optional>
 #include <variant>
 #include <string_view>
 #include <vector>
 
-#include "Utils.hpp"
-#include "Logger.hpp"
+#include <Utils.hpp>
+#include <Logger.hpp>
 
 struct OffsetConversionOptions {
 	uint32_t baseOffset;

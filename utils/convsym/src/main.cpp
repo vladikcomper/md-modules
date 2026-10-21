@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.14									*
+ * ConvSym utility version 2.15									*
  * Main definitions file										*
  * (c) 2017-2026, Vladikcomper									*
  * ------------------------------------------------------------	*/
@@ -21,9 +21,9 @@
 
 #include <Logger.hpp>
 #include <ArgvParser.hpp>
+#include <Utils.hpp>
 
 /* Input wrappers */
-#include "Utils.hpp"
 #include "input/ASM68K_Listing.cpp"
 #include "input/ASM68K_Sym.cpp"
 #include "input/AS_Listing.cpp"
@@ -39,7 +39,7 @@
 
 #include "util/SymbolTable.hpp"
 
-#define CONVSYM_VERSION_LINE "ConvSym utility version 2.14\n"
+#define CONVSYM_VERSION_LINE "ConvSym utility version 2.15\n"
 #define CONVSYM_COPYRIGHT_LINE "(c) 2016-2026, Vladikcomper\n"
 
 /* Main function */

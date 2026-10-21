@@ -1,6 +1,6 @@
 
 /* ------------------------------------------------------------ *
- * ConvSym utility version 2.13									*
+ * ConvSym utility version 2.15									*
  * Output wrapper for assembly file with equates				*
  * ------------------------------------------------------------	*/
 
@@ -51,6 +51,7 @@ struct Output__Asm : public OutputWrapper {
 		const auto sLineFormat = std::string(options.fmt);	/* FIXME: Avoid re-allocation because string_view is not null-terminated */
 
 		for (const auto & [offset, label] : symbols) {
+			/* FIXME: Replace with `fmt::fprintf` */
 			std::fprintf(output, sLineFormat.c_str(), label.data(), offset);
 			std::fputc('\n', output);
 		}
