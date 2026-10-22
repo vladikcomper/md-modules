@@ -84,7 +84,8 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
   - Sets the mask for the offsets in the input data: it's applied to every offset found in `[input_file]` after the base offset subtraction (if occurs).
   - **Default:** `FFFFFF`
 
-- `-range [startOffset] [endOffset]`, `-range @[startSymbol] @[endSymbol]`
+- `-range [startOffset] [endOffset]`  
+  `-range @[startSymbol] @[endSymbol]`
   - Determines the range for offsets allowed in a final symbol file (after subtraction of the base offset).  
   You can specify something like `"-range @MyStartSymbol @MyEndSymbol"` instead of raw offsets to limit to symbols between `MyStartSymbol` and `MyEndSymbol` (inclusive) respectively.
   - **Default:** `0 FFFFFFFF` (covers the entire address space)
