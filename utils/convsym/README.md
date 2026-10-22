@@ -39,119 +39,97 @@ When using `-` as input and/or output file name, the I/O is redirected to STDIN 
 
 ### Supported options
 
-```
-  -in [format]
-  -input [format]
-    Selects input file format.
-    Supported formats: asm68k_sym, as_lst, log, txt, asm68k_lst (deprecated),
-      as_lst_exp (deprecated)
-    Default: asm68k_sym
+- `-in [format]`  
+  `-input [format]`
+  - Selects input file format.
+  - **Supported formats:** `asm68k_sym`, `as_lst`, `log`, `txt`, `asm68k_lst` (deprecated), `as_lst_exp` (deprecated)
+  - **Default:** `asm68k_sym`
 
-  -out [format]
-  -output [format]
-    Selects output file format.
-    Supported formats: asm, deb2, deb1 (deprecated), log
-    Default: deb2
+- `-out [format]`  
+  `-output [format]`
+  - Selects output file format.
+  - **Supported formats:** `asm`, `deb2`, `deb1` (deprecated), `log`
+  - **Default:** `deb2`
 
-  -inopt [options]
-    Additional options specific for the input format.
-    Default options (depending on -in [format]):
-      -in asm68k_sym -inopt "/localSign=@ /localJoin=. /processLocals+
-        /ignoreConstants+"
-      -in asm68k_lst -inopt "/localSign=@ /localJoin=. /ignoreMacroDefs+
-        /ignoreMacroExp- /addMacrosAsOpcodes+ /processLocals+"
-      -in as_lst -inopt "/localJoin=. /processLocals+ /ignoreInternalSymbols+"
-      -in log -inopt "/separator=: /useDecimal-"
-      -in txt -inopt "/fmt='%s %X' /offsetFirst-"
+- `-inopt [options]`
+  - Additional options specific for the _input format_.
+  - **Default options** (depending on `-in [format]`):
+    - `-in asm68k_sym -inopt "/localSign=@ /localJoin=. /processLocals+ /ignoreConstants+"`
+    - `-in asm68k_lst -inopt "/localSign=@ /localJoin=. /ignoreMacroDefs+ /ignoreMacroExp- /addMacrosAsOpcodes+ /processLocals+"`
+    - `-in as_lst -inopt "/localJoin=. /processLocals+ /ignoreInternalSymbols+"`
+    - `-in log -inopt "/separator=: /useDecimal-"`
+    - `-in txt -inopt "/fmt='%s %X' /offsetFirst-"`
 
-  -outopt [options]
-    Additional options specific for the output format.
-    Default options (depending on -out [format]):
-      -out deb2 -outopt "/favorLastLabels- /padToEvenSize+"
-      -out deb1 -outopt "/favorLastLabels- /padToEvenSize+"
-      -out asm -outopt "/fmt='%s:       equ     $%X'"
-      -out log -outopt "/fmt='%X: %s'"
+- `-outopt [options]`
+  - Additional options specific for the _output format_.
+  - **Default options** (depending on `-out [format]`):
+    - `-out deb2 -outopt "/favorLastLabels- /padToEvenSize+"`
+    - `-out deb1 -outopt "/favorLastLabels- /padToEvenSize+"`
+    - `-out asm -outopt "/fmt='%s:       equ     $%X'"`
+    - `-out log -outopt "/fmt='%X: %s'"`
 
-  -verbose
-    Enables more verbose logging (useful for troubleshooting).
+- `-verbose`
+  - Enables more verbose logging (useful for troubleshooting).
 
-  -debug
-    Extremely verbose output, only use if -verbose isn't enough.
+- `-debug`
+  - Extremely verbose output, only use if `-verbose` isn't enough.
 
-Offsets conversion options:
-  -base [offset]
-    Sets the base offset for the input data: it is subtracted from every 
-    symbol's offset found in [input_file] to form the final offset.
-    Default: 0
+**Offsets conversion options:**
 
-  -mask [offset]
-    Sets the mask for the offsets in the input data: it's applied to every 
-    offset found in [input_file] after the base offset subtraction (if occurs).
-    Default: FFFFFF
+- `-base [offset]`
+  - Sets the base offset for the input data: it is subtracted from every symbol's offset found in `[input_file]` to form the final offset.
+  - **Default:** `0`
 
-  -range [startOffset] [endOffset]
-  -range @[startSymbol] @[endSymbol]
-    Determines the range for offsets allowed in a final symbol file (after
-    subtraction of the base offset).
-    You can specify something like "-range @MyStartSymbol @MyEndSymbol" instead
-    of raw offsets to limit to symbols between MyStartSymbol and MyEndSymbol
-    (inclusive) respectively.
-    Default: 0 FFFFFFFF (covers the entire address space)
+- `-mask [offset]`
+  - Sets the mask for the offsets in the input data: it's applied to every offset found in `[input_file]` after the base offset subtraction (if occurs).
+  - **Default:** `FFFFFF`
 
-  -a
-    Enables "Append mode": symbol data is appended to the end of the 
-    [output_file]. Data overwrites file contents by default.
-    This is usually used to append symbols to ROMs.
+- `-range [startOffset] [endOffset]`, `-range @[startSymbol] @[endSymbol]`
+  - Determines the range for offsets allowed in a final symbol file (after subtraction of the base offset).  
+  You can specify something like `"-range @MyStartSymbol @MyEndSymbol"` instead of raw offsets to limit to symbols between `MyStartSymbol` and `MyEndSymbol` (inclusive) respectively.
+  - **Default:** `0 FFFFFFFF` (covers the entire address space)
 
-  -noalign
-    Don't align symbol data in "Append mode", which is aligned to nearest
-    even offset by default. Using this option is not recommended, it's only 
-    there to retain compatibility with older ConvSym versions.
+- `-a`
+  - Enables "Append mode": symbol data is appended to the end of the `[output_file]`. Data overwrites file contents by default.  
+  This is usually used to append symbols to ROMs.
 
-Symbol table dump options:
-  -org [offset]
-  -org @[symbolName]
-    If set, symbol data will placed at the specified [offset] in the output 
-    file. This option cannot be used in "append mode".
-    You can specify @SomeSymbol instead of plain offset, in this case ConvSym 
-    will resolve that symbol's offset.
+- `-noalign`
+  - Don't align symbol data in "Append mode", which is aligned to nearest even offset by default. Using this option is not recommended, it's only there to retain compatibility with older ConvSym versions.
 
-  -ref [offset]
-  -ref @[symbolName]
-    If set, a 32-bit Big Endian offset pointing to the beginning of symbol
-    data will be written at specified offset. This is can be used, 
-    if symbol data pointer must be written somewhere in the ROM header.
-    You can specify @SomeSymbol instead of plain offset, in this case ConvSym 
-    will resolve that symbol's offset.
+**Symbol table dump options:**
 
-Symbols conversion and filtering options:
-  -filter [regex]
-  -ifilter [regex]
-    Enables filtering of the symbol list fetched from the [input_file]
-    based on a regular expression.
-    ConvSym uses PCRE2 library for regex parsing.
-    Filtering is done before any other transformations (see below).
-    For case-insensitive regex, use "-ifilter" instead.
+- `-org [offset]`  
+  `-org @[symbolName]`
+  - If set, symbol data will placed at the specified `[offset]` in the output file. This option cannot be used in "append mode".  
+  You can specify `@SomeSymbol` instead of plain offset, in this case ConvSym will resolve that symbol's offset.
 
-  -exclude
-    Make filter work in "exclude mode": all labels that DO match the filter
-    regex are removed from the list, everything else stays.
+- `-ref [offset]`  
+  `-ref @[symbolName]`
+  - If set, a 32-bit Big Endian offset pointing to the beginning of symbol data will be written at specified offset. This is can be used, if symbol data pointer must be written somewhere in the ROM header.  
+  You can specify `@SomeSymbol` instead of plain offset, in this case ConvSym will resolve that symbol's offset.
 
-  -toupper
-    Converts all symbol names to uppercase.
+**Symbols conversion and filtering options:**
 
-  -tolower
-    Converts all symbol names to lowercase.
+- `-filter [regex]`  
+  `-ifilter [regex]`
+  - Enables filtering of the symbol list fetched from the `[input_file]` based on a regular expression. ConvSym uses PCRE2 library for regex parsing. Filtering is done before any other transformations (see below).  
+  For case-insensitive regex, use `"-ifilter"` instead.
 
-  -rmprefix [string]
-    Removes a specified prefix if symbol starts with it.
-    Done after all other transformations, but before -addprefix.
+- `-exclude`
+  - Make filter work in "exclude mode": all labels that DO match the filter regex are removed from the list, everything else stays.
 
-  -addprefix [string]
-    Prepends a specified prefix string to every symbol in the resulting table.
-    Done after all other transformations.
+- `-toupper`
+  - Converts all symbol names to uppercase.
 
-```
+- `-tolower`
+  - Converts all symbol names to lowercase.
+
+- `-rmprefix [string]`
+  - Removes a specified prefix if symbol starts with it. Done after all other transformations, but before `-addprefix`.
+
+- `-addprefix [string]`
+  - Prepends a specified prefix string to every symbol in the resulting table. Done after all other transformations.
+
 
 ### Examples
 

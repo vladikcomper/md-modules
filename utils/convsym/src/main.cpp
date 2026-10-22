@@ -84,7 +84,7 @@ int main (int argc, const char ** argv) {
 			"      -in as_lst -inopt \"/localJoin=. /processLocals+ /ignoreInternalSymbols+\"\n"
 			"      -in as_lst_exp -inopt \"/strictSymbolOrder-\"\n"
 			"      -in log -inopt \"/separator=: /useDecimal-\"\n"
-			"      -in txt -inopt \"/fmt='%%s %%X' /offsetFirst-\"\n"
+			"      -in txt -inopt \"/fmt='%%1023s %%X' /offsetFirst-\"\n"
 			"\n"
 			"  -outopt [options]\n"
 			"    Additional options specific for the output format. See README for more information.\n"
